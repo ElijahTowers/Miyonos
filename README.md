@@ -66,6 +66,8 @@ to another maintainer without relying on prior conversation context.
 
 ## Install
 
+Download the current package from the [GitHub Releases page](https://github.com/ElijahTowers/Miyonos/releases).
+
 1. Download `Miyonos-0.1.24-OnionOS.zip` and shut down the Miyoo.
 2. Put the OnionOS SD card in a computer.
 3. Extract the ZIP onto the **root** of the card. The resulting file must be
