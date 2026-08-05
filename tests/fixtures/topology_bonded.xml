@@ -1,0 +1,15 @@
+<ZoneGroups>
+  <ZoneGroup Coordinator="RINCON_BAR" ID="RINCON_BAR:1">
+    <ZoneGroupMember UUID="RINCON_BAR" ZoneName="Living Room"
+      Location="http://192.168.1.42:1400/xml/device_description.xml"
+      Invisible="0">
+      <Satellite UUID="RINCON_SURROUND" HTChanMapSet="R"/>
+    </ZoneGroupMember>
+    <ZoneGroupMember UUID="RINCON_SURROUND" ZoneName="Living Room (R)"
+      Location="http://192.168.1.43:1400/xml/device_description.xml"
+      Invisible="1"/>
+    <ZoneGroupMember UUID="RINCON_SUB" ZoneName="Sub"
+      Location="http://192.168.1.44:1400/xml/device_description.xml"
+      Invisible="1"/>
+  </ZoneGroup>
+</ZoneGroups>

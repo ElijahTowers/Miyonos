@@ -1,0 +1,10 @@
+build/
+build-*/
+dist/
+.DS_Store
+/AGENTS.md
+*.log
+*.tmp
+compile_commands.json
+__pycache__/
+*.py[cod]

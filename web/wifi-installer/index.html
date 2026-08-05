@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="miyonos-token" content="__MIYONOS_TOKEN__">
+  <title>Miyonos Wi-Fi Installer</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div class="brand">
+        <img src="/icon.png" alt="" width="72" height="72">
+        <div>
+          <p class="eyebrow">MIYONOS · RELEASE __MIYONOS_VERSION__</p>
+          <h1>Install Miyonos on your Miyoo over Wi-Fi</h1>
+        </div>
+      </div>
+      <p class="intro">
+        No SD card swapping. Your Mac sends the verified release straight to
+        your Miyoo and keeps your settings.
+      </p>
+      <div class="privacy-pill">
+        <span aria-hidden="true"></span>
+        Available only on this Mac · nothing is sent to the internet
+      </div>
+    </header>
+
+    <section class="steps" aria-label="Preparation">
+      <article>
+        <span class="step-number">1</span>
+        <div>
+          <h2>Enable SSH</h2>
+          <p>On the Miyoo: Apps → Tweaks → Network → SSH.</p>
+        </div>
+      </article>
+      <article>
+        <span class="step-number">2</span>
+        <div>
+          <h2>Note the IP address</h2>
+          <p>It is shown at the top of the same Network screen.</p>
+        </div>
+      </article>
+      <article>
+        <span class="step-number">3</span>
+        <div>
+          <h2>Keep the Miyoo on</h2>
+          <p>Connect your Mac and Miyoo to the same trusted Wi-Fi.</p>
+        </div>
+      </article>
+    </section>
+
+    <section class="installer-card">
+      <div class="card-heading">
+        <div>
+          <p class="eyebrow">READY TO INSTALL</p>
+          <h2>Connect to your Miyoo</h2>
+        </div>
+        <span class="release-badge">v__MIYONOS_VERSION__</span>
+      </div>
+
+      <form id="installer-form" novalidate>
+        <label for="host">IP address of your Miyoo</label>
+        <div class="input-wrap">
+          <span aria-hidden="true">●</span>
+          <input
+            id="host"
+            name="host"
+            inputmode="decimal"
+            autocomplete="off"
+            placeholder="For example 192.168.1.50"
+            required
+          >
+        </div>
+        <p class="field-help">Copy the address exactly from the Network screen.</p>
+
+        <label for="password">Onion password</label>
+        <div class="input-wrap">
+          <span aria-hidden="true">◆</span>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            value="onion"
+            autocomplete="off"
+          >
+          <button class="show-password" id="show-password" type="button">
+            Show
+          </button>
+        </div>
+        <p class="field-help">The default is <code>onion</code>. It is not stored.</p>
+
+        <details>
+          <summary>Advanced options</summary>
+          <div class="advanced-grid">
+            <div>
+              <label for="user">Username</label>
+              <input id="user" name="user" value="onion" autocomplete="off">
+            </div>
+            <label class="checkbox">
+              <input id="keep-backup" type="checkbox" checked>
+              <span>Keep the previous version for recovery</span>
+            </label>
+          </div>
+        </details>
+
+        <p class="form-error" id="form-error" role="alert"></p>
+        <button class="primary-button" id="install-button" type="submit">
+          <span>Install or update</span>
+          <span aria-hidden="true">→</span>
+        </button>
+      </form>
+
+      <div class="secondary-actions">
+        <button id="rollback-button" type="button">Restore previous version</button>
+      </div>
+    </section>
+
+    <section class="status-card" id="status-card" aria-live="polite">
+      <div class="status-icon" id="status-icon" aria-hidden="true">✓</div>
+      <div class="status-copy">
+        <p class="eyebrow" id="status-label">STATUS</p>
+        <h2 id="status-title">Ready to connect</h2>
+        <p id="status-message">
+          Enter the IP address above. Installation usually takes less than a
+          minute.
+        </p>
+        <ol class="progress" id="progress" aria-label="Progress">
+          <li data-phase="connecting">Connecting</li>
+          <li data-phase="uploading">Transferring</li>
+          <li data-phase="finishing">Finishing</li>
+          <li data-phase="done">Done</li>
+        </ol>
+        <details class="log-details" id="log-details">
+          <summary>Technical details</summary>
+          <pre id="log-output"></pre>
+        </details>
+        <button class="done-button" id="shutdown-button" type="button" hidden>
+          Stop installer
+        </button>
+      </div>
+    </section>
+
+    <footer>
+      <p>Miyonos runs locally and is not affiliated with Sonos or OnionOS.</p>
+    </footer>
+  </main>
+
+  <dialog id="rollback-dialog">
+    <form method="dialog">
+      <p class="eyebrow">RESTORE</p>
+      <h2>Restore the previous version?</h2>
+      <p>
+        The current app version will be replaced by the previous one. Your
+        settings and artwork will be preserved.
+      </p>
+      <div class="dialog-actions">
+        <button value="cancel">Cancel</button>
+        <button value="confirm" class="danger-button">Restore</button>
+      </div>
+    </form>
+  </dialog>
+</body>
+</html>

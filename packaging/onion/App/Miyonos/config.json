@@ -1,0 +1,6 @@
+{
+  "label": "Miyonos",
+  "icon": "icon.png",
+  "launch": "launch.sh",
+  "description": "Local Sonos remote"
+}

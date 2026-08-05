@@ -1,0 +1,5 @@
+# Fixed visual clock (MIYONOS_SCREENSHOT_TIME_MS=1000), grouped native fixture.
+# Desktop hosts with an image decoder show the code-generated cover. Minimal
+# Linux hosts without SDL2_image retain the intentional fallback-art path.
+grouped-frame-with-artwork.bmp 527d584918bfeeaaccc27eb05f4fd589a6591524cef7c05e7a33a333e6973c3d
+grouped-frame-fallback.bmp 324ef431800ea5b1e5754ec4cf1006bf12a55daae1d88aff1b93cccc22cc5ec4

@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+  <s:Body><s:Fault><faultcode>s:Client</faultcode>
+    <faultstring>UPnPError</faultstring><detail>
+      <UPnPError xmlns="urn:schemas-upnp-org:control-1-0">
+        <errorCode>711</errorCode>
+        <errorDescription>Illegal seek target</errorDescription>
+      </UPnPError>
+    </detail>
+  </s:Fault></s:Body>
+</s:Envelope>
