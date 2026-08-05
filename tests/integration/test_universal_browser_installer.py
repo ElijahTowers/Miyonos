@@ -15,6 +15,8 @@ SOURCE_HTML = (
 )
 PACKAGE = ROOT / "dist" / f"Miyonos-{VERSION}-Universal-Browser-Installer.zip"
 PREFIX = "Miyonos-Universal-Browser-Installer/"
+APP_PACKAGE = ROOT / "dist" / f"Miyonos-App-{VERSION}.zip"
+APP_PREFIX = "Miyonos/"
 
 
 def check_html(html: str, *, packaged: bool) -> None:
@@ -78,7 +80,25 @@ def main() -> int:
         assert int.from_bytes(icon_data[16:20], "big") == 74
         assert int.from_bytes(icon_data[20:24], "big") == 74
 
-    print("Universal no-install browser package checks passed.")
+    assert APP_PACKAGE.is_file(), "Single-folder app package is missing."
+    with zipfile.ZipFile(APP_PACKAGE) as archive:
+        bad_file = archive.testzip()
+        assert bad_file is None
+        names = set(archive.namelist())
+        assert APP_PREFIX + "VERSION" in names
+        assert APP_PREFIX + "config.json" in names
+        assert APP_PREFIX + "icon.png" in names
+        assert APP_PREFIX + "launch.sh" in names
+        assert APP_PREFIX + "miyonos" in names
+        assert APP_PREFIX + "libs/libSDL2_image-2.0.so.0" in names
+        assert not any(name.startswith("App/") for name in names)
+        assert not any(name.startswith(APP_PREFIX + "data/") for name in names)
+        assert (
+            archive.read(APP_PREFIX + "VERSION").decode("utf-8").strip()
+            == VERSION
+        )
+
+    print("Universal browser and single-folder app package checks passed.")
     return 0
 
 

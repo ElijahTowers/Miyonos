@@ -45,9 +45,7 @@ changes the selected target only.
 | Item | Current state |
 | --- | --- |
 | Release version | `0.1.24` |
-| OnionOS package | `dist/Miyonos-0.1.24-OnionOS.zip` |
-| Universal browser package | `dist/Miyonos-0.1.24-Universal-Browser-Installer.zip` |
-| macOS browser package | `dist/Miyonos-0.1.24-WiFi-Installer-macOS.zip` |
+| End-user download | `dist/Miyonos-App-0.1.24.zip` — a single `Miyonos` folder to put in `App` |
 | macOS simulator | `dist/Miyonos Simulator.app` |
 | Last verified device | Miyoo Mini Plus on OnionOS 4.3.x |
 | Last observed device IP | Not recorded in the public repository; check **Apps → Tweaks → Network** on the device |
@@ -112,13 +110,12 @@ device IP is shown at the top of **Apps → Tweaks → Network**.
 This is the simplest path for Windows, macOS, and Linux. It installs no helper
 on the computer.
 
-1. Extract `dist/Miyonos-0.1.24-Universal-Browser-Installer.zip`.
-2. Open `Open Miyonos Installer.html` from the extracted folder.
-3. On the Miyoo, enable **Apps → Tweaks → Network → HTTP: Web-based file sync**.
-4. Enter the Miyoo IP in the guide and open the device page.
-5. Open `App` and upload the complete supplied `Miyonos` folder. Do not upload
-   a nested folder and do not upload a `data` folder.
-6. Wait for all files to finish, then open **Apps → Miyonos** on the device.
+1. Extract `dist/Miyonos-App-0.1.24.zip`.
+2. On the Miyoo, enable **Apps → Tweaks → Network → HTTP: Web-based file sync**.
+3. Open the device page in a browser, then open `App`.
+4. Upload the supplied `Miyonos` folder. Do not upload a nested folder and do
+   not upload a `data` folder.
+5. Wait for all files to finish, then open **Apps → Miyonos** on the device.
 
 The browser login is normally `admin` / `admin` on an untouched OnionOS setup.
 Use the service only on a trusted network and disable it after use. Full detail

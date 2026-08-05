@@ -57,47 +57,21 @@ The Sonos local interface is unofficial. Models, sources, and firmware can
 expose different capabilities, so unsupported actions fail safely and leave
 the remote usable.
 
-## Continue this project in a new chat
-
-Start with [docs/PROJECT_HANDOFF.md](docs/PROJECT_HANDOFF.md). It records the
-current release, physical-device state, recommended update route, test order,
-project map, and known verification boundary so this repository can be handed
-to another maintainer without relying on prior conversation context.
-
 ## Install
 
-Download the current package from the [GitHub Releases page](https://github.com/ElijahTowers/Miyonos/releases).
+Download `Miyonos-App-0.1.24.zip` from the [GitHub Releases page](https://github.com/ElijahTowers/Miyonos/releases). It contains only the `Miyonos` app folder.
 
-1. Download `Miyonos-0.1.24-OnionOS.zip` and shut down the Miyoo.
-2. Put the OnionOS SD card in a computer.
-3. Extract the ZIP onto the **root** of the card. The resulting file must be
-   `App/Miyonos/config.json`, not a second nested Miyonos folder.
-4. Safely eject the card, boot the Miyoo, and open **Apps → Miyonos**.
+1. Unzip the download. It contains one folder: `Miyonos`.
+2. Put that folder in the OnionOS `App` folder, so the resulting path is
+   `App/Miyonos/config.json`.
+3. Safely eject the SD card, boot the Miyoo, and open **Apps → Miyonos**.
+
+To install over Wi-Fi, enable OnionOS **HTTP: Web-based file sync**, open the
+device in a browser, open `App`, and upload that same `Miyonos` folder.
 
 Settings, artwork, and logs are stored in `App/Miyonos/data`. Installing a
-new release over the app leaves that directory alone. SSH deployment is
-documented in [docs/WIFI_INSTALL.md](docs/WIFI_INSTALL.md).
-
-For the recommended installation on Windows, macOS, or Linux, unzip
-`Miyonos-0.1.24-Universal-Browser-Installer.zip` and double-click
-`Open Miyonos Installer.html`. The guide uses OnionOS's built-in HTTP file
-server, so nothing is installed on the computer. It walks through enabling the
-service, opening the Miyoo from a browser, and uploading the included
-`Miyonos` folder into `App`.
-
-See [docs/UNIVERSAL_INSTALL.md](docs/UNIVERSAL_INSTALL.md) for the universal
-browser flow. The atomic SSH alternative for a first install or later update
-is:
-
-```sh
-./dist/Miyonos-wifi-install.sh MIYOO_IP_ADDRESS
-```
-
-Keep the updater, release ZIP, and `.sha256` file together. The updater checks
-the release, preserves all user data, switches versions safely, and retains a
-rollback copy. It can also be run as `./scripts/wifi-install.sh` from a source
-checkout. See [docs/WIFI_INSTALL.md](docs/WIFI_INSTALL.md) for this advanced
-method.
+new release over the app leaves that directory alone. For an update, retain
+that `data` folder when replacing the app files.
 
 ## Essential controls
 

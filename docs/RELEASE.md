@@ -19,8 +19,10 @@
 7. Execute the full hardware checklist in `TESTING.md`. If hardware is not
    available, state that explicitly in `FINAL_STATUS.md` and do not promote the
    mock result to stable.
-8. Publish the ZIP, `.sha256`, changelog, and known limitations together.
+8. Publish `Miyonos-App-<version>.zip` and its `.sha256` file as the only
+   end-user assets, together with the changelog and known limitations.
 
-The technical-preview package is installed by extracting it at the OnionOS SD
-card root. Updates must never remove `App/Miyonos/data`. Debug symbols are for
-maintainers and are not copied to the handheld.
+The end-user package contains only the `Miyonos` folder. Copy or upload that
+folder into OnionOS's `App` directory. Updates must never remove
+`App/Miyonos/data`. Debug symbols and installer helpers are for maintainers and
+are not released to end users.

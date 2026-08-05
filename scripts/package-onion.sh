@@ -9,6 +9,7 @@ STAGE="$ROOT/build/onion-stage"
 APP="$STAGE/App/Miyonos"
 DIST="$ROOT/dist"
 ZIP="$DIST/Miyonos-$VERSION-OnionOS.zip"
+APP_FOLDER_ZIP="$DIST/Miyonos-App-$VERSION.zip"
 WEB_BUNDLE="$DIST/Miyonos-WiFi-Installer-macOS"
 WEB_ZIP="$DIST/Miyonos-$VERSION-WiFi-Installer-macOS.zip"
 UNIVERSAL_BUNDLE="$DIST/Miyonos-Universal-Browser-Installer"
@@ -61,6 +62,12 @@ cp "$ROOT/packaging/onion/README.txt" "$STAGE/"
 rm -f "$ZIP" "$ZIP.sha256"
 (cd "$STAGE" && zip -q -r "$ZIP" App README.txt)
 shasum -a 256 "$ZIP" > "$ZIP.sha256"
+
+# This is the end-user release asset: one folder to copy to OnionOS's App
+# directory or upload into App through OnionOS File Sync.
+rm -f "$APP_FOLDER_ZIP" "$APP_FOLDER_ZIP.sha256"
+(cd "$STAGE/App" && zip -q -r "$APP_FOLDER_ZIP" Miyonos)
+shasum -a 256 "$APP_FOLDER_ZIP" > "$APP_FOLDER_ZIP.sha256"
 cp "$ROOT/build/miyoo/miyonos.debug" "$DIST/Miyonos-$VERSION-symbols"
 cp "$ROOT/scripts/wifi-install.sh" "$DIST/Miyonos-wifi-install.sh"
 chmod +x "$DIST/Miyonos-wifi-install.sh"
@@ -98,6 +105,8 @@ shasum -a 256 "$UNIVERSAL_ZIP" > "$UNIVERSAL_ZIP.sha256"
 
 echo "Release: $ZIP"
 echo "Checksum: $ZIP.sha256"
+echo "Single-folder release: $APP_FOLDER_ZIP"
+echo "Single-folder release checksum: $APP_FOLDER_ZIP.sha256"
 echo "Universal browser installer: $UNIVERSAL_ZIP"
 echo "Universal browser installer checksum: $UNIVERSAL_ZIP.sha256"
 echo "Mac browser installer: $WEB_ZIP"
