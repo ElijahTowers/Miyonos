@@ -612,36 +612,34 @@ void Renderer::queue_list(const ViewState& view) {
     return;
   }
 
-  constexpr int kRowHeight = 62;
-  constexpr int kVisibleRows = 6;
+  // Keep Queue aligned with the Favorites browser: the list stays readable
+  // on the left and the currently selected track gets a useful, full-size
+  // cover preview on the right. Queue numbers remain visible as an anchor
+  // when starting from a specific track.
+  constexpr int kRowHeight = 48;
+  constexpr int kVisibleRows = 7;
   const int count = static_cast<int>(view.queue.size());
   int start = std::max(0, view.selection - kVisibleRows / 2);
   start = std::min(start, std::max(0, count - kVisibleRows));
   for (int row = 0; row < kVisibleRows && start + row < count; ++row) {
     const int index = start + row;
-    const int y = 48 + row * kRowHeight;
+    const int y = 64 + row * kRowHeight;
     const bool selected = index == view.selection;
     if (selected) {
-      fill(renderer_, SDL_Rect{12, y - 3, 616, kRowHeight - 3}, kCream);
+      fill(renderer_, SDL_Rect{12, y - 4, 380, kRowHeight - 3}, kCream);
     } else if (row % 2 == 0) {
-      fill(renderer_, SDL_Rect{12, y - 3, 616, kRowHeight - 3}, kPanel);
+      fill(renderer_, SDL_Rect{12, y - 4, 380, kRowHeight - 3}, kPanel);
     }
     const SDL_Color main = selected ? kDark : kCream;
     const SDL_Color sub = selected ? SDL_Color{63, 82, 98, 255} : kMuted;
     const SDL_Color number = selected ? kDark : kMint;
-    const std::string number_label =
-        index + 1 == view.playback.track.queue_position
-            ? ">"
-            : std::to_string(index + 1);
-    font_.draw(number_label, 22, y + 19, 1, number, 24);
-    const std::string artwork =
-        index < static_cast<int>(view.queue_artwork_paths.size())
-            ? view.queue_artwork_paths[index]
-            : "";
-    draw_queue_thumbnail(artwork, SDL_Rect{54, y + 3, 52, 52});
+    if (index + 1 == view.playback.track.queue_position) {
+      font_.draw(">", 18, y + 10, 1, number, 10);
+    }
+    font_.draw(std::to_string(index + 1), 32, y + 10, 1, number, 28);
     const BrowseItem& item = view.queue[index];
-    font_.draw(clipped(item.title.empty() ? "Untitled track" : item.title, 46),
-               120, y + 5, 2, main, 490);
+    font_.draw(clipped(item.title.empty() ? "Untitled track" : item.title, 31),
+               68, y, 2, main, 304);
     std::string detail = item.artist;
     if (!item.album.empty()) {
       if (!detail.empty()) detail += " - ";
@@ -651,8 +649,29 @@ void Renderer::queue_list(const ViewState& view) {
       if (!detail.empty()) detail += "   ";
       detail += format_duration(item.duration_seconds);
     }
-    font_.draw(clipped(detail, 72), 120, y + 34, 1, sub, 490);
+    font_.draw(clipped(detail, 43), 68, y + 25, 1, sub, 304);
   }
+
+  const BrowseItem& selected = view.queue[view.selection];
+  const std::string selected_artwork =
+      view.selection < static_cast<int>(view.queue_artwork_paths.size())
+          ? view.queue_artwork_paths[view.selection]
+          : "";
+  font_.draw_centered("Selected track", 75, 1, kMuted, 500);
+  draw_artwork(selected_artwork, SDL_Rect{424, 96, 184, 184});
+  if (selected_artwork.empty()) {
+    font_.draw_centered("Cover unavailable", 291, 1, kMuted, 516);
+  }
+  font_.draw_centered(
+      clipped(selected.title.empty() ? "Untitled track" : selected.title, 24),
+      322, 1, kCream, 516);
+  std::string selected_detail = selected.artist;
+  if (!selected.album.empty()) {
+    if (!selected_detail.empty()) selected_detail += " - ";
+    selected_detail += selected.album;
+  }
+  font_.draw_centered(clipped(selected_detail, 36), 360, 1, kMuted, 516);
+  font_.draw_centered("A starts from this track", 380, 1, kMuted, 516);
   hints("B  Back    D-Pad  Browse", "A  Play    X  Favorite playlists");
 }
 

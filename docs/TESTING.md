@@ -73,8 +73,8 @@ simulated battery reading to compare a deterministic 640 × 480 BMP against its
 approved SHA-256 reference. It also restarts against the same isolated SD-card
 tree, verifies settings persistence, captures offline behavior, and confirms
 that the local fixture leaves no listener behind. It includes the Controls
-overlay, an active-playlist Now Playing layout, and the tail of a mixed
-Favorite Playlists collection to guard against paging regressions. The current
+overlay, Queue and active-playlist layouts, and the tail of a mixed Favorite
+Playlists collection to guard against paging regressions. The current
 254-check controller suite automatically visits
 Now Playing, Rooms, Group Editor, Queue, Favorites, Settings, Help, About,
 Diagnostics, IP Editor, action confirmation, and exit confirmation.

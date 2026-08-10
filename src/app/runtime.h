@@ -17,6 +17,7 @@ struct AppRuntimeOptions {
   std::string scenario = "grouped";
   bool live_sonos = false;
   bool show_controls_on_start = false;
+  bool show_queue_on_start = false;
   bool show_playlist_on_start = false;
   bool show_playlist_tail_on_start = false;
   uint32_t capture_after_ms = 0;

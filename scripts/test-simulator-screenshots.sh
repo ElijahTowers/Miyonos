@@ -43,6 +43,23 @@ EXPECTED_CONTROLS="$(awk '$1 == "controls-overlay.bmp" {print $2}' "$REFERENCE")
 }
 file "$OUTPUT/controls-overlay.bmp" | grep -q '640 x 480 x 32'
 
+QUEUE_DATA="$RUN_ROOT/queue/SDCARD/App/Miyonos/data"
+mkdir -p "$QUEUE_DATA"
+printf 'schema_version=2\nvolume_step=3\nconfirm_exit=1\n' > "$QUEUE_DATA/settings.ini"
+MIYONOS_SCREENSHOT_TIME_MS=1000 SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
+  "$BUILD/miyonos" --screen-only --show-queue --scenario grouped \
+  --data-dir "$QUEUE_DATA" --capture-after-ms 6000 \
+  --capture-frame "$OUTPUT/queue-layout.bmp"
+QUEUE_FRAME="$(shasum -a 256 "$OUTPUT/queue-layout.bmp" | awk '{print $1}')"
+EXPECTED_QUEUE="$(awk '$1 == "queue-layout.bmp" {print $2}' "$REFERENCE")"
+[[ "$QUEUE_FRAME" == "$EXPECTED_QUEUE" ]] || {
+  echo "The Queue layout reference image changed." >&2
+  echo "Expected: ${EXPECTED_QUEUE:-missing}" >&2
+  echo "Actual:   $QUEUE_FRAME" >&2
+  exit 1
+}
+file "$OUTPUT/queue-layout.bmp" | grep -q '640 x 480 x 32'
+
 MIYONOS_SCREENSHOT_TIME_MS=1000 SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
   "$BUILD/miyonos" --screen-only --show-playlist --scenario grouped \
   --data-dir "$DATA_DIR" --capture-after-ms 6000 \
