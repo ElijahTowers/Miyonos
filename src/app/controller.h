@@ -185,7 +185,7 @@ class Controller {
   void request_queue_artwork();
   void request_browse(ListKind kind, const std::string& object_id = {},
                       std::size_t start_index = 0);
-  void select_group(std::size_t index);
+  void select_group(std::size_t index, bool opened_by_user = true);
   Player* player_by_uuid(const std::string& uuid);
   const Player* player_by_uuid(const std::string& uuid) const;
   Group* active_group();

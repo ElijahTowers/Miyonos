@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.30 — Persistent Now Playing playlist label
+
+- Retains the playlist selected in Miyonos while Sonos advances through its
+  generic queue metadata, which does not repeat the source playlist name.
+- A routine topology refresh of the same group no longer clears playlist
+  context or interrupts the current screen; changing to another group still
+  clears the old queue context safely.
+
 ## 0.1.29 — Queue track cover art
 
 - Queue rows now show a compact cover-art thumbnail for each visible track.

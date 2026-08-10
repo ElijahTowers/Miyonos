@@ -67,6 +67,12 @@ queue.
 Sonos can report UPnP 804 for an already-empty queue; Miyonos treats that as
 the required clean state and continues loading the selected playlist.
 
+Many players then report only a generic `x-rincon-queue` transport URI for
+each following track, with no source playlist label. Miyonos keeps the title
+of the playlist it started for that active group queue. A routine refresh of
+the same group preserves this context; selecting another group or starting a
+different source clears it.
+
 ## Defensive limits
 
 HTTP has bounded connect/read waits, 16 KiB headers, per-request bodies,

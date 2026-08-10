@@ -26,7 +26,8 @@ the existing bounded artwork cache. **Favorite Playlists** filters the playlist-
 Sonos exposes, including Spotify playlists; X returns to Queue. The selected
 playlist's cover art appears beside its name; A replaces the active Sonos
 queue with that playlist and immediately opens Now Playing with the selected
-playlist name, then begins at its first track.
+playlist name, then begins at its first track. The playlist name remains on
+Now Playing while that queue advances through later tracks.
 
 In **Favorites**, the selected item appears beside its source-provided cover
 art. Folders and providers that do not expose a usable cover show **Cover

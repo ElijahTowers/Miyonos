@@ -134,6 +134,13 @@ std::string didl_saved_playlist(int identifier) {
          std::to_string(identifier) + "</res></container>";
 }
 
+std::string didl_generic_queue() {
+  return "<item id=\"Q:0\" parentID=\"Q:\" restricted=\"true\">"
+         "<dc:title>Queue</dc:title>"
+         "<upnp:class>object.item.audioItem</upnp:class>"
+         "<res>x-rincon-queue:RINCON_LIVING#0</res></item>";
+}
+
 int saved_playlist_id(const std::string& uri) {
   const std::size_t marker = uri.rfind('#');
   if (marker == std::string::npos) return 0;
@@ -484,8 +491,12 @@ std::string SimulatorSonosFixture::response_for(
                     "<AbsCount>2147483647</AbsCount>");
   }
   if (action == "GetMediaInfo") {
-    const std::string playlist = didl_saved_playlist(
-        loaded_playlist_id_ == 0 ? 1 : loaded_playlist_id_);
+    const std::string playlist =
+        loaded_from_favorite_
+            ? didl_generic_queue()
+            : didl_saved_playlist(loaded_playlist_id_ == 0
+                                      ? 1
+                                      : loaded_playlist_id_);
     return envelope(action, kAv,
                     "<NrTracks>8</NrTracks><MediaDuration>0:29:00"
                     "</MediaDuration><CurrentURI>x-rincon-queue:RINCON_LIVING#0"
@@ -564,6 +575,7 @@ std::string SimulatorSonosFixture::response_for(
     const int playlist_id = saved_playlist_id(enqueued_uri);
     if (playlist_id > 0 && queue_cleared_) {
       loaded_playlist_id_ = playlist_id;
+      loaded_from_favorite_ = false;
       return envelope(action, kAv,
                       "<FirstTrackNumberEnqueued>1</FirstTrackNumberEnqueued>"
                       "<NumTracksAdded>8</NumTracksAdded>"
@@ -572,6 +584,7 @@ std::string SimulatorSonosFixture::response_for(
     if (queue_cleared_ &&
         enqueued_uri.rfind("x-rincon-cpcontainer:", 0) == 0) {
       loaded_playlist_id_ = 2;
+      loaded_from_favorite_ = true;
       return envelope(action, kAv,
                       "<FirstTrackNumberEnqueued>1</FirstTrackNumberEnqueued>"
                       "<NumTracksAdded>8</NumTracksAdded>"
@@ -585,6 +598,7 @@ std::string SimulatorSonosFixture::response_for(
   if (action == "RemoveAllTracksFromQueue") {
     queue_cleared_ = true;
     loaded_playlist_id_ = 0;
+    loaded_from_favorite_ = false;
     return envelope(action, kAv);
   }
   if (action == "Pause" || action == "Stop") playing_ = false;

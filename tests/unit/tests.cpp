@@ -529,6 +529,21 @@ void test_live_mock_if_requested() {
   CHECK(controller.view().playback.transport_uri.rfind("x-rincon-queue:",
                                                         0) == 0);
   CHECK(controller.view().playback.playlist_title == selected_playlist);
+  // Real playlist Favorites become a generic Sonos queue and do not keep a
+  // playlist title in their later metadata polls. Re-selecting the same group
+  // models the periodic topology refresh that must preserve Miyonos' context.
+  controller.handle(Action::Rooms);
+  CHECK(controller.view().screen == Screen::Rooms);
+  controller.handle(Action::Confirm);
+  CHECK(controller.view().screen == Screen::NowPlaying);
+  const auto retained_playlist_deadline = std::chrono::steady_clock::now() +
+                                          std::chrono::seconds(3);
+  while (std::chrono::steady_clock::now() < retained_playlist_deadline &&
+         controller.view().playback.playlist_title != selected_playlist) {
+    controller.update();
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+  }
+  CHECK(controller.view().playback.playlist_title == selected_playlist);
   controller.handle(Action::Queue);
   const auto queue_deadline = std::chrono::steady_clock::now() +
                               std::chrono::seconds(3);

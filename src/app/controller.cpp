@@ -482,9 +482,11 @@ void Controller::cycle_volume_target(int direction) {
   show_toast("Volume target: " + target->room_name, 1800);
 }
 
-void Controller::select_group(std::size_t index) {
+void Controller::select_group(std::size_t index, bool opened_by_user) {
   if (index >= view_.topology.groups.size()) return;
   const Group& group = view_.topology.groups[index];
+  const bool same_active_group = !view_.active_group_id.empty() &&
+                                 view_.active_group_id == group.id;
   view_.active_group_id = group.id;
   view_.group_volume_target = false;
   const auto contains = [&group](const std::string& uuid) {
@@ -504,20 +506,27 @@ void Controller::select_group(std::size_t index) {
       cached == speaker_volumes_.end() ? -1 : cached->second.volume;
   view_.speaker_muted =
       cached == speaker_volumes_.end() ? false : cached->second.muted;
-  selected_playlist_title_.clear();
-  selected_playlist_object_id_.clear();
-  playlist_context_lookup_requested_id_.clear();
-  pending_playlist_title_.clear();
-  pending_playlist_object_id_.clear();
-  playlist_title_before_start_.clear();
-  playlist_object_before_start_.clear();
-  playlist_start_acknowledged_ = false;
+  if (!same_active_group) {
+    // A playlist label belongs to the active group queue. Topology refreshes
+    // regularly reselect the same group; they must not erase that label while
+    // the queue advances to later tracks.
+    selected_playlist_title_.clear();
+    selected_playlist_object_id_.clear();
+    playlist_context_lookup_requested_id_.clear();
+    pending_playlist_title_.clear();
+    pending_playlist_object_id_.clear();
+    playlist_title_before_start_.clear();
+    playlist_object_before_start_.clear();
+    playlist_start_acknowledged_ = false;
+  }
   settings_.last_group_id = group.id;
   settings_.last_room_uuid = view_.active_room_uuid;
   save_settings();
   view_.connected = true;
-  view_.screen = Screen::NowPlaying;
-  history_.clear();
+  if (opened_by_user || !same_active_group) {
+    view_.screen = Screen::NowPlaying;
+    history_.clear();
+  }
   request_poll();
   request_speaker_volume();
 }
@@ -613,7 +622,7 @@ void Controller::apply_result(WorkerResult result) {
         view_.screen = Screen::Rooms;
         view_.selection = static_cast<int>(selected);
       } else {
-        select_group(selected);
+        select_group(selected, false);
       }
       if (!old_group.empty() && old_group != view_.active_group_id) {
         show_toast("The selected group changed; a surviving room was selected.");

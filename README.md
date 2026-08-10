@@ -8,7 +8,7 @@ external cover downloads.
 
 ![Miyonos Now Playing preview](docs/images/now-playing.png)
 
-Version 0.1.29 is a technical preview with real Sonos LAN validation, robust
+Version 0.1.30 is a technical preview with real Sonos LAN validation, robust
 source-provided cover retrieval, a local Miyoo battery gauge, a local
 simulator, and sharp native 640 × 480 output through the device's
 double-buffered framebuffer. It includes:
@@ -37,7 +37,7 @@ double-buffered framebuffer. It includes:
 
 The desktop/mock suite and ARM cross-build pass. Discovery, playback metadata,
 cover retrieval, topology, and an idempotent volume write have also been
-validated against a real mixed-model Sonos household. Version 0.1.29 reads the
+validated against a real mixed-model Sonos household. Version 0.1.30 reads the
 real Sonos `Q:0` track container and starts playlist-shaped Spotify Favorites
 as clean queue replacements. It also accepts
 the strict Spotify, Spotify-in-Sonos, and Sonos Radio/TuneIn cover endpoint
@@ -61,7 +61,7 @@ the remote usable.
 
 ## Install
 
-Download `Miyonos-App-0.1.29.zip` from the [GitHub Releases page](https://github.com/ElijahTowers/Miyonos/releases). It contains only the `Miyonos` app folder.
+Download `Miyonos-App-0.1.30.zip` from the [GitHub Releases page](https://github.com/ElijahTowers/Miyonos/releases). It contains only the `Miyonos` app folder.
 
 1. Unzip the download. It contains one folder: `Miyonos`.
 2. Put that folder in the OnionOS `App` folder, so the resulting path is
@@ -93,7 +93,8 @@ playlist-shaped Favorites supplied by Sonos, including Spotify playlists. It
 shows the selected playlist's source-provided cover art. Press A to play it;
 Miyonos immediately opens Now Playing, shows the selected playlist name, and
 replaces the current Sonos queue first so the selected playlist begins at its
-first track.
+first track. That playlist name remains visible as the queue advances through
+later tracks, until another source or playlist is started.
 Favorites also shows the selected favorite's source-provided cover art, or
 **Cover unavailable** when the Sonos item does not provide one. L1/R1 cycles
 the group-volume target together with each individual speaker.

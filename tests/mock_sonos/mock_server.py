@@ -85,6 +85,15 @@ def didl_saved_playlist(identifier):
     )
 
 
+def didl_generic_queue():
+    return (
+        '<item id="Q:0" parentID="Q:" restricted="true">'
+        "<dc:title>Queue</dc:title>"
+        "<upnp:class>object.item.audioItem</upnp:class>"
+        "<res>x-rincon-queue:RINCON_LIVING#0</res></item>"
+    )
+
+
 def saved_playlist_id(uri):
     match = re.search(r"savedqueues\.rsq#([12])$", uri)
     return int(match.group(1)) if match else 0
@@ -99,6 +108,7 @@ class State:
     scenario = "grouped"
     queue_cleared = False
     loaded_playlist_id = 0
+    loaded_from_favorite = False
     coordinator_changed = False
     radio_transition = False
     radio_transition_started = False
@@ -386,7 +396,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" '
                 'xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" '
                 'xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/">'
-                + didl_saved_playlist(State.loaded_playlist_id or 1)
+                + (didl_generic_queue()
+                   if State.loaded_from_favorite
+                   else didl_saved_playlist(State.loaded_playlist_id or 1))
                 + "</DIDL-Lite>"
             )
             response = envelope(
@@ -432,12 +444,14 @@ class Handler(http.server.BaseHTTPRequestHandler):
         elif action == "RemoveAllTracksFromQueue":
             State.queue_cleared = True
             State.loaded_playlist_id = 0
+            State.loaded_from_favorite = False
             response = envelope(action, AV)
         elif action == "AddURIToQueue":
             enqueued_uri = self.field(body, "EnqueuedURI")
             playlist_id = saved_playlist_id(enqueued_uri)
             if playlist_id and State.queue_cleared:
                 State.loaded_playlist_id = playlist_id
+                State.loaded_from_favorite = False
                 response = envelope(
                     action,
                     AV,
@@ -447,6 +461,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             elif (State.queue_cleared and
                   enqueued_uri.startswith("x-rincon-cpcontainer:")):
                 State.loaded_playlist_id = 2
+                State.loaded_from_favorite = True
                 response = envelope(
                     action,
                     AV,

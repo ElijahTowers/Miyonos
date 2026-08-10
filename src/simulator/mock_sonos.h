@@ -39,6 +39,7 @@ class SimulatorSonosFixture {
   int volume_ = 28;
   bool queue_cleared_ = false;
   int loaded_playlist_id_ = 0;
+  bool loaded_from_favorite_ = false;
   bool coordinator_changed_ = false;
 };
 
