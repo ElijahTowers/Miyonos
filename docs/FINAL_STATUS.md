@@ -1,11 +1,11 @@
-# Miyonos 0.1.21 final status
+# Miyonos 0.1.28 final status
 
 Status: **real Sonos LAN integration, cover retrieval, simulator, and release
-packages complete; sharp direct framebuffer output is visually and digitally
-verified. Version 0.1.21 reconciles direct Sonos Radio buffering using the
-stable station identity and adds the tightly bounded current Sonos
-Radio/TuneIn logo path. Its physical radio visual smoke test awaits final
-confirmation.**
+packages are complete; sharp direct framebuffer output is visually and
+digitally verified. Version 0.1.28 was additionally validated against the
+owner's live Sonos household: a playlist-shaped Sonos Favorite immediately
+opened Now Playing, retained its playlist name, replaced the old queue, and
+returned the real upcoming-track list. Its physical-device retest is pending.**
 
 ## Delivered
 
@@ -14,14 +14,15 @@ over SSDP, reads device descriptions and grouped topology, routes transport
 actions to the coordinator, controls playback/volume/mute/seeking, browses the
 Queue/Favorites, presents current metadata and selected cover art, persists
 settings, recovers from offline speakers, and records bounded diagnostics and
-logs. When a saved Sonos playlist is playing, Queue reads the active playlist
-container and lists its tracks. X in Queue opens Saved Playlists, whose
-selected entry shows source-provided cover art; A replaces the active queue
-with that saved playlist before starting it. It uses no Miyonos account, cloud
-service, API key, analytics, or Sonos cloud authorization.
+logs. Queue reads Sonos' actual `Q:0` track container rather than its technical
+queue-instance container. X in Queue opens **Favorite Playlists**, which
+filters playlist-shaped Sonos Favorites (including Spotify playlists); A
+replaces the active queue, opens Now Playing immediately, and retains the
+selected playlist name. It uses no Miyonos account, cloud service, API key,
+analytics, or Sonos cloud authorization.
 
-Version 0.1.21 retains the adapter validated against a real Beam/Play:1/Sub
-Mini/Roam household and the target cover-art path fixed in 0.1.3. Physical
+Version 0.1.28 retains the adapter validated against a real Sonos household
+and the target cover-art path fixed in 0.1.3. Physical
 testing showed that both the rejected 640 × 480 Mini GFX route and its accepted
 320 × 240 scale route were unsuitable for a complete sharp interface. Miyonos
 now software-rotates its authored 640 × 480 frame directly into the device's
@@ -43,13 +44,11 @@ confirms that Up, Down, Confirm, Back, and Exit are still available. A fixed
 MENU + START three-second chord restores the defaults independently of the
 saved mapping.
 
-Version 0.1.12 adds the saved-playlist browser as a companion view to Queue,
-not a Main Menu entry. It parses each playlist's `albumArtURI`, downloads only
-the selected cover through the existing bounded cache, and displays it beside
-the playlist names. Choosing a playlist clears the active Sonos queue, adds
-the selected saved queue, opens the refreshed queue, seeks to its first track,
-and starts playback. This makes playlist selection a predictable replacement
-instead of leaving tracks from a previous playlist behind.
+Earlier release notes below are retained as historical context. The current
+playlist browser no longer uses Sonos' `SQ:` saved-queue container: in the
+validated household it was empty, while the user's Spotify playlists arrived
+as playlist-shaped Favorites. The current browser therefore filters `FV:2` and
+uses `Q:0` for the simple upcoming-track list.
 
 Now Playing also shows the name of the active Sonos saved playlist when the
 speaker's active-container metadata identifies a playlist. The current track

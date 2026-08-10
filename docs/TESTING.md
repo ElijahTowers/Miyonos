@@ -95,9 +95,10 @@ Render a deterministic UI preview without a display:
       cleanly when fields or actions are unavailable.
 - [ ] Seekable media seeks; non-seekable media explains without track skipping.
 - [ ] Queue pages past 60, page jumps, selection, refresh, and play work. It
-      must match the active Sonos Queue (`Q:`), including after a saved playlist
-      was started. X must switch to Saved Playlists, show the selected cover
-      when supplied, and A must replace—not append to—the active Sonos queue.
+      must match the active Sonos Queue (`Q:0`), including after a Favorite
+      Playlist was started. X must switch to Favorite Playlists, show the
+      selected cover when supplied, and A must replace—not append to—the active
+      Sonos queue.
 - [ ] Favorite and nested favorite container open/play. The selected Favorite
       shows source-provided cover art, or **Cover unavailable** when absent.
 - [ ] With internet access and **External cover art over HTTPS** explicitly on,

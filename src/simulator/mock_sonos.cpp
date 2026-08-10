@@ -94,6 +94,16 @@ std::string didl_item(int identifier) {
          ".mp3</res></item>";
 }
 
+std::string didl_playlist_favorite() {
+  return "<item id=\"FV:2/3\" parentID=\"FV:2\" restricted=\"true\">"
+         "<dc:title>Road Trip Playlist</dc:title>"
+         "<dc:creator>Miyonos Ensemble</dc:creator>"
+         "<upnp:class>object.item.sonos-favorite</upnp:class>"
+         "<upnp:albumArtURI>/getaa?s=1&amp;u=mock</upnp:albumArtURI>"
+         "<res>x-rincon-cpcontainer:1006206cspotify%3Aplaylist%3Aroad-trip</res>"
+         "</item>";
+}
+
 std::string didl_playlist_track(int playlist_id, int identifier) {
   const std::string number = std::to_string(identifier);
   const std::string prefix =
@@ -536,8 +546,8 @@ std::string SimulatorSonosFixture::response_for(
       items = "<container id=\"FV:2/1\" parentID=\"FV:2\">"
               "<dc:title>Morning Collection</dc:title>"
               "<upnp:class>object.container</upnp:class></container>" +
-              didl_item(2);
-      total = count = 2;
+              didl_item(2) + didl_playlist_favorite();
+      total = count = 3;
     } else if (object_id == "SQ:") {
       items = didl_saved_playlist(1) + didl_saved_playlist(2);
       total = count = 2;
@@ -550,9 +560,18 @@ std::string SimulatorSonosFixture::response_for(
                         "</TotalMatches><UpdateID>7</UpdateID>");
   }
   if (action == "AddURIToQueue") {
-    const int playlist_id = saved_playlist_id(field(body, "EnqueuedURI"));
+    const std::string enqueued_uri = field(body, "EnqueuedURI");
+    const int playlist_id = saved_playlist_id(enqueued_uri);
     if (playlist_id > 0 && queue_cleared_) {
       loaded_playlist_id_ = playlist_id;
+      return envelope(action, kAv,
+                      "<FirstTrackNumberEnqueued>1</FirstTrackNumberEnqueued>"
+                      "<NumTracksAdded>8</NumTracksAdded>"
+                      "<NewQueueLength>8</NewQueueLength>");
+    }
+    if (queue_cleared_ &&
+        enqueued_uri.rfind("x-rincon-cpcontainer:", 0) == 0) {
+      loaded_playlist_id_ = 2;
       return envelope(action, kAv,
                       "<FirstTrackNumberEnqueued>1</FirstTrackNumberEnqueued>"
                       "<NumTracksAdded>8</NumTracksAdded>"

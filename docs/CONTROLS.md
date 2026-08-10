@@ -18,12 +18,13 @@ source. All screens use semantic actions rather than raw SDL keys.
 | Select | Refresh | Refresh current screen |
 | Menu | Exit confirmation | Exit confirmation |
 
-In **Queue**, X opens **Saved Playlists**. Queue always shows the current Sonos
-queue exactly; it does not mix in a Saved Playlist browse view. In **Saved
-Playlists**, X returns to Queue. The selected playlist's cover art appears
-beside its name; A replaces the active Sonos queue with that playlist and
-immediately opens Now Playing with the selected playlist name, then begins at
-its first track.
+In **Queue**, X opens **Favorite Playlists**. Queue reads Sonos' `Q:0` track
+container, so it shows the actual upcoming tracks rather than technical queue
+instances. **Favorite Playlists** filters the playlist-shaped Favorites that
+Sonos exposes, including Spotify playlists; X returns to Queue. The selected
+playlist's cover art appears beside its name; A replaces the active Sonos
+queue with that playlist and immediately opens Now Playing with the selected
+playlist name, then begins at its first track.
 
 In **Favorites**, the selected item appears beside its source-provided cover
 art. Folders and providers that do not expose a usable cover show **Cover

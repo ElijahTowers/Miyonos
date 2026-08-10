@@ -32,6 +32,11 @@ bool is_queue_transport_uri(const std::string& uri) {
   return lowercase(uri).rfind("x-rincon-queue:", 0) == 0;
 }
 
+bool is_queue_playback(const PlaybackSnapshot& playback) {
+  return is_queue_transport_uri(playback.transport_uri) ||
+         is_queue_transport_uri(playback.track.uri);
+}
+
 std::string ip_from_octets(const std::array<int, 4>& octets) {
   return std::to_string(octets[0]) + "." + std::to_string(octets[1]) + "." +
          std::to_string(octets[2]) + "." + std::to_string(octets[3]);
@@ -305,10 +310,10 @@ void Controller::request_browse(ListKind kind, const std::string& object_id,
   command.player = *selected;
   command.list_kind = kind;
   command.text = object_id.empty()
-                     ? (kind == ListKind::Queue ? "Q:"
+                     ? (kind == ListKind::Queue ? "Q:0"
                                                  : kind == ListKind::Favorites
                                                        ? "FV:2"
-                                                       : "SQ:")
+                                                       : "FV:2")
                      : object_id;
   command.index = start_index;
   if (start_index == 0) {
@@ -321,7 +326,7 @@ void Controller::request_browse(ListKind kind, const std::string& object_id,
   view_.status = kind == ListKind::Queue
                      ? "Loading queue..."
                      : kind == ListKind::Favorites ? "Loading favorites..."
-                                                   : "Loading Sonos playlists...";
+                                                   : "Loading favorite playlists...";
   enqueue(std::move(command));
 }
 
@@ -579,7 +584,7 @@ void Controller::apply_result(WorkerResult result) {
         // reports the replacement queue (or the same saved-playlist ID).
         const bool replacement_confirmed =
             playlist_start_acknowledged_ &&
-            (is_queue_transport_uri(result.playback.track.uri) ||
+            (is_queue_playback(result.playback) ||
              result.playback.active_playlist_object_id ==
                  pending_playlist_object_id_);
         result.playback.playlist_title = pending_playlist_title_;
@@ -624,7 +629,7 @@ void Controller::apply_result(WorkerResult result) {
                 result.playback.active_playlist_object_id;
             playlist_context_lookup_requested_id_.clear();
           }
-        } else if (is_queue_transport_uri(result.playback.track.uri) &&
+        } else if (is_queue_playback(result.playback) &&
                    !selected_playlist_title_.empty()) {
           // Saved playlists are loaded into Sonos' queue. Some players omit
           // the saved-playlist metadata for that queue, so retain the title
@@ -718,6 +723,16 @@ void Controller::apply_result(WorkerResult result) {
         view_.error = result.text;
         show_toast("Could not load this list.");
         break;
+      }
+      if (result.list_kind == ListKind::Playlists) {
+        auto& items = result.browse.items;
+        items.erase(std::remove_if(items.begin(), items.end(),
+                                   [](const BrowseItem& item) {
+                                     return !is_playlist_favorite(item);
+                                   }),
+                    items.end());
+        result.browse.number_returned = items.size();
+        result.browse.total_matches = items.size();
       }
       auto* target = result.list_kind == ListKind::Queue
                          ? &view_.queue
@@ -1066,13 +1081,15 @@ void Controller::activate() {
       } else {
         const Player* selected = coordinator();
         if (!selected) break;
+        const bool playlist_favorite =
+            from_playlists || is_playlist_favorite(item);
         Command command;
-        command.type = from_playlists ? CommandType::PlaySavedPlaylist
-                                      : CommandType::PlayItem;
+        command.type = CommandType::PlayItem;
         command.player = *selected;
         command.item = item;
-        command.replaces_playlist_context = true;
-        if (from_playlists) {
+        command.replace_queue = playlist_favorite;
+        command.replaces_playlist_context = playlist_favorite;
+        if (playlist_favorite) {
           command.playlist_title = item.title;
           command.playlist_object_id = item.id;
         }
@@ -1080,9 +1097,9 @@ void Controller::activate() {
             item.uri.rfind("x-sonosapi-stream:", 0) == 0;
         const bool queued = enqueue(std::move(command));
         view_.busy = queued;
-        if (queued && from_playlists) {
-          // Show the selected playlist at once instead of waiting for Sonos'
-          // next metadata poll. Some players expose only a queue URI there.
+        if (queued && playlist_favorite) {
+          // Playlist Favorites load into Sonos' generic queue, whose metadata
+          // often does not retain the source playlist title.
           pending_playlist_title_ = item.title;
           pending_playlist_object_id_ = item.id;
           playlist_title_before_start_ = view_.playback.playlist_title;
@@ -1717,7 +1734,8 @@ void Controller::worker_loop() {
         result.context_id = command.playlist_object_id;
         break;
       case CommandType::PlayItem:
-        action(adapter.play_item(command.player, command.item),
+        action(adapter.play_item(command.player, command.item,
+                                 command.replace_queue),
                command.item.uri.rfind("x-sonosapi-stream:", 0) == 0
                    ? "Station started"
                    : "Item started");

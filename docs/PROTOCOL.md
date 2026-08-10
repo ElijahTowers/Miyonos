@@ -35,10 +35,12 @@ afterward and the UI changes only from the confirmed response.
   relative-time and track-number seek, URI playback, join, and leave.
 - `RenderingControl`: player volume and mute.
 - `GroupRenderingControl`: group volume and mute when the service is present.
-- `ContentDirectory`: Queue (`Q:`), Favorites (`FV:2`), and saved playlists
-  (`SQ:`), 60 items per page and at most 240 loaded per list. The Queue screen
-  always reads `Q:`, so it matches the active Sonos queue exactly. Saved-playlist
-  browse metadata includes `albumArtURI` when Sonos provides one.
+- `ContentDirectory`: Queue tracks (`Q:0`) and Favorites (`FV:2`), 60 items
+  per page and at most 240 loaded per list. Real players can return technical
+  queue-instance entries from `Q:`, so the Queue screen reads `Q:0` to show
+  actual upcoming tracks. The Queue X view filters playlist-shaped Favorites,
+  including Spotify playlists; browse metadata includes `albumArtURI` when
+  Sonos provides one.
 - HTTP GET: bounded artwork retrieval, including Sonos-relative `/getaa` URLs.
   JPEG and PNG covers are cached locally and decoded by the bundled target
   image runtime. **External cover art over HTTPS** is an optional, default-off
@@ -55,10 +57,11 @@ identifier is retained separately from current-track metadata. Position polls
 are roughly 1–3 seconds while playing depending on settings and slower while
 paused.
 
-Starting a saved playlist is intentionally a replacement operation: Miyonos
-calls `RemoveAllTracksFromQueue`, adds the selected saved-queue URI, opens the
-coordinator queue, seeks to the first returned position, and starts playback.
-This prevents songs from an earlier playlist remaining in the active queue.
+Starting a playlist-shaped Favorite is intentionally a replacement operation:
+Miyonos calls `RemoveAllTracksFromQueue`, adds the selected Favorite URI,
+opens the coordinator queue, seeks to the first returned position, and starts
+playback. This prevents songs from an earlier playlist remaining in the active
+queue.
 Sonos can report UPnP 804 for an already-empty queue; Miyonos treats that as
 the required clean state and continues loading the selected playlist.
 

@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.28 — Real Sonos playlist and queue routing
+
+- Queue now reads Sonos' track container `Q:0`, rather than the `Q:` index
+  that real players return as technical queue instances. It therefore shows
+  the actual upcoming tracks.
+- Queue's X view now lists Spotify and other playlist-shaped Sonos Favorites,
+  which is where the tested household exposes its playlists. Selecting one
+  replaces the active queue, opens Now Playing immediately, and retains the
+  selected playlist name while Sonos reports its generic queue transport.
+- Uses the transport URI from `GetMediaInfo` to distinguish the generic Sonos
+  queue from a direct track URI, keeping playlist context stable for Spotify
+  playback.
+
 ## 0.1.27 — Immediate playlist Now Playing
 
 - Selecting a Saved Playlist now opens Now Playing immediately and shows the

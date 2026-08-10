@@ -539,7 +539,7 @@ void Renderer::media_list(const ViewState& view,
   }
   hints("B  Back    D-Pad  Browse",
         view.screen == Screen::Queue
-            ? "A  Play    X  Saved playlists"
+            ? "A  Play    X  Favorite playlists"
             : "A  Open/Play    SELECT  Refresh");
 }
 
@@ -606,13 +606,13 @@ void Renderer::favorites(const ViewState& view) {
 }
 
 void Renderer::playlists(const ViewState& view) {
-  status_bar(view, "Saved Playlists");
+  status_bar(view, "Favorite Playlists");
   if (view.playlists.empty()) {
     const bool failed = !view.busy && !view.error.empty();
     font_.draw_centered(
-        view.busy ? "Loading saved playlists..."
-                   : failed ? "Could not load saved playlists"
-                            : "No saved playlists found",
+        view.busy ? "Loading favorite playlists..."
+                   : failed ? "Could not load favorite playlists"
+                            : "No favorite playlists found",
         204, 2, kCream);
     font_.draw_centered(view.busy ? view.status : "Press SELECT to retry", 246,
                         1, kMuted);
@@ -640,7 +640,7 @@ void Renderer::playlists(const ViewState& view) {
     font_.draw(clipped(item.title.empty() ? "Untitled playlist" : item.title,
                        36),
                24, y, 2, main, 350);
-    const std::string detail = item.album.empty() ? "Saved Sonos playlist"
+    const std::string detail = item.album.empty() ? "Sonos favorite playlist"
                                                    : item.album;
     font_.draw(clipped(detail, 48), 24, y + 25, 1, sub, 350);
   }
@@ -667,7 +667,7 @@ void Renderer::menu(const ViewState& view) {
                                  strings::kMainMenu.end());
   std::vector<std::string> descriptions = {
       "Choose a room or edit groups", "Browse and start the active queue",
-      "Start a saved Sonos favorite", "Change Miyonos behavior",
+      "Browse and start Sonos favorites", "Change Miyonos behavior",
       "Controls and connection help", "Version, license, and disclaimer",
       "Local connection and cache details"};
   list_rows(names, descriptions, view.selection);
@@ -771,7 +771,7 @@ void Renderer::help(const ViewState& view) {
       "B  Back or cancel",
       "D-Pad Up/Down  Selected target volume or list selection",
       "D-Pad Left/Right  Previous/next track or page",
-      "X  Mute, or switch Queue and saved playlists",
+      "X  Mute, or switch Queue and favorite playlists",
       "Y  Rooms & Groups",
       "L1/R1  Previous/next speaker or group volume",
       "L2/R2  Queue/favorites",

@@ -86,6 +86,7 @@ struct PlaybackSnapshot {
   Track track;
   std::string playlist_title;
   std::string active_playlist_object_id;
+  std::string transport_uri;
   int volume = 0;
   bool muted = false;
   bool group_volume = false;

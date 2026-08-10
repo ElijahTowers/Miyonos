@@ -128,8 +128,16 @@ void test_content_scenarios() {
     CHECK(replaced_queue.value.items.front().title == "Road Trip Track 1");
     auto favorites = adapter.browse(players.front(), "FV:2", 0, 60);
     CHECK(favorites.ok());
-    CHECK(favorites.value.items.size() == 2);
+    CHECK(favorites.value.items.size() == 3);
     CHECK(favorites.value.items.back().artwork_uri == "/getaa?s=1&u=mock");
+    CHECK(is_playlist_favorite(favorites.value.items.back()));
+    CHECK(adapter.play_item(players.front(), favorites.value.items.back(), true)
+              .ok());
+    auto favorite_replaced_queue = adapter.browse(players.front(), "Q:0", 0, 60);
+    CHECK(favorite_replaced_queue.ok());
+    CHECK(favorite_replaced_queue.value.total_matches == 8);
+    CHECK(favorite_replaced_queue.value.items.front().title ==
+          "Road Trip Track 1");
   }
   {
     Session session("no-artwork");

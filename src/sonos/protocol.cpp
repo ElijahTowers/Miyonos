@@ -502,6 +502,13 @@ bool is_saved_playlist_container(const Track& track) {
          uri.find("savedqueues.rsq") != std::string::npos;
 }
 
+bool is_playlist_favorite(const BrowseItem& item) {
+  if (item.uri.rfind("x-rincon-cpcontainer:", 0) != 0) return false;
+  const std::string description =
+      lowercase(item.uri + " " + item.metadata + " " + item.item_class);
+  return description.find("playlist") != std::string::npos;
+}
+
 namespace {
 
 void merge_missing_media_metadata(Track& track, const Track& media_track) {
@@ -785,6 +792,8 @@ ProtocolResult<PlaybackSnapshot> SonosAdapter::get_playback(
   const auto media =
       soap(coordinator, "AVTransport", "GetMediaInfo", {{"InstanceID", "0"}});
   if (media.ok()) {
+    result.value.transport_uri = capped(response_value(media.value, "CurrentURI"),
+                                        4096);
     const Track media_track =
         parse_didl_track(response_value(media.value, "CurrentURIMetaData"));
     if (is_saved_playlist_container(media_track)) {
@@ -941,7 +950,8 @@ ProtocolResult<bool> SonosAdapter::set_mute(const Player& player, bool muted,
 }
 
 ProtocolResult<bool> SonosAdapter::play_item(const Player& coordinator,
-                                              const BrowseItem& item) {
+                                              const BrowseItem& item,
+                                              bool replace_queue) {
   if (!item.playable || item.uri.empty()) {
     return {false, "This item type is not supported yet.", 0};
   }
@@ -956,13 +966,22 @@ ProtocolResult<bool> SonosAdapter::play_item(const Player& coordinator,
   };
 
   if (item.uri.rfind("x-rincon-cpcontainer:", 0) == 0) {
+    if (replace_queue) {
+      // A playlist Favorite must replace, not append to, the existing queue.
+      // Otherwise tracks from the previous playlist remain in the next-up list.
+      auto cleared = soap(coordinator, "AVTransport", "RemoveAllTracksFromQueue",
+                          {{"InstanceID", "0"}});
+      if (!cleared.ok() && cleared.upnp_error_code != 804) {
+        return failure("Clearing the current queue", cleared);
+      }
+    }
     auto added = soap(
         coordinator, "AVTransport", "AddURIToQueue",
         {{"InstanceID", "0"},
          {"EnqueuedURI", item.uri},
          {"EnqueuedURIMetaData", item.metadata},
          {"DesiredFirstTrackNumberEnqueued", "0"},
-         {"EnqueueAsNext", "1"}});
+         {"EnqueueAsNext", replace_queue ? "0" : "1"}});
     if (!added.ok()) return failure("Adding this favorite to the queue", added);
     const int first_track =
         to_int(response_value(added.value, "FirstTrackNumberEnqueued"));

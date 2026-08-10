@@ -370,6 +370,7 @@ void test_live_mock_if_requested() {
   CHECK(playback.value.track.artwork_uri == "/getaa?s=1&u=mock");
   CHECK(playback.value.playlist_title == "Weekend Playlist");
   CHECK(playback.value.active_playlist_object_id == "SQ:1");
+  CHECK(playback.value.transport_uri == "x-rincon-queue:RINCON_LIVING#0");
   CHECK(playback.value.volume == 28);
   CHECK(playback.value.track.seekable);
   auto speaker_volume = adapter.get_speaker_volume(*mock_player);
@@ -402,8 +403,14 @@ void test_live_mock_if_requested() {
   CHECK(replaced_queue.value.items.front().title == "Road Trip Track 1");
   auto favorites = adapter.browse(*mock_player, "FV:2", 0, 60);
   CHECK(favorites.ok());
-  CHECK(favorites.value.items.size() == 2);
+  CHECK(favorites.value.items.size() == 3);
   CHECK(favorites.value.items.back().artwork_uri == "/getaa?s=1&u=mock");
+  CHECK(is_playlist_favorite(favorites.value.items.back()));
+  CHECK(adapter.play_item(*mock_player, favorites.value.items.back(), true).ok());
+  auto favorite_replaced_queue = adapter.browse(*mock_player, "Q:0", 0, 60);
+  CHECK(favorite_replaced_queue.ok());
+  CHECK(favorite_replaced_queue.value.total_matches == 8);
+  CHECK(favorite_replaced_queue.value.items.front().title == "Road Trip Track 1");
   BrowseItem container_favorite;
   container_favorite.playable = true;
   container_favorite.uri = "x-rincon-cpcontainer:1006206cfavorite";
@@ -514,16 +521,25 @@ void test_live_mock_if_requested() {
   const auto playback_deadline = std::chrono::steady_clock::now() +
                                  std::chrono::seconds(3);
   while (std::chrono::steady_clock::now() < playback_deadline &&
-         controller.view().playback.track.uri.rfind("x-rincon-queue:", 0) !=
-             0) {
+         controller.view().playback.transport_uri.rfind("x-rincon-queue:",
+                                                         0) != 0) {
     controller.update();
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
   }
-  CHECK(controller.view().playback.track.uri.rfind("x-rincon-queue:", 0) ==
-        0);
+  CHECK(controller.view().playback.transport_uri.rfind("x-rincon-queue:",
+                                                        0) == 0);
   CHECK(controller.view().playback.playlist_title == selected_playlist);
   controller.handle(Action::Queue);
+  const auto queue_deadline = std::chrono::steady_clock::now() +
+                              std::chrono::seconds(3);
+  while (std::chrono::steady_clock::now() < queue_deadline &&
+         controller.view().queue.empty()) {
+    controller.update();
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+  }
   CHECK(controller.view().screen == Screen::Queue);
+  CHECK(!controller.view().queue.empty());
+  CHECK(controller.view().queue.front().title == "Road Trip Track 1");
   controller.handle(Action::Context);
   CHECK(controller.view().screen == Screen::Playlists);
   controller.handle(Action::Context);

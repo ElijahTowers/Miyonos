@@ -134,6 +134,7 @@ class Controller {
     std::string playlist_object_id;
     int value = 0;
     bool flag = false;
+    bool replace_queue = false;
     bool replaces_playlist_context = false;
     ArtworkTarget artwork_target = ArtworkTarget::NowPlaying;
     std::size_t index = 0;
@@ -243,9 +244,9 @@ class Controller {
   std::string last_playlist_artwork_url_;
   std::map<std::string, SpeakerVolume> speaker_volumes_;
   std::map<Screen, int> selections_;
-  std::string queue_object_ = "Q:";
+  std::string queue_object_ = "Q:0";
   std::string favorites_object_ = "FV:2";
-  std::string playlists_object_ = "SQ:";
+  std::string playlists_object_ = "FV:2";
   PendingConfirmation pending_confirmation_ = PendingConfirmation::None;
 };
 

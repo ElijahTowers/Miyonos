@@ -288,8 +288,16 @@ class Handler(http.server.BaseHTTPRequestHandler):
                     "x-sonosapi-stream:station",
                     "0:00:00",
                 )
+                + didl_item(
+                    "FV:2/3",
+                    "Road Trip Playlist",
+                    "Miyonos Ensemble",
+                    "",
+                    "x-rincon-cpcontainer:1006206cspotify%3Aplaylist%3Aroad-trip",
+                    "0:00:00",
+                )
             )
-            total = 2
+            total = 3
         elif object_id == "FV:2/1":
             items = didl_item(
                 "FV:2/1/1",
@@ -426,9 +434,19 @@ class Handler(http.server.BaseHTTPRequestHandler):
             State.loaded_playlist_id = 0
             response = envelope(action, AV)
         elif action == "AddURIToQueue":
-            playlist_id = saved_playlist_id(self.field(body, "EnqueuedURI"))
+            enqueued_uri = self.field(body, "EnqueuedURI")
+            playlist_id = saved_playlist_id(enqueued_uri)
             if playlist_id and State.queue_cleared:
                 State.loaded_playlist_id = playlist_id
+                response = envelope(
+                    action,
+                    AV,
+                    "<FirstTrackNumberEnqueued>1</FirstTrackNumberEnqueued>"
+                    "<NumTracksAdded>8</NumTracksAdded><NewQueueLength>8</NewQueueLength>",
+                )
+            elif (State.queue_cleared and
+                  enqueued_uri.startswith("x-rincon-cpcontainer:")):
+                State.loaded_playlist_id = 2
                 response = envelope(
                     action,
                     AV,
