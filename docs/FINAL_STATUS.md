@@ -19,8 +19,9 @@ logs. Queue reads Sonos' actual `Q:0` track container rather than its technical
 queue-instance container. X in Queue opens **Favorite Playlists**, which
 filters playlist-shaped Sonos Favorites (including Spotify playlists); A
 replaces the active queue, opens Now Playing immediately, and retains the
-selected playlist name. Queue rows show compact source-provided cover art for
-the visible tracks, loading at most one uncached image at a time. It uses no
+selected playlist name. Queue keeps its numbered tracks on the left and shows
+the selected source-provided cover art on the right, loading at most one
+uncached image at a time. It uses no
 Miyonos account, cloud service, API key, analytics, or Sonos cloud
 authorization.
 
@@ -31,9 +32,10 @@ testing showed that both the rejected 640 × 480 Mini GFX route and its accepted
 now software-rotates its authored 640 × 480 frame directly into the device's
 double-buffered ARGB framebuffer, bypassing the unreliable hardware blitter.
 It retains the safe display probe and two-press Menu emergency exit. It also
-distinguishes direct stream favorites from collection favorites, adding the
-latter through Sonos' advertised queue action before selecting and playing the
-returned position. Detailed, privacy-sanitized Sonos evidence is in
+distinguishes direct stream favorites from collection favorites: playlist
+favorites replace the active queue, while large non-playlist collections open
+directly without trying to expand every item into the queue. Detailed,
+privacy-sanitized Sonos evidence is in
 [LIVE_SONOS_VALIDATION.md](LIVE_SONOS_VALIDATION.md).
 
 The Now Playing D-pad Left/Right actions select the previous/next track. L1/R1
@@ -41,6 +43,9 @@ now cycles the volume target through Group and every controllable speaker in
 the active group; D-pad Up/Down changes only that target. Group uses Sonos'
 group-volume service when available, while an individual target uses its own
 `RenderingControl` volume. X remains the existing group mute control.
+The Main Menu's Speaker Volumes screen presents every available member of the
+selected group together, with its individual volume, mute state, room name, and
+a local model-specific illustration. It never downloads product images.
 All 15 physical Miyoo controls can be reassigned from Settings, including
 separate seek actions and No action. Edits remain staged until a safety check
 confirms that Up, Down, Confirm, Back, and Exit are still available. A fixed

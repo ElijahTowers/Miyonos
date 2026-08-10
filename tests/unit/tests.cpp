@@ -462,17 +462,36 @@ void test_live_mock_if_requested() {
   CHECK(controller.view().controls_overlay);
   controller.handle(Action::Back);
   CHECK(!controller.view().controls_overlay);
-  const Screen menu_screens[] = {Screen::Rooms, Screen::Queue,
-                                 Screen::Favorites, Screen::Settings,
-                                 Screen::Help, Screen::About,
-                                 Screen::Diagnostics};
-  for (int i = 0; i < 7; ++i) {
+  const Screen menu_screens[] = {Screen::Rooms, Screen::Speakers,
+                                 Screen::Queue, Screen::Favorites,
+                                 Screen::Settings, Screen::Help,
+                                 Screen::About, Screen::Diagnostics};
+  for (int i = 0; i < 8; ++i) {
     controller.handle(Action::Menu);
     CHECK(controller.view().screen == Screen::Menu);
     controller.handle(Action::Previous);
     for (int row = 0; row < i; ++row) controller.handle(Action::Down);
     controller.handle(Action::Confirm);
     CHECK(controller.view().screen == menu_screens[i]);
+    if (menu_screens[i] == Screen::Speakers) {
+      const auto speakers_deadline = std::chrono::steady_clock::now() +
+                                     std::chrono::seconds(3);
+      while (std::chrono::steady_clock::now() < speakers_deadline &&
+             controller.view().speaker_volumes.size() < 2) {
+        controller.update();
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+      }
+      CHECK(controller.view().speaker_volumes.size() >= 2);
+      controller.handle(Action::Right);
+      CHECK(controller.view().selection == 1);
+      controller.handle(Action::Down);
+      CHECK(controller.view().speaker_volume >= 0);
+      const bool muted_before = controller.view().speaker_muted;
+      controller.handle(Action::Confirm);
+      CHECK(controller.view().speaker_muted != muted_before);
+      controller.handle(Action::Left);
+      CHECK(controller.view().selection == 0);
+    }
     controller.handle(Action::Back);
     CHECK(controller.view().screen == Screen::Menu);
     controller.handle(Action::Back);
@@ -485,7 +504,7 @@ void test_live_mock_if_requested() {
   controller.handle(Action::Back);
   controller.handle(Action::Menu);
   controller.handle(Action::Previous);
-  for (int row = 0; row < 3; ++row) controller.handle(Action::Down);
+  for (int row = 0; row < 4; ++row) controller.handle(Action::Down);
   controller.handle(Action::Confirm);
   controller.handle(Action::Previous);
   for (int row = 0; row < 9; ++row) controller.handle(Action::Down);

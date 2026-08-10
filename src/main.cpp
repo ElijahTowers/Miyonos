@@ -47,6 +47,7 @@ int main(int argc, char** argv) {
   bool live_sonos = false;
   bool show_controls = false;
   bool show_queue = false;
+  bool show_speakers = false;
   bool show_playlist = false;
   bool show_playlist_tail = false;
   bool data_directory_explicit = std::getenv("MIYONOS_DATA_DIR") != nullptr;
@@ -62,6 +63,7 @@ int main(int argc, char** argv) {
   constexpr bool live_sonos = false;
   constexpr bool show_controls = false;
   constexpr bool show_queue = false;
+  constexpr bool show_speakers = false;
   constexpr bool show_playlist = false;
   constexpr bool show_playlist_tail = false;
   constexpr uint32_t capture_after_ms = 0;
@@ -101,6 +103,9 @@ int main(int argc, char** argv) {
     } else if (argument == "--show-queue") {
       simulator = true;
       show_queue = true;
+    } else if (argument == "--show-speakers") {
+      simulator = true;
+      show_speakers = true;
     } else if (argument == "--show-playlist") {
       simulator = true;
       show_playlist = true;
@@ -133,6 +138,7 @@ int main(int argc, char** argv) {
       std::cout
           << "       miyonos --simulator [--scenario NAME] "
              "[--live-sonos] [--screen-only] [--show-controls] [--show-queue] "
+             "[--show-speakers] "
              "[--show-playlist] [--show-playlist-tail]\n"
           << "Test capture: [--capture-frame PATH] [--capture-shell PATH] "
              "[--capture-after-ms N]\n";
@@ -274,7 +280,8 @@ int main(int argc, char** argv) {
       }
       miyonos::AppRuntime runtime(
           {mode, data_directory, capture_path, capture_shell_path,
-           scenario, live_sonos, show_controls, show_queue, show_playlist,
+           scenario, live_sonos, show_controls, show_queue, show_speakers,
+           show_playlist,
            show_playlist_tail, capture_after_ms});
       exit_status = runtime.run(frames);
     }

@@ -74,11 +74,13 @@ simulated battery reading to compare a deterministic 640 × 480 BMP against its
 approved SHA-256 reference. It also restarts against the same isolated SD-card
 tree, verifies settings persistence, captures offline behavior, and confirms
 that the local fixture leaves no listener behind. It includes the Controls
-overlay, Queue and active-playlist layouts, and the tail of a mixed Favorite
-Playlists collection to guard against paging regressions. The current
-254-check controller suite automatically visits
-Now Playing, Rooms, Group Editor, Queue, Favorites, Settings, Help, About,
-Diagnostics, IP Editor, action confirmation, and exit confirmation.
+overlay, Queue, Speaker Volumes, and active-playlist layouts, and the tail of
+a mixed Favorite Playlists collection to guard against paging regressions. The
+current
+263-check controller suite automatically visits
+Now Playing, Rooms, Group Editor, Speaker Volumes, Queue, Favorites, Settings,
+Help, About, Diagnostics, IP Editor, action confirmation, and exit
+confirmation.
 
 Render a deterministic UI preview without a display:
 
@@ -99,7 +101,7 @@ Render a deterministic UI preview without a display:
       cleanly when fields or actions are unavailable.
 - [ ] Seekable media seeks; non-seekable media explains without track skipping.
 - [ ] Queue pages past 60, page jumps, selection, refresh, play, and the
-      visible per-track cover thumbnails work. Covers must load lazily without
+      selected track cover on the right work. Covers must load lazily without
       making controls unresponsive. It
       must match the active Sonos Queue (`Q:0`), including after a Favorite
       Playlist was started. X must switch to Favorite Playlists, show the
@@ -116,6 +118,10 @@ Render a deterministic UI preview without a display:
       Turn the setting off again and confirm no internet request is made.
 - [ ] Unsupported favorite shows the explicit unsupported message.
 - [ ] Join and remove a room refreshes topology and retains a coordinator.
+- [ ] Speaker Volumes shows every available member of the selected group with
+      the correct room, model illustration, mute state, and individual volume.
+      Left/Right and L1/R1 change the selection; Up/Down and A affect only the
+      selected speaker.
 - [ ] Speaker reboot and router reconnect recover without restarting Miyonos.
 - [ ] Sleep/dim settings and `/tmp/stay_awake` behavior are correct.
 - [ ] Menu exit, signal exit, and an induced crash all resume Onion MainUI.

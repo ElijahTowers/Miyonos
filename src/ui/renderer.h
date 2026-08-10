@@ -26,6 +26,7 @@ class Renderer {
   void discovery(const ViewState& view);
   void now_playing(const ViewState& view, const Settings& settings);
   void rooms(const ViewState& view, bool editor);
+  void speakers(const ViewState& view);
   void media_list(const ViewState& view, const std::vector<BrowseItem>& items,
                   const std::string& title);
   void queue_list(const ViewState& view);
@@ -49,6 +50,7 @@ class Renderer {
   void draw_artwork(const std::string& path, const SDL_Rect& area);
   void draw_queue_thumbnail(const std::string& path, const SDL_Rect& area);
   void draw_queue_thumbnail_fallback(const SDL_Rect& area);
+  void draw_speaker_model(const Player& player, const SDL_Rect& area);
   void draw_marquee(const std::string& text, int x, int y, int scale,
                     SDL_Color color, int width, uint64_t now);
   std::string setting_value(int index, const Settings& settings) const;

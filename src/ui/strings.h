@@ -13,9 +13,9 @@ inline constexpr const char* kDisclaimer =
     "Miyonos is an independent community project and is not affiliated with "
     "or endorsed by Sonos, Inc. or the OnionOS project.";
 
-inline constexpr std::array<const char*, 7> kMainMenu = {
-    "Rooms & Groups", "Queue", "Favorites", "Settings",
-    "Help",           "About", "Diagnostics"};
+inline constexpr std::array<const char*, 8> kMainMenu = {
+    "Rooms & Groups", "Speaker Volumes", "Queue", "Favorites",
+    "Settings",       "Help",            "About", "Diagnostics"};
 
 inline constexpr std::array<const char*, 17> kSettings = {
     "Startup room or group", "Sonos volume step", "Seek interval",

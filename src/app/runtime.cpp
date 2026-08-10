@@ -47,6 +47,7 @@ int AppRuntime::run(FramePresenter& frames) {
 #ifdef MIYONOS_ENABLE_SIMULATOR
   bool controls_shown = false;
   bool queue_opened = false;
+  bool speakers_shown = false;
   bool playlist_started = false;
   bool playlist_tail_opened = false;
 #endif
@@ -88,6 +89,16 @@ int AppRuntime::run(FramePresenter& frames) {
         controller.view().screen == Screen::NowPlaying) {
       controller.handle(Action::Queue);
       queue_opened = true;
+    }
+    if (options_.show_speakers_on_start && !speakers_shown) {
+      if (controller.view().screen == Screen::NowPlaying) {
+        controller.handle(Action::Menu);
+      } else if (controller.view().screen == Screen::Menu) {
+        controller.handle(Action::Previous);
+        controller.handle(Action::Down);
+        controller.handle(Action::Confirm);
+        speakers_shown = true;
+      }
     }
     if (options_.show_playlist_on_start && !playlist_started) {
       if (controller.view().screen == Screen::NowPlaying) {

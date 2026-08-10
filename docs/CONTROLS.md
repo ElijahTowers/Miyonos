@@ -20,22 +20,30 @@ source. All screens use semantic actions rather than raw SDL keys.
 
 In **Queue**, X opens **Favorite Playlists**. Queue reads Sonos' `Q:0` track
 container, so it shows the actual upcoming tracks rather than technical queue
-instances. Each visible Queue row shows its own source-provided cover-art
-thumbnail when available; covers are fetched lazily, one at a time, and use
-the existing bounded artwork cache. **Favorite Playlists** filters the playlist-shaped Favorites that
-Sonos exposes, including Spotify playlists; X returns to Queue. The selected
-playlist's cover art appears beside its name; A replaces the active Sonos
-queue with that playlist and immediately opens Now Playing with the selected
-playlist name, then begins at its first track. The playlist name remains on
-Now Playing while that queue advances through later tracks. Its cover and name
-also remain in the dedicated lower-right playlist block, separate from the
-current track cover.
+instances. It uses the same readable layout as Favorites: numbered track rows
+on the left and the selected track's source-provided cover art on the right.
+Covers are fetched lazily, one at a time, and use the existing bounded artwork
+cache. **Favorite Playlists** filters the playlist-shaped Favorites that Sonos
+exposes, including Spotify playlists; X returns to Queue. The selected
+playlist's cover art appears beside its name; A replaces the active Sonos queue
+with that playlist and immediately opens Now Playing with the selected playlist
+name, then begins at its first track. The playlist name remains on Now Playing
+while that queue advances through later tracks. Its cover and name also remain
+in the dedicated lower-right playlist block, separate from the current track
+cover.
 
 In **Favorites**, the selected item appears beside its source-provided cover
 art. Folders and providers that do not expose a usable cover show **Cover
 unavailable** instead. When enabled, supported Sonos Radio/TuneIn station
 logos use the same bounded cache. L1/R1 always cycles Group together with
 the visible individual speakers; Up/Down changes the currently shown target.
+
+**Speaker Volumes** in the Main Menu is a group overview. It shows each
+available speaker in the selected group with its room name, current individual
+volume, mute state, and a built-in illustration based on its Sonos model.
+No speaker or product image is downloaded. Use Left/Right or L1/R1 to choose a
+speaker, Up/Down to change that speaker's volume, A to mute or unmute it, and
+Select to refresh the displayed values.
 
 For Spotify Favorites and supported Sonos Radio stations that provide only a
 public HTTPS cover, turn on **Settings → External cover art over HTTPS**. This

@@ -27,6 +27,12 @@ Starting one replaces the active Sonos queue before playback begins. Individual 
 services can still impose their own source-specific restrictions; Miyonos does
 not bypass those restrictions.
 
+The Main Menu also includes **Speaker Volumes**, a local visual overview of
+every available speaker in the selected group. It uses built-in illustrations
+matched to the discovered Sonos model, never web-hosted product images. It
+shows each speaker's individual volume and mute state; Left/Right or L1/R1
+selects a speaker, Up/Down adjusts only that speaker, and A toggles its mute.
+
 Favorites uses the same source-provided artwork policy: its selected entry
 shows a bounded cached cover when Sonos supplies one, otherwise **Cover
 unavailable**. Spotify Favorites and Sonos Radio stations can provide a public

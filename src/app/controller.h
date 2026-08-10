@@ -23,6 +23,7 @@ enum class Screen {
   NowPlaying,
   Rooms,
   GroupEditor,
+  Speakers,
   Queue,
   Favorites,
   Playlists,
@@ -61,6 +62,7 @@ struct ViewState {
   bool group_volume_target = false;
   int speaker_volume = -1;
   bool speaker_muted = false;
+  std::map<std::string, SpeakerVolume> speaker_volumes;
   std::string status = "Starting Miyonos...";
   std::string toast;
   std::string error;
@@ -201,6 +203,7 @@ class Controller {
   void request_topology();
   void request_poll();
   void request_speaker_volume();
+  void request_group_speaker_volumes();
   void request_selected_favorite_artwork();
   void request_selected_playlist_artwork();
   void request_now_playing_playlist_artwork(const BrowseItem& playlist);
@@ -220,6 +223,9 @@ class Controller {
   const Player* coordinator() const;
   const Player* volume_target() const;
   void cycle_volume_target(int direction);
+  void focus_speaker_card();
+  void adjust_speaker_card_volume(int direction);
+  void toggle_speaker_card_mute();
   void navigate(Screen screen);
   void switch_queue_playlist();
   void back();

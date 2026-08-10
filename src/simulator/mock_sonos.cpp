@@ -417,12 +417,18 @@ std::string SimulatorSonosFixture::response_for(
     }
     std::string room;
     std::string uuid;
+    std::string model;
+    std::string model_number;
     if (path == "/xml/device_description.xml") {
       room = "Living Room";
       uuid = "RINCON_LIVING";
+      model = "Sonos Beam";
+      model_number = "S14";
     } else if (path == "/xml/kitchen_device_description.xml") {
       room = "Kitchen";
       uuid = "RINCON_KITCHEN";
+      model = "Sonos Roam";
+      model_number = "S27";
     } else {
       status = 404;
       return "Missing fixture resource";
@@ -431,8 +437,9 @@ std::string SimulatorSonosFixture::response_for(
            "xmlns=\"urn:schemas-upnp-org:device-1-0\"><URLBase>"
            "http://127.0.0.1:1400</URLBase><device><friendlyName>" +
            room + "</friendlyName><roomName>" + room +
-           "</roomName><modelName>Sonos Mock</modelName><modelNumber>M1"
-           "</modelNumber><serialNum>00-00</serialNum><softwareVersion>99.0"
+           "</roomName><modelName>" + model + "</modelName><modelNumber>" +
+           model_number + "</modelNumber><serialNum>00-00</serialNum>"
+           "<softwareVersion>99.0"
            "</softwareVersion><UDN>uuid:" + uuid +
            "</UDN><serviceList>" +
            service(kAv, "AVTransport", "/MediaRenderer/AVTransport/Control") +

@@ -60,6 +60,23 @@ EXPECTED_QUEUE="$(awk '$1 == "queue-layout.bmp" {print $2}' "$REFERENCE")"
 }
 file "$OUTPUT/queue-layout.bmp" | grep -q '640 x 480 x 32'
 
+SPEAKERS_DATA="$RUN_ROOT/speakers/SDCARD/App/Miyonos/data"
+mkdir -p "$SPEAKERS_DATA"
+printf 'schema_version=2\nvolume_step=3\nconfirm_exit=1\n' > "$SPEAKERS_DATA/settings.ini"
+MIYONOS_SCREENSHOT_TIME_MS=1000 SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
+  "$BUILD/miyonos" --screen-only --show-speakers --scenario grouped \
+  --data-dir "$SPEAKERS_DATA" --capture-after-ms 6000 \
+  --capture-frame "$OUTPUT/speakers-overview.bmp"
+SPEAKERS_FRAME="$(shasum -a 256 "$OUTPUT/speakers-overview.bmp" | awk '{print $1}')"
+EXPECTED_SPEAKERS="$(awk '$1 == "speakers-overview.bmp" {print $2}' "$REFERENCE")"
+[[ "$SPEAKERS_FRAME" == "$EXPECTED_SPEAKERS" ]] || {
+  echo "The Speaker Volumes reference image changed." >&2
+  echo "Expected: ${EXPECTED_SPEAKERS:-missing}" >&2
+  echo "Actual:   $SPEAKERS_FRAME" >&2
+  exit 1
+}
+file "$OUTPUT/speakers-overview.bmp" | grep -q '640 x 480 x 32'
+
 MIYONOS_SCREENSHOT_TIME_MS=1000 SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
   "$BUILD/miyonos" --screen-only --show-playlist --scenario grouped \
   --data-dir "$DATA_DIR" --capture-after-ms 6000 \

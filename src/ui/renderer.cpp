@@ -598,6 +598,159 @@ void Renderer::rooms(const ViewState& view, bool editor) {
   hints("B  Back", editor ? "A  Toggle room" : "A  Select    X  Group editor");
 }
 
+void Renderer::draw_speaker_model(const Player& player, const SDL_Rect& area) {
+  fill(renderer_, area, kPanel);
+  const std::string model =
+      lowercase(player.model_name + " " + player.model_number);
+  const SDL_Color body = kCream;
+  const SDL_Color detail = kPanelLight;
+  const SDL_Color accent = kMint;
+
+  const bool soundbar = model.find("arc") != std::string::npos ||
+                        model.find("beam") != std::string::npos ||
+                        model.find("playbar") != std::string::npos ||
+                        model.find("playbase") != std::string::npos;
+  const bool portable = model.find("roam") != std::string::npos ||
+                        model.find("move") != std::string::npos;
+  const bool subwoofer = model.find("sub") != std::string::npos;
+  const bool headphones = model.find("ace") != std::string::npos;
+
+  if (soundbar) {
+    const SDL_Rect bar{area.x + 8, area.y + area.h / 2 - 13, area.w - 16, 26};
+    fill(renderer_, bar, body);
+    for (int index = 0; index < 5; ++index) {
+      fill(renderer_, SDL_Rect{bar.x + 13 + index * (bar.w - 26) / 4,
+                               bar.y + 10, 4, 4},
+           detail);
+    }
+  } else if (subwoofer) {
+    const SDL_Rect cabinet{area.x + area.w / 2 - 28, area.y + 7, 56, area.h - 14};
+    fill(renderer_, cabinet, body);
+    fill(renderer_, SDL_Rect{cabinet.x + 13, cabinet.y + 18,
+                             cabinet.w - 26, cabinet.h - 36},
+         detail);
+    fill(renderer_, SDL_Rect{cabinet.x + 22, cabinet.y + 29,
+                             cabinet.w - 44, cabinet.h - 58},
+         accent);
+  } else if (headphones) {
+    fill(renderer_, SDL_Rect{area.x + area.w / 2 - 25, area.y + 10, 50, 10},
+         body);
+    fill(renderer_, SDL_Rect{area.x + 13, area.y + 30, 20, 42}, body);
+    fill(renderer_, SDL_Rect{area.x + area.w - 33, area.y + 30, 20, 42}, body);
+    fill(renderer_, SDL_Rect{area.x + 17, area.y + 37, 12, 28}, detail);
+    fill(renderer_, SDL_Rect{area.x + area.w - 29, area.y + 37, 12, 28}, detail);
+  } else {
+    const int width = portable ? 52 : 64;
+    const int height = portable ? area.h - 12 : area.h - 8;
+    const SDL_Rect cabinet{area.x + (area.w - width) / 2,
+                           area.y + (area.h - height) / 2, width, height};
+    fill(renderer_, cabinet, body);
+    fill(renderer_, SDL_Rect{cabinet.x + 9, cabinet.y + 13,
+                             cabinet.w - 18, cabinet.h - 34},
+         detail);
+    fill(renderer_, SDL_Rect{cabinet.x + cabinet.w / 2 - 10,
+                             cabinet.y + cabinet.h / 2 - 12, 20, 20},
+         accent);
+    fill(renderer_, SDL_Rect{cabinet.x + cabinet.w / 2 - 3,
+                             cabinet.y + cabinet.h - 12, 6, 6},
+         kCoral);
+  }
+}
+
+void Renderer::speakers(const ViewState& view) {
+  const Group* active = nullptr;
+  for (const auto& group : view.topology.groups) {
+    if (group.id == view.active_group_id) {
+      active = &group;
+      break;
+    }
+  }
+  status_bar(view, "Speaker Volumes");
+  if (!active) {
+    font_.draw_centered("Select a room group first", 210, 2, kCream);
+    hints("B  Back", "Y  Rooms & Groups");
+    return;
+  }
+
+  std::vector<const Player*> speakers;
+  for (const auto& uuid : active->member_uuids) {
+    const auto found = std::find_if(
+        view.topology.players.begin(), view.topology.players.end(),
+        [&uuid](const Player& player) { return player.uuid == uuid; });
+    if (found != view.topology.players.end() && found->visible &&
+        found->available) {
+      speakers.push_back(&*found);
+    }
+  }
+  if (speakers.empty()) {
+    font_.draw_centered("No available speakers in this group", 210, 2, kCream);
+    hints("B  Back", "SELECT  Controls");
+    return;
+  }
+
+  const int selection = std::max(
+      0, std::min<int>(view.selection, static_cast<int>(speakers.size() - 1)));
+  const int page_start = selection / 4 * 4;
+  const std::string subtitle =
+      clipped(active->name, 34) + "  -  " + std::to_string(speakers.size()) +
+      (speakers.size() == 1 ? " speaker" : " speakers");
+  font_.draw_centered(subtitle, 48, 1, kMuted);
+
+  constexpr int kCardWidth = 296;
+  constexpr int kCardHeight = 158;
+  for (int card = 0; card < 4 && page_start + card < static_cast<int>(speakers.size());
+       ++card) {
+    const int index = page_start + card;
+    const int x = 16 + (card % 2) * 312;
+    const int y = 68 + (card / 2) * 170;
+    const bool selected = index == selection;
+    fill(renderer_, SDL_Rect{x, y, kCardWidth, kCardHeight},
+         selected ? kCream : kPanel);
+    if (!selected) {
+      fill(renderer_, SDL_Rect{x + 2, y + 2, kCardWidth - 4, kCardHeight - 4},
+           kPanelLight);
+    }
+    const SDL_Color primary = selected ? kDark : kCream;
+    const SDL_Color secondary = selected ? SDL_Color{63, 82, 98, 255} : kMuted;
+    const Player& speaker = *speakers[static_cast<std::size_t>(index)];
+    draw_speaker_model(speaker, SDL_Rect{x + 12, y + 40, 86, 94});
+    font_.draw(clipped(speaker.room_name.empty() ? "Unnamed speaker"
+                                                 : speaker.room_name,
+                       20),
+               x + 112, y + 16, 2, primary, 168);
+    const std::string model = speaker.model_name.empty()
+                                  ? speaker.model_number.empty()
+                                        ? "Sonos speaker"
+                                        : speaker.model_number
+                                  : speaker.model_name;
+    font_.draw(clipped(model, 27), x + 112, y + 45, 1, secondary, 168);
+
+    const auto volume = view.speaker_volumes.find(speaker.uuid);
+    const bool known = volume != view.speaker_volumes.end();
+    const int level = known ? clamp_volume(volume->second.volume) : 0;
+    const bool muted = known && volume->second.muted;
+    font_.draw(known ? muted ? "MUTED" : "VOL " + std::to_string(level)
+                      : "READING...",
+               x + 112, y + 72, 1, muted ? kCoral : primary, 160);
+    fill(renderer_, SDL_Rect{x + 112, y + 93, 160, 8},
+         selected ? SDL_Color{170, 183, 186, 255} : kPanel);
+    if (known && level > 0) {
+      fill(renderer_, SDL_Rect{x + 112, y + 93, level * 160 / 100, 8},
+           muted ? kCoral : kMint);
+    }
+    font_.draw(selected ? "Selected" : "", x + 112, y + 119, 1, secondary,
+               160);
+  }
+  if (speakers.size() > 4) {
+    font_.draw_centered(std::to_string(page_start + 1) + "-" +
+                            std::to_string(std::min<int>(
+                                page_start + 4, static_cast<int>(speakers.size()))) +
+                            " of " + std::to_string(speakers.size()),
+                        420, 1, kMuted);
+  }
+  hints("L/R  Speaker   Up/Down  Volume", "A  Mute    B  Back");
+}
+
 void Renderer::queue_list(const ViewState& view) {
   status_bar(view, "Queue");
   if (view.queue.empty()) {
@@ -848,10 +1001,11 @@ void Renderer::menu(const ViewState& view) {
   std::vector<std::string> names(strings::kMainMenu.begin(),
                                  strings::kMainMenu.end());
   std::vector<std::string> descriptions = {
-      "Choose a room or edit groups", "Browse and start the active queue",
-      "Browse and start Sonos favorites", "Change Miyonos behavior",
-      "Controls and connection help", "Version, license, and disclaimer",
-      "Local connection and cache details"};
+      "Choose a room or edit groups",
+      "Compare speakers and adjust individual volumes",
+      "Browse and start the active queue", "Browse and start Sonos favorites",
+      "Change Miyonos behavior", "Controls and connection help",
+      "Version, license, and disclaimer", "Local connection and cache details"};
   list_rows(names, descriptions, view.selection);
   hints("B  Back", "A  Open");
 }
@@ -1101,6 +1255,7 @@ void Renderer::draw(const ViewState& view, const Settings& settings_value) {
     case Screen::NowPlaying: now_playing(view, settings_value); break;
     case Screen::Rooms: rooms(view, false); break;
     case Screen::GroupEditor: rooms(view, true); break;
+    case Screen::Speakers: speakers(view); break;
     case Screen::Queue:
       media_list(view, view.queue, "Queue");
       break;

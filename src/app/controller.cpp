@@ -265,6 +265,19 @@ void Controller::request_speaker_volume() {
   enqueue(std::move(command));
 }
 
+void Controller::request_group_speaker_volumes() {
+  const Group* group = active_group();
+  if (!group) return;
+  for (const auto& uuid : group->member_uuids) {
+    const Player* player = player_by_uuid(uuid);
+    if (!player || !player->visible || !player->available) continue;
+    Command command;
+    command.type = CommandType::GetSpeakerVolume;
+    command.player = *player;
+    enqueue(std::move(command));
+  }
+}
+
 void Controller::request_selected_favorite_artwork() {
   if (!settings_.auto_artwork || view_.screen != Screen::Favorites ||
       view_.selection < 0 ||
@@ -630,6 +643,72 @@ void Controller::cycle_volume_target(int direction) {
   show_toast("Volume target: " + target->room_name, 1800);
 }
 
+void Controller::focus_speaker_card() {
+  const Group* group = active_group();
+  if (!group) return;
+  std::vector<const Player*> speakers;
+  for (const auto& uuid : group->member_uuids) {
+    const Player* player = player_by_uuid(uuid);
+    if (player && player->visible && player->available) speakers.push_back(player);
+  }
+  if (speakers.empty()) return;
+  view_.selection = std::max(
+      0, std::min<int>(view_.selection, static_cast<int>(speakers.size() - 1)));
+  const Player* speaker = speakers[static_cast<std::size_t>(view_.selection)];
+  view_.group_volume_target = false;
+  view_.active_room_uuid = speaker->uuid;
+  const auto cached = speaker_volumes_.find(speaker->uuid);
+  view_.speaker_volume =
+      cached == speaker_volumes_.end() ? -1 : cached->second.volume;
+  view_.speaker_muted =
+      cached == speaker_volumes_.end() ? false : cached->second.muted;
+  request_speaker_volume();
+}
+
+void Controller::adjust_speaker_card_volume(int direction) {
+  const Player* target = volume_target();
+  if (!target) return;
+  if (view_.speaker_volume < 0) {
+    request_speaker_volume();
+    show_toast("Reading " + target->room_name + " volume...");
+    return;
+  }
+  const int intended =
+      clamp_volume(view_.speaker_volume + direction * settings_.volume_step);
+  view_.speaker_volume = intended;
+  const SpeakerVolume volume{intended, view_.speaker_muted};
+  speaker_volumes_[target->uuid] = volume;
+  view_.speaker_volumes[target->uuid] = volume;
+  volume_feedback_until_ms_ = monotonic_ms() + 1200;
+  Command command;
+  command.type = CommandType::Volume;
+  command.player = *target;
+  command.value = intended;
+  command.flag = false;
+  enqueue(std::move(command));
+}
+
+void Controller::toggle_speaker_card_mute() {
+  const Player* target = volume_target();
+  if (!target) return;
+  if (view_.speaker_volume < 0) {
+    request_speaker_volume();
+    show_toast("Reading " + target->room_name + " volume...");
+    return;
+  }
+  view_.speaker_muted = !view_.speaker_muted;
+  const SpeakerVolume volume{view_.speaker_volume, view_.speaker_muted};
+  speaker_volumes_[target->uuid] = volume;
+  view_.speaker_volumes[target->uuid] = volume;
+  Command command;
+  command.type = CommandType::Mute;
+  command.player = *target;
+  command.flag = view_.speaker_muted;
+  command.value = 0;
+  enqueue(std::move(command));
+  show_toast(target->room_name + (view_.speaker_muted ? " muted" : " unmuted"));
+}
+
 void Controller::select_group(std::size_t index, bool opened_by_user) {
   if (index >= view_.topology.groups.size()) return;
   const Group& group = view_.topology.groups[index];
@@ -975,6 +1054,7 @@ void Controller::apply_result(WorkerResult result) {
       }
       const SpeakerVolume volume{result.value, result.flag};
       speaker_volumes_[result.context] = volume;
+      view_.speaker_volumes[result.context] = volume;
       if (!view_.group_volume_target &&
           view_.active_room_uuid == result.context) {
         view_.speaker_volume = volume.volume;
@@ -1320,6 +1400,10 @@ void Controller::navigate(Screen screen) {
   if (screen == Screen::Favorites) request_browse(ListKind::Favorites);
   if (screen == Screen::Playlists) request_browse(ListKind::Playlists);
   if (screen == Screen::Diagnostics) refresh_diagnostics();
+  if (screen == Screen::Speakers) {
+    request_group_speaker_volumes();
+    focus_speaker_card();
+  }
 }
 
 void Controller::switch_queue_playlist() {
@@ -1399,7 +1483,17 @@ std::size_t Controller::list_size(Screen screen) const {
     case Screen::Queue: return view_.queue.size();
     case Screen::Favorites: return view_.favorites.size();
     case Screen::Playlists: return view_.playlists.size();
-    case Screen::Menu: return 7;
+    case Screen::Speakers: {
+      const Group* group = active_group();
+      if (!group) return 0;
+      return static_cast<std::size_t>(std::count_if(
+          group->member_uuids.begin(), group->member_uuids.end(),
+          [this](const std::string& uuid) {
+            const Player* player = player_by_uuid(uuid);
+            return player && player->visible && player->available;
+          }));
+    }
+    case Screen::Menu: return 8;
     case Screen::Settings: return 16;
     case Screen::ButtonMapping: return kPhysicalButtonCount;
     case Screen::Diagnostics: return 3;
@@ -1417,6 +1511,10 @@ void Controller::move_selection(int delta) {
   view_.selection =
       std::max(0, std::min<int>(static_cast<int>(size - 1),
                                view_.selection + delta));
+  if (view_.screen == Screen::Speakers) {
+    focus_speaker_card();
+    return;
+  }
   if (view_.screen == Screen::Queue) request_queue_artwork();
   if (view_.screen == Screen::Favorites) request_selected_favorite_artwork();
   if (view_.screen == Screen::Playlists) request_selected_playlist_artwork();
@@ -1519,9 +1617,9 @@ void Controller::activate() {
     }
     case Screen::Menu: {
       const Screen targets[] = {
-          Screen::Rooms,    Screen::Queue,      Screen::Favorites,
-          Screen::Settings, Screen::Help,       Screen::About,
-          Screen::Diagnostics};
+          Screen::Rooms,    Screen::Speakers,   Screen::Queue,
+          Screen::Favorites, Screen::Settings,  Screen::Help,
+          Screen::About,    Screen::Diagnostics};
       navigate(targets[view_.selection]);
       break;
     }
@@ -1942,6 +2040,9 @@ void Controller::handle(Action action) {
     if (view_.screen == Screen::Rooms ||
         view_.screen == Screen::GroupEditor) {
       request_topology();
+    } else if (view_.screen == Screen::Speakers) {
+      request_group_speaker_volumes();
+      show_toast("Refreshing speaker volumes...");
     } else if (view_.screen == Screen::Queue) {
       request_browse(ListKind::Queue);
     } else if (view_.screen == Screen::Favorites) {
@@ -1961,6 +2062,21 @@ void Controller::handle(Action action) {
 
   if (action == Action::Queue && view_.screen == Screen::Playlists) {
     switch_queue_playlist();
+    return;
+  }
+
+  if (view_.screen == Screen::Speakers) {
+    if (action == Action::Left || action == Action::Previous ||
+        action == Action::PreviousSpeaker) {
+      move_selection(-1);
+    } else if (action == Action::Right || action == Action::Next ||
+               action == Action::NextSpeaker) {
+      move_selection(1);
+    } else if (action == Action::Up || action == Action::Down) {
+      adjust_speaker_card_volume(action == Action::Up ? 1 : -1);
+    } else if (action == Action::Confirm || action == Action::Context) {
+      toggle_speaker_card_mute();
+    }
     return;
   }
 
@@ -1985,7 +2101,11 @@ void Controller::handle(Action action) {
       const int intended = clamp_volume(view_.speaker_volume + delta);
       view_.speaker_volume = intended;
       if (view_.group_volume_target) view_.playback.volume = intended;
-      else speaker_volumes_[target->uuid] = {intended, view_.speaker_muted};
+      else {
+        const SpeakerVolume volume{intended, view_.speaker_muted};
+        speaker_volumes_[target->uuid] = volume;
+        view_.speaker_volumes[target->uuid] = volume;
+      }
       volume_feedback_until_ms_ = monotonic_ms() + 1200;
       Command command;
       command.type = CommandType::Volume;
