@@ -45,7 +45,10 @@ group-volume service when available, while an individual target uses its own
 `RenderingControl` volume. X remains the existing group mute control.
 The Main Menu's Speaker Volumes screen presents every available member of the
 selected group together, with its individual volume, mute state, room name, and
-a local model-specific illustration. It never downloads product images.
+a local model-specific illustration. The default remains fully local; an
+optional setting can replace the illustration for recognized Beam, Roam, Era
+100, and Arc models with a strictly allowlisted official Sonos product image
+from `media.sonos.com`, cached locally after TLS verification.
 All 15 physical Miyoo controls can be reassigned from Settings, including
 separate seek actions and No action. Edits remain staged until a safety check
 confirms that Up, Down, Confirm, Back, and Exit are still available. A fixed

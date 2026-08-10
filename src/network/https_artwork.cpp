@@ -1,6 +1,7 @@
 #include "network/https_artwork.h"
 
 #include <algorithm>
+#include <array>
 #include <cctype>
 #include <csignal>
 #include <cstdlib>
@@ -40,12 +41,42 @@ constexpr char kLegacySonosRadioArtworkHost[] =
 constexpr char kTuneInProfilesHost[] = "cdn-profiles.tunein.com";
 constexpr char kTuneInRadiotimeHost[] = "cdn-radiotime-logos.tunein.com";
 
+struct OfficialSonosProductImage {
+  const char* model_token;
+  const char* model_number;
+  const char* url;
+};
+
+// These are direct image URLs published by Sonos' own media CDN. They are
+// intentionally exact rather than accepting a broad sonos.com path, so an
+// update cannot turn Miyonos into a general web client. The files are never
+// bundled with Miyonos; the user can opt in to a cached download per model.
+constexpr std::array<OfficialSonosProductImage, 4> kOfficialSonosProductImages = {{
+    {"beam", "S14",
+     "https://media.sonos.com/images/znqtjj88/production/e12ba440b45fc67e970049734783d6fb0b6b20d1-2480x2480.png?auto=format&fit=clip&q=100&w=480"},
+    {"roam", "S27",
+     "https://media.sonos.com/images/znqtjj88/production/0c428c14ef5f4007d028f1994b03190c7abab826-2000x2000.png?auto=format&fit=clip&q=100&w=480"},
+    {"era 100", "S41",
+     "https://media.sonos.com/images/znqtjj88/production/03b89d4e259ddfe3388083e943059f0436468258-2000x2000.png?auto=format&fit=clip&q=100&w=480"},
+    {"arc", "S19",
+     "https://media.sonos.com/images/znqtjj88/production/8336e6a70e41572264a30a8ef029950d135f40c7-2480x2480.png?auto=format&fit=clip&q=100&w=480"},
+}};
+
 enum class ArtworkEndpoint {
   None,
   Direct,
+  SonosProduct,
   RadioProxy,
   RadioCdn
 };
+
+bool is_official_sonos_product_image_url(const std::string& url) {
+  return std::any_of(kOfficialSonosProductImages.begin(),
+                     kOfficialSonosProductImages.end(),
+                     [&url](const OfficialSonosProductImage& image) {
+                       return url == image.url;
+                     });
+}
 
 bool is_hexadecimal(char character) {
   return (character >= '0' && character <= '9') ||
@@ -238,6 +269,7 @@ bool parse_trusted_external_artwork_url(const std::string& url,
       (host == kSpotifySonosStaticHost &&
        path == "/icons/playlist_folder_legacy.png");
   ArtworkEndpoint endpoint = trusted ? ArtworkEndpoint::Direct
+      : is_official_sonos_product_image_url(url) ? ArtworkEndpoint::SonosProduct
       : ((host == kSonosRadioArtworkHost ||
           host == kCurrentSonosRadioArtworkHost ||
           host == kLegacySonosRadioArtworkHost) && is_radio_proxy_path(path))
@@ -642,6 +674,19 @@ bool is_redirect(int status) {
 }
 
 }  // namespace
+
+std::string official_sonos_product_image_url(const std::string& model_name,
+                                             const std::string& model_number) {
+  const std::string model = lowercase(model_name);
+  const std::string number = lowercase(model_number);
+  for (const auto& image : kOfficialSonosProductImages) {
+    if ((!number.empty() && number == lowercase(image.model_number)) ||
+        (!model.empty() && model.find(image.model_token) != std::string::npos)) {
+      return image.url;
+    }
+  }
+  return {};
+}
 
 bool is_trusted_external_artwork_url(const std::string& url) {
   ArtworkEndpoint endpoint = ArtworkEndpoint::None;

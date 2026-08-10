@@ -13,6 +13,7 @@
 #include <sstream>
 
 #include "network/http.h"
+#include "network/https_artwork.h"
 #include "platform/clock.h"
 #include "platform/logger.h"
 
@@ -275,6 +276,57 @@ void Controller::request_group_speaker_volumes() {
     command.type = CommandType::GetSpeakerVolume;
     command.player = *player;
     enqueue(std::move(command));
+  }
+}
+
+void Controller::request_speaker_product_photos() {
+  if (!settings_.official_sonos_product_photos) {
+    view_.speaker_product_photo_paths.clear();
+    speaker_product_photo_urls_.clear();
+    failed_speaker_product_photo_urls_.clear();
+    return;
+  }
+  const Group* group = active_group();
+  if (!group) return;
+
+  std::set<std::string> active_speakers;
+  for (const auto& uuid : group->member_uuids) {
+    const Player* speaker = player_by_uuid(uuid);
+    if (!speaker || !speaker->visible || !speaker->available) continue;
+    active_speakers.insert(speaker->uuid);
+    const std::string url = official_sonos_product_image_url(
+        speaker->model_name, speaker->model_number);
+    if (url.empty()) continue;
+    if (speaker_product_photo_urls_[speaker->uuid] != url) {
+      speaker_product_photo_urls_[speaker->uuid] = url;
+      view_.speaker_product_photo_paths.erase(speaker->uuid);
+    }
+    const std::string cached = artwork_cache_.find(url);
+    if (!cached.empty()) {
+      view_.speaker_product_photo_paths[speaker->uuid] = cached;
+      continue;
+    }
+    if (!speaker_product_photo_inflight_url_.empty() ||
+        failed_speaker_product_photo_urls_.count(url) != 0) {
+      continue;
+    }
+    Command command;
+    command.type = CommandType::DownloadArtwork;
+    command.text = url;
+    command.flag = true;
+    command.artwork_target = ArtworkTarget::SpeakerProduct;
+    if (enqueue(std::move(command))) {
+      speaker_product_photo_inflight_url_ = url;
+    }
+    return;
+  }
+  for (auto it = view_.speaker_product_photo_paths.begin();
+       it != view_.speaker_product_photo_paths.end();) {
+    if (active_speakers.count(it->first) == 0) {
+      it = view_.speaker_product_photo_paths.erase(it);
+    } else {
+      ++it;
+    }
   }
 }
 
@@ -864,6 +916,7 @@ void Controller::apply_result(WorkerResult result) {
       if (!old_group.empty() && old_group != view_.active_group_id) {
         show_toast("The selected group changed; a surviving room was selected.");
       }
+      if (view_.screen == Screen::Speakers) request_speaker_product_photos();
       break;
     }
     case ResultType::Playback: {
@@ -1295,6 +1348,23 @@ void Controller::apply_result(WorkerResult result) {
         request_queue_artwork();
         break;
       }
+      if (result.artwork_target == ArtworkTarget::SpeakerProduct) {
+        if (result.context == speaker_product_photo_inflight_url_) {
+          speaker_product_photo_inflight_url_.clear();
+        }
+        if (result.success) {
+          for (const auto& [uuid, url] : speaker_product_photo_urls_) {
+            if (url == result.context) {
+              view_.speaker_product_photo_paths[uuid] = result.text;
+            }
+          }
+        } else {
+          failed_speaker_product_photo_urls_.insert(result.context);
+          view_.diagnostics.last_error = result.text;
+        }
+        request_speaker_product_photos();
+        break;
+      }
       if (result.context != *last_artwork_url) break;
       if (result.success) {
         *artwork_path = result.text;
@@ -1314,6 +1384,7 @@ void Controller::apply_result(WorkerResult result) {
       view_.playlist_artwork_path.clear();
       view_.now_playing_playlist_artwork_path.clear();
       view_.queue_artwork_paths.assign(view_.queue.size(), {});
+      view_.speaker_product_photo_paths.clear();
       last_artwork_url_.clear();
       last_favorite_artwork_url_.clear();
       last_playlist_artwork_url_.clear();
@@ -1321,6 +1392,11 @@ void Controller::apply_result(WorkerResult result) {
       queue_artwork_urls_.assign(view_.queue.size(), {});
       queue_artwork_inflight_url_.clear();
       failed_queue_artwork_urls_.clear();
+      speaker_product_photo_inflight_url_.clear();
+      failed_speaker_product_photo_urls_.clear();
+      if (settings_.official_sonos_product_photos) {
+        request_speaker_product_photos();
+      }
       show_toast(result.success ? "Artwork cache cleared"
                                : "Artwork cache could not be cleared");
       break;
@@ -1402,6 +1478,7 @@ void Controller::navigate(Screen screen) {
   if (screen == Screen::Diagnostics) refresh_diagnostics();
   if (screen == Screen::Speakers) {
     request_group_speaker_volumes();
+    request_speaker_product_photos();
     focus_speaker_card();
   }
 }
@@ -1454,7 +1531,7 @@ void Controller::restore_button_mapping() {
   save_settings();
   history_.clear();
   view_.screen = Screen::Settings;
-  view_.selection = 12;
+  view_.selection = 13;
   show_toast("Default button mapping restored", 2400);
 }
 
@@ -1494,7 +1571,7 @@ std::size_t Controller::list_size(Screen screen) const {
           }));
     }
     case Screen::Menu: return 8;
-    case Screen::Settings: return 16;
+    case Screen::Settings: return 18;
     case Screen::ButtonMapping: return kPhysicalButtonCount;
     case Screen::Diagnostics: return 3;
     case Screen::Offline: return 3;
@@ -1624,17 +1701,17 @@ void Controller::activate() {
       break;
     }
     case Screen::Settings:
-      if (view_.selection == 9) enter_ip_editor();
-      else if (view_.selection == 12) enter_button_mapping();
-      else if (view_.selection == 13) {
+      if (view_.selection == 10) enter_ip_editor();
+      else if (view_.selection == 13) enter_button_mapping();
+      else if (view_.selection == 14) {
         request_confirmation(PendingConfirmation::ClearArtwork,
                              "Clear Artwork Cache?",
                              "Downloaded artwork will be removed.");
-      } else if (view_.selection == 14) {
+      } else if (view_.selection == 15) {
         request_confirmation(PendingConfirmation::ForgetSystem,
                              "Forget Sonos System?",
                              "Cached rooms and addresses will be removed.");
-      } else if (view_.selection == 15) {
+      } else if (view_.selection == 16) {
         request_confirmation(PendingConfirmation::ResetSettings,
                              "Reset All Settings?",
                              "Miyonos defaults will be restored.");
@@ -1777,12 +1854,25 @@ void Controller::adjust_setting(int direction) {
       request_queue_artwork();
       break;
     case 6: {
+      settings_.official_sonos_product_photos =
+          !settings_.official_sonos_product_photos;
+      view_.speaker_product_photo_paths.clear();
+      speaker_product_photo_urls_.clear();
+      speaker_product_photo_inflight_url_.clear();
+      failed_speaker_product_photo_urls_.clear();
+      request_speaker_product_photos();
+      show_toast(settings_.official_sonos_product_photos
+                     ? "Official Sonos photos enabled"
+                     : "Official Sonos photos disabled");
+      break;
+    }
+    case 7: {
       int value = static_cast<int>(settings_.polling);
       settings_.polling =
           static_cast<PollingIntensity>((value + direction + 3) % 3);
       break;
     }
-    case 7: {
+    case 8: {
       const int values[] = {0, 30, 60, 120, 300, 600};
       auto found = std::find(std::begin(values), std::end(values),
                              settings_.dim_timeout_seconds);
@@ -1792,15 +1882,15 @@ void Controller::adjust_setting(int direction) {
       settings_.dim_timeout_seconds = values[(index + direction + 6) % 6];
       break;
     }
-    case 8: settings_.prevent_sleep = !settings_.prevent_sleep; break;
-    case 10: {
+    case 9: settings_.prevent_sleep = !settings_.prevent_sleep; break;
+    case 11: {
       int value = static_cast<int>(settings_.button_hints);
       settings_.button_hints =
           static_cast<ButtonHints>((value + direction + 3) % 3);
       break;
     }
-    case 11: settings_.confirm_exit = !settings_.confirm_exit; break;
-    case 16:
+    case 12: settings_.confirm_exit = !settings_.confirm_exit; break;
+    case 17:
       settings_.diagnostics_mode = !settings_.diagnostics_mode;
       Logger::instance().set_verbose(settings_.diagnostics_mode);
       break;

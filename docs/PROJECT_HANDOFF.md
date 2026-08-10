@@ -28,10 +28,13 @@ services can still impose their own source-specific restrictions; Miyonos does
 not bypass those restrictions.
 
 The Main Menu also includes **Speaker Volumes**, a local visual overview of
-every available speaker in the selected group. It uses built-in illustrations
-matched to the discovered Sonos model, never web-hosted product images. It
-shows each speaker's individual volume and mute state; Left/Right or L1/R1
-selects a speaker, Up/Down adjusts only that speaker, and A toggles its mute.
+every available speaker in the selected group. By default it uses built-in
+illustrations matched to the discovered Sonos model. The optional, default-off
+**Official Sonos product photos** setting permits only a fixed catalog of four
+direct `media.sonos.com` images for Beam, Roam, Era 100, and Arc; they are
+TLS-verified, cached locally, and never bundled or proxied. It shows each
+speaker's individual volume and mute state; Left/Right or L1/R1 selects a
+speaker, Up/Down adjusts only that speaker, and A toggles its mute.
 
 Favorites uses the same source-provided artwork policy: its selected entry
 shows a bounded cached cover when Sonos supplies one, otherwise **Cover

@@ -111,6 +111,15 @@ void test_url_and_http_helpers() {
       "https://image-cdn-ak.spotifycdn.com/image/ab67706c0000da84513ab59cccfcf9bef6cabe2f"));
   CHECK(is_trusted_external_artwork_url(
       "https://spotify-static.ws.sonos.com/icons/playlist_folder_legacy.png"));
+  const std::string official_roam_photo =
+      official_sonos_product_image_url("Sonos Roam", "S27");
+  CHECK(!official_roam_photo.empty());
+  CHECK(is_trusted_external_artwork_url(official_roam_photo));
+  CHECK(official_sonos_product_image_url("Unknown", "S27") ==
+        official_roam_photo);
+  CHECK(official_sonos_product_image_url("Unknown", "S999").empty());
+  CHECK(!is_trusted_external_artwork_url(
+      official_roam_photo + "&untrusted=1"));
   CHECK(is_trusted_external_artwork_url(
       "https://sali.sonos.radio/image?w=60&image=https%3A%2F%2Fcdn-radiotime-logos.tunein.com%2Fs9483g.png&partnerId=tunein"));
   CHECK(is_trusted_external_artwork_url(
@@ -295,10 +304,12 @@ void test_settings_and_cache() {
   CHECK(settings.unknown_fields["future_option"] == "keep-me");
   settings.volume_step = 3;
   settings.spotify_https_artwork = true;
+  settings.official_sonos_product_photos = true;
   CHECK(store.save(settings));
   Settings saved = store.load();
   CHECK(saved.volume_step == 3);
   CHECK(saved.spotify_https_artwork);
+  CHECK(saved.official_sonos_product_photos);
   CHECK(saved.button_mapping[button_index(PhysicalButton::Left)] ==
         Action::Next);
   CHECK(saved.unknown_fields["future_option"] == "keep-me");
@@ -507,12 +518,12 @@ void test_live_mock_if_requested() {
   for (int row = 0; row < 4; ++row) controller.handle(Action::Down);
   controller.handle(Action::Confirm);
   controller.handle(Action::Previous);
-  for (int row = 0; row < 9; ++row) controller.handle(Action::Down);
+  for (int row = 0; row < 10; ++row) controller.handle(Action::Down);
   controller.handle(Action::Confirm);
   CHECK(controller.view().screen == Screen::IpEditor);
   controller.handle(Action::Back);
   controller.handle(Action::Previous);
-  for (int row = 0; row < 12; ++row) controller.handle(Action::Down);
+  for (int row = 0; row < 13; ++row) controller.handle(Action::Down);
   controller.handle(Action::Confirm);
   CHECK(controller.view().screen == Screen::ButtonMapping);
   controller.handle(Action::Confirm);

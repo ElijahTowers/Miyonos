@@ -713,7 +713,12 @@ void Renderer::speakers(const ViewState& view) {
     const SDL_Color primary = selected ? kDark : kCream;
     const SDL_Color secondary = selected ? SDL_Color{63, 82, 98, 255} : kMuted;
     const Player& speaker = *speakers[static_cast<std::size_t>(index)];
-    draw_speaker_model(speaker, SDL_Rect{x + 12, y + 40, 86, 94});
+    const auto photo = view.speaker_product_photo_paths.find(speaker.uuid);
+    const bool has_official_photo =
+        photo != view.speaker_product_photo_paths.end() && !photo->second.empty();
+    const SDL_Rect image_area{x + 12, y + 40, 86, 94};
+    if (has_official_photo) draw_queue_thumbnail(photo->second, image_area);
+    else draw_speaker_model(speaker, image_area);
     font_.draw(clipped(speaker.room_name.empty() ? "Unnamed speaker"
                                                  : speaker.room_name,
                        20),
@@ -738,8 +743,10 @@ void Renderer::speakers(const ViewState& view) {
       fill(renderer_, SDL_Rect{x + 112, y + 93, level * 160 / 100, 8},
            muted ? kCoral : kMint);
     }
-    font_.draw(selected ? "Selected" : "", x + 112, y + 119, 1, secondary,
-               160);
+    font_.draw(selected ? has_official_photo ? "Selected - Official photo"
+                                           : "Selected"
+                        : has_official_photo ? "Official Sonos photo" : "",
+               x + 112, y + 119, 1, secondary, 160);
   }
   if (speakers.size() > 4) {
     font_.draw_centered(std::to_string(page_start + 1) + "-" +
@@ -1023,32 +1030,33 @@ std::string Renderer::setting_value(int index, const Settings& settings) const {
     case 3: return std::to_string(settings.artwork_cache_mb) + " MB";
     case 4: return yes_no(settings.auto_artwork);
     case 5: return yes_no(settings.spotify_https_artwork);
-    case 6:
+    case 6: return yes_no(settings.official_sonos_product_photos);
+    case 7:
       return settings.polling == PollingIntensity::BatterySaver
                  ? "Battery saver"
                  : settings.polling == PollingIntensity::Responsive
                        ? "Responsive"
                        : "Balanced";
-    case 7:
+    case 8:
       return settings.dim_timeout_seconds == 0
                  ? "Never"
                  : std::to_string(settings.dim_timeout_seconds) + " seconds";
-    case 8: return yes_no(settings.prevent_sleep);
-    case 9:
+    case 9: return yes_no(settings.prevent_sleep);
+    case 10:
       return settings.manual_ips.empty()
                  ? "None"
                  : std::to_string(settings.manual_ips.size()) + " saved";
-    case 10:
+    case 11:
       return settings.button_hints == ButtonHints::Always
                  ? "Always"
                  : settings.button_hints == ButtonHints::Never ? "Never"
                                                                 : "Briefly";
-    case 11: return yes_no(settings.confirm_exit);
-    case 12: return "Open";
-    case 13: return "Press A";
+    case 12: return yes_no(settings.confirm_exit);
+    case 13: return "Open";
     case 14: return "Press A";
     case 15: return "Press A";
-    case 16: return yes_no(settings.diagnostics_mode);
+    case 16: return "Press A";
+    case 17: return yes_no(settings.diagnostics_mode);
     default: return {};
   }
 }

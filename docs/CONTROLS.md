@@ -41,9 +41,11 @@ the visible individual speakers; Up/Down changes the currently shown target.
 **Speaker Volumes** in the Main Menu is a group overview. It shows each
 available speaker in the selected group with its room name, current individual
 volume, mute state, and a built-in illustration based on its Sonos model.
-No speaker or product image is downloaded. Use Left/Right or L1/R1 to choose a
-speaker, Up/Down to change that speaker's volume, A to mute or unmute it, and
-Select to refresh the displayed values.
+Use Left/Right or L1/R1 to choose a speaker, Up/Down to change that speaker's
+volume, A to mute or unmute it, and Select to refresh the displayed values.
+With **Settings → Official Sonos product photos** on, recognized models use a
+cached direct image from Sonos' official media CDN; the default remains the
+built-in illustration and makes no internet request.
 
 For Spotify Favorites and supported Sonos Radio stations that provide only a
 public HTTPS cover, turn on **Settings → External cover art over HTTPS**. This

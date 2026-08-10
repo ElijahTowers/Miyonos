@@ -149,6 +149,8 @@ Settings SettingsStore::load(std::string* warning) const {
   settings.auto_artwork = parse_bool(get("auto_artwork", "1"), true);
   settings.spotify_https_artwork =
       parse_bool(get("spotify_https_artwork", "0"), false);
+  settings.official_sonos_product_photos =
+      parse_bool(get("official_sonos_product_photos", "0"), false);
   const auto polling = get("polling", "balanced");
   settings.polling = polling == "battery"
                          ? PollingIntensity::BatterySaver
@@ -192,7 +194,7 @@ Settings SettingsStore::load(std::string* warning) const {
   const std::vector<std::string> known = {
       "schema_version", "startup_mode", "startup_room_uuid", "volume_step",
       "seek_seconds", "artwork_cache_mb", "auto_artwork",
-      "spotify_https_artwork", "polling",
+      "spotify_https_artwork", "official_sonos_product_photos", "polling",
       "dim_timeout_seconds", "prevent_sleep", "manual_ips", "button_hints",
       "confirm_exit", "diagnostics_mode", "last_group_id", "last_room_uuid",
       "cached_ips", "playlist_context_group_id", "playlist_context_title",
@@ -236,6 +238,8 @@ bool SettingsStore::save(const Settings& input, std::string* error) const {
   fields["auto_artwork"] = settings.auto_artwork ? "1" : "0";
   fields["spotify_https_artwork"] =
       settings.spotify_https_artwork ? "1" : "0";
+  fields["official_sonos_product_photos"] =
+      settings.official_sonos_product_photos ? "1" : "0";
   fields["polling"] = settings.polling == PollingIntensity::BatterySaver
                           ? "battery"
                           : settings.polling == PollingIntensity::Responsive

@@ -77,9 +77,13 @@ Spotify-in-Sonos, and observed Sonos Radio/TuneIn public cover endpoints:
 CDN images, the fixed Sonos Spotify folder image, and three Sonos Radio artwork
 proxies. A radio proxy may make exactly one TLS-verified redirect to either
 fixed TuneIn logo CDN; every other redirect is rejected. It uses a bundled
-four-root trust bundle with TLS hostname verification and the same
+five-root trust bundle with TLS hostname verification and the same
 response/cache limits. It sends no account, cookie, playback, or device data.
-It is not a general web client.
+It is not a general web client. The same worker also supports the separate,
+default-off **Official Sonos product photos** setting: it may fetch only four
+exact, direct 480-pixel PNG URLs from `media.sonos.com`, selected from the
+locally discovered Beam, Roam, Era 100, or Arc model. Product photos are not
+bundled or proxied; no redirects or dynamically supplied URLs are accepted.
 Logs rotate at 256 KiB into one previous file.
 
 OnionOS reads the Miyoo Mini Plus battery percentage from the AXP223 fuel

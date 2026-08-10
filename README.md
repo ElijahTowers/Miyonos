@@ -4,7 +4,7 @@ Miyonos turns a Miyoo Mini Plus running OnionOS into a fast, button-first,
 local Sonos remote. It uses the speakers' LAN UPnP/SOAP interface: there is no
 Miyonos account, cloud service, API key, analytics, or advertising. It makes
 no internet request by default; an owner can separately opt in to verified
-external cover downloads.
+external cover or official Sonos product-photo downloads.
 
 ![Miyonos Now Playing preview](docs/images/now-playing.png)
 
@@ -24,12 +24,15 @@ double-buffered framebuffer. It includes:
   hardware fuel gauge without network access;
 - editable mappings for every physical button, protected by a lockout check
   and a fixed hardware recovery chord;
-- paged browsing of the current Sonos Queue with small per-track cover art,
-  selected-cover views for Sonos Favorites and Favorite Playlists, and direct
-  Favorites playback;
+- paged browsing of the current Sonos Queue with a selected-track cover view,
+  selected-cover views for Sonos Favorites and Favorite Playlists, direct
+  Favorites playback, and an individual Speaker Volumes overview;
 - an optional **External cover art over HTTPS** switch. It is off by default
   and accepts only verified public Spotify and Sonos Radio/TuneIn cover URLs;
   it never sends a Sonos login, cookies, playback data, or device identifiers;
+- an optional **Official Sonos product photos** switch. It is off by default,
+  downloads only a fixed catalog of direct Sonos `media.sonos.com` product
+  images for recognized models, and stores them in the same bounded local cache;
 - offline recovery, bounded retries, confirmations, rotating logs, settings,
   diagnostics, help, and a polished 640 × 480 interface;
 - a self-contained OnionOS package and a double-clickable macOS simulator with
@@ -53,7 +56,8 @@ smoke test remains in progress. See
 - OnionOS 4.3.x; the release is built against assumptions verified for
   OnionOS 4.3.1-1
 - Miyoo and Sonos products on the same IPv4 LAN
-- Internet access only if **Settings → External cover art over HTTPS** is enabled
+- Internet access only if **Settings → External cover art over HTTPS** or
+  **Settings → Official Sonos product photos** is enabled
 
 The Sonos local interface is unofficial. Models, sources, and firmware can
 expose different capabilities, so unsupported actions fail safely and leave
@@ -92,18 +96,18 @@ Menu asks to exit. B goes back. Every button can be changed in **Settings →
 Button mapping**. Holding Menu + Start for three seconds always restores the
 default layout.
 
-In Queue, each visible track has its own cover-art thumbnail when Sonos
-provides one. Miyonos loads only nearby queue covers, one at a time, into the
-same bounded artwork cache; a small music placeholder is shown while a cover
-is unavailable. X switches to **Favorite Playlists**. That view contains the
-playlist-shaped Favorites supplied by Sonos, including Spotify playlists. It
-shows the selected playlist's source-provided cover art. Press A to play it;
-Miyonos immediately opens Now Playing, shows the selected playlist name, and
-replaces the current Sonos queue first so the selected playlist begins at its
-first track. That playlist name remains visible as the queue advances through
-later tracks, until another source or playlist is started. Now Playing also
-keeps that playlist's cover art in a dedicated lower-right block, separate
-from the current track cover on the left.
+Queue uses the same clear layout as Favorites: numbered tracks on the left and
+the selected track's source-provided cover on the right. Miyonos loads only
+nearby queue covers, one at a time, into the same bounded artwork cache. X
+switches to **Favorite Playlists**. That view contains the playlist-shaped
+Favorites supplied by Sonos, including Spotify playlists. It shows the selected
+playlist's source-provided cover art. Press A to play it; Miyonos immediately
+opens Now Playing, shows the selected playlist name, and replaces the current
+Sonos queue first so the selected playlist begins at its first track. That
+playlist name remains visible as the queue advances through later tracks,
+until another source or playlist is started. Now Playing also keeps that
+playlist's cover art in a dedicated lower-right block, separate from the
+current track cover on the left.
 Favorites also shows the selected favorite's source-provided cover art, or
 **Cover unavailable** when the Sonos item does not provide one. L1/R1 cycles
 the group-volume target together with each individual speaker.
@@ -116,6 +120,14 @@ Radio/TuneIn cover URLs with certificate and hostname verification against the
 bundled offline trust roots. Radio artwork may use one fixed, verified redirect
 from a Sonos proxy to a TuneIn image CDN; no Sonos or music-service credentials
 are used.
+
+To use Sonos' own product photography on **Main Menu → Speaker Volumes**, turn
+on **Settings → Official Sonos product photos**. The switch is optional and off
+by default. Miyonos downloads only four exact, 480-pixel image URLs published
+on Sonos' `media.sonos.com` CDN for recognized Beam, Roam, Era 100, and Arc
+models; it does not bundle, upload, or proxy those images. The photos are
+TLS-verified and cached on the SD card. A model without a catalog entry keeps
+the built-in illustration.
 
 See [docs/CONTROLS.md](docs/CONTROLS.md) for all screens and desktop keys.
 

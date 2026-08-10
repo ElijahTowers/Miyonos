@@ -52,6 +52,13 @@ afterward and the UI changes only from the confirmed response.
   verification, and no credentials, cookies, or telemetry. Spotify redirects
   remain forbidden. A Sonos Radio proxy may make exactly one verified redirect
   to either fixed TuneIn logo CDN; all other redirects are rejected.
+- **Speaker Volumes** can optionally use a similarly constrained path for
+  official product photography. **Official Sonos product photos** is off by
+  default and permits only four exact 480-pixel PNG URLs published by
+  `media.sonos.com` for recognized Beam, Roam, Era 100, and Arc models. It
+  never sends model, room, or account data to Sonos; the image URL is selected
+  from Miyonos' fixed catalog and no redirects are permitted. A missing catalog
+  entry keeps the built-in model illustration.
 
 Current transport metadata is decoded from escaped DIDL-Lite. Missing and
 unknown fields remain empty; no raw XML is shown. The active playlist container

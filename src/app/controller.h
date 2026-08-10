@@ -63,6 +63,7 @@ struct ViewState {
   int speaker_volume = -1;
   bool speaker_muted = false;
   std::map<std::string, SpeakerVolume> speaker_volumes;
+  std::map<std::string, std::string> speaker_product_photo_paths;
   std::string status = "Starting Miyonos...";
   std::string toast;
   std::string error;
@@ -138,7 +139,8 @@ class Controller {
     Favorite,
     Playlist,
     NowPlayingPlaylist,
-    Queue
+    Queue,
+    SpeakerProduct
   };
 
   struct Command {
@@ -204,6 +206,7 @@ class Controller {
   void request_poll();
   void request_speaker_volume();
   void request_group_speaker_volumes();
+  void request_speaker_product_photos();
   void request_selected_favorite_artwork();
   void request_selected_playlist_artwork();
   void request_now_playing_playlist_artwork(const BrowseItem& playlist);
@@ -294,6 +297,9 @@ class Controller {
   bool playlist_context_validation_pending_ = false;
   uint64_t last_playlist_context_validation_ms_ = 0;
   std::map<std::string, SpeakerVolume> speaker_volumes_;
+  std::map<std::string, std::string> speaker_product_photo_urls_;
+  std::string speaker_product_photo_inflight_url_;
+  std::set<std::string> failed_speaker_product_photo_urls_;
   std::map<Screen, int> selections_;
   std::string queue_object_ = "Q:0";
   std::string favorites_object_ = "FV:2";

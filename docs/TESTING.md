@@ -122,6 +122,10 @@ Render a deterministic UI preview without a display:
       the correct room, model illustration, mute state, and individual volume.
       Left/Right and L1/R1 change the selection; Up/Down and A affect only the
       selected speaker.
+- [ ] With **Official Sonos product photos** explicitly on and internet access,
+      supported Beam, Roam, Era 100, or Arc cards show the direct official
+      image after a short load. Turn the setting off again and confirm the
+      local illustration returns without any internet request.
 - [ ] Speaker reboot and router reconnect recover without restarting Miyonos.
 - [ ] Sleep/dim settings and `/tmp/stay_awake` behavior are correct.
 - [ ] Menu exit, signal exit, and an induced crash all resume Onion MainUI.

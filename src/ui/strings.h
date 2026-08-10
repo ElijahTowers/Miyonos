@@ -17,11 +17,11 @@ inline constexpr std::array<const char*, 8> kMainMenu = {
     "Rooms & Groups", "Speaker Volumes", "Queue", "Favorites",
     "Settings",       "Help",            "About", "Diagnostics"};
 
-inline constexpr std::array<const char*, 17> kSettings = {
+inline constexpr std::array<const char*, 18> kSettings = {
     "Startup room or group", "Sonos volume step", "Seek interval",
     "Artwork cache size", "Automatic artwork", "External cover art over HTTPS",
-    "Polling intensity", "Screen dim timeout", "Prevent sleep",
-    "Manual player IP", "Button hints", "Confirm before exit",
+    "Official Sonos product photos", "Polling intensity", "Screen dim timeout",
+    "Prevent sleep", "Manual player IP", "Button hints", "Confirm before exit",
     "Button mapping", "Clear artwork cache", "Forget discovered system",
     "Reset all settings", "Diagnostics mode"};
 
