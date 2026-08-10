@@ -493,14 +493,16 @@ Track parse_didl_track(const std::string& xml) {
   return track;
 }
 
-namespace {
-
-bool is_playlist_container(const Track& track) {
+bool is_saved_playlist_container(const Track& track) {
   const std::string source = lowercase(track.source);
   const std::string uri = lowercase(track.uri);
-  return source.find("playlistcontainer") != std::string::npos ||
+  const std::string id = lowercase(track.id);
+  return id.rfind("sq:", 0) == 0 ||
+         source.find("playlistcontainer") != std::string::npos ||
          uri.find("savedqueues.rsq") != std::string::npos;
 }
+
+namespace {
 
 void merge_missing_media_metadata(Track& track, const Track& media_track) {
   if (track.title.empty()) track.title = media_track.title;
@@ -785,7 +787,7 @@ ProtocolResult<PlaybackSnapshot> SonosAdapter::get_playback(
   if (media.ok()) {
     const Track media_track =
         parse_didl_track(response_value(media.value, "CurrentURIMetaData"));
-    if (is_playlist_container(media_track)) {
+    if (is_saved_playlist_container(media_track)) {
       result.value.playlist_title = media_track.title;
       result.value.active_playlist_object_id = media_track.id;
     }

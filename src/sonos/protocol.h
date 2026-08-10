@@ -58,6 +58,7 @@ int parse_duration(const std::string& value);
 std::string format_duration(int seconds);
 int seek_target(int elapsed_seconds, int delta_seconds, int duration_seconds);
 bool is_radio_stream(const Track& track);
+bool is_saved_playlist_container(const Track& track);
 std::string strip_radio_backend_suffix(const std::string& value);
 bool is_technical_media_text(const std::string& value);
 Track parse_didl_track(const std::string& xml);

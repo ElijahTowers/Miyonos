@@ -131,6 +131,7 @@ class Controller {
     std::string text;
     std::vector<std::string> ips;
     std::string playlist_title;
+    std::string playlist_object_id;
     int value = 0;
     bool flag = false;
     bool replaces_playlist_context = false;
@@ -159,6 +160,7 @@ class Controller {
     ListKind list_kind = ListKind::Queue;
     std::string text;
     std::string context;
+    std::string context_id;
     std::size_t start_index = 0;
     int value = 0;
     bool flag = false;
@@ -230,6 +232,8 @@ class Controller {
   int discovery_failures_ = 0;
   int poll_failures_ = 0;
   std::string selected_playlist_title_;
+  std::string selected_playlist_object_id_;
+  std::string playlist_context_lookup_requested_id_;
   std::string active_station_title_;
   std::string last_artwork_url_;
   std::string last_favorite_artwork_url_;

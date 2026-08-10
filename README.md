@@ -8,7 +8,7 @@ external cover downloads.
 
 ![Miyonos Now Playing preview](docs/images/now-playing.png)
 
-Version 0.1.24 is a technical preview with real Sonos LAN validation, robust
+Version 0.1.25 is a technical preview with real Sonos LAN validation, robust
 source-provided cover retrieval, a local Miyoo battery gauge, a local
 simulator, and sharp native 640 × 480 output through the device's
 double-buffered framebuffer. It includes:
@@ -37,7 +37,7 @@ double-buffered framebuffer. It includes:
 
 The desktop/mock suite and ARM cross-build pass. Discovery, playback metadata,
 cover retrieval, topology, and an idempotent volume write have also been
-validated against a real mixed-model Sonos household. Version 0.1.24 accepts
+validated against a real mixed-model Sonos household. Version 0.1.25 accepts
 the strict Spotify, Spotify-in-Sonos, and Sonos Radio/TuneIn cover endpoint
 forms that real Sonos Favorites expose. A direct radio Favorite waits for its
 buffering transition to settle, recognizes Sonos' rewritten session flags, and
@@ -59,7 +59,7 @@ the remote usable.
 
 ## Install
 
-Download `Miyonos-App-0.1.24.zip` from the [GitHub Releases page](https://github.com/ElijahTowers/Miyonos/releases). It contains only the `Miyonos` app folder.
+Download `Miyonos-App-0.1.25.zip` from the [GitHub Releases page](https://github.com/ElijahTowers/Miyonos/releases). It contains only the `Miyonos` app folder.
 
 1. Unzip the download. It contains one folder: `Miyonos`.
 2. Put that folder in the OnionOS `App` folder, so the resulting path is

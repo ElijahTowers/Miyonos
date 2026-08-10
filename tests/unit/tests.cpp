@@ -237,6 +237,11 @@ void test_metadata_and_ranges() {
   music.source = "object.item.audioItem.musicTrack";
   CHECK(!is_radio_stream(music));
 
+  Track saved_playlist_metadata;
+  saved_playlist_metadata.id = "SQ:42";
+  saved_playlist_metadata.source = "object.container";
+  CHECK(is_saved_playlist_container(saved_playlist_metadata));
+
   const std::string didl =
       R"(<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" )"
       R"(xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/">)"

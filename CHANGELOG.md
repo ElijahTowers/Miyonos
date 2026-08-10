@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.25 — Reliable Now Playing playlist context
+
+- Shows the active Saved Playlist on Now Playing even when a Sonos player
+  reports only its `SQ:` playlist identifier instead of its display name.
+- Looks up a missing title from Saved Playlists and retains the title for the
+  queue session that Miyonos starts, without carrying it into another source.
+
 ## 0.1.24 — Radio stream-label cleanup
 
 - Removes Sonos' trailing `-BB-AAC` (and equivalent codec) backend suffix

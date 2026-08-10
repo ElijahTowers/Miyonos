@@ -24,6 +24,14 @@ namespace {
 constexpr std::size_t kBrowsePageSize = 60;
 constexpr std::size_t kMaximumBrowseItems = 240;
 
+bool is_saved_playlist_object_id(const std::string& object_id) {
+  return lowercase(object_id).rfind("sq:", 0) == 0;
+}
+
+bool is_queue_transport_uri(const std::string& uri) {
+  return lowercase(uri).rfind("x-rincon-queue:", 0) == 0;
+}
+
 std::string ip_from_octets(const std::array<int, 4>& octets) {
   return std::to_string(octets[0]) + "." + std::to_string(octets[1]) + "." +
          std::to_string(octets[2]) + "." + std::to_string(octets[3]);
@@ -445,6 +453,8 @@ void Controller::select_group(std::size_t index) {
   view_.speaker_muted =
       cached == speaker_volumes_.end() ? false : cached->second.muted;
   selected_playlist_title_.clear();
+  selected_playlist_object_id_.clear();
+  playlist_context_lookup_requested_id_.clear();
   settings_.last_group_id = group.id;
   settings_.last_room_uuid = view_.active_room_uuid;
   save_settings();
@@ -566,13 +576,47 @@ void Controller::apply_result(WorkerResult result) {
         break;
       }
       poll_failures_ = 0;
+      const bool saved_playlist = is_saved_playlist_object_id(
+          result.playback.active_playlist_object_id);
+      bool needs_playlist_lookup = false;
       if (!result.playback.playlist_title.empty()) {
         selected_playlist_title_ = result.playback.playlist_title;
-      } else if (lowercase(result.playback.track.uri).rfind(
-                     "x-rincon-queue:", 0) == 0) {
+        selected_playlist_object_id_ =
+            saved_playlist ? result.playback.active_playlist_object_id : "";
+        playlist_context_lookup_requested_id_.clear();
+      } else if (saved_playlist) {
+        const auto saved_playlist_item = std::find_if(
+            view_.playlists.begin(), view_.playlists.end(),
+            [&result](const BrowseItem& item) {
+              return item.id == result.playback.active_playlist_object_id &&
+                     !item.title.empty();
+            });
+        if (saved_playlist_item != view_.playlists.end()) {
+          result.playback.playlist_title = saved_playlist_item->title;
+        } else if (selected_playlist_object_id_ ==
+                       result.playback.active_playlist_object_id) {
+          result.playback.playlist_title = selected_playlist_title_;
+        } else {
+          needs_playlist_lookup =
+              playlist_context_lookup_requested_id_ !=
+              result.playback.active_playlist_object_id;
+        }
+        if (!result.playback.playlist_title.empty()) {
+          selected_playlist_title_ = result.playback.playlist_title;
+          selected_playlist_object_id_ =
+              result.playback.active_playlist_object_id;
+          playlist_context_lookup_requested_id_.clear();
+        }
+      } else if (is_queue_transport_uri(result.playback.track.uri) &&
+                 !selected_playlist_title_.empty()) {
+        // Saved playlists are loaded into Sonos' queue. Some players omit the
+        // saved-playlist metadata for that queue, so retain the title selected
+        // in Miyonos for the active queue session.
         result.playback.playlist_title = selected_playlist_title_;
       } else {
         selected_playlist_title_.clear();
+        selected_playlist_object_id_.clear();
+        playlist_context_lookup_requested_id_.clear();
       }
       const std::string old_playlist_object =
           view_.playback.active_playlist_object_id;
@@ -629,6 +673,11 @@ void Controller::apply_result(WorkerResult result) {
       if (view_.screen == Screen::Queue &&
           old_playlist_object != view_.playback.active_playlist_object_id) {
         request_browse(ListKind::Queue);
+      }
+      if (needs_playlist_lookup) {
+        playlist_context_lookup_requested_id_ =
+            view_.playback.active_playlist_object_id;
+        request_browse(ListKind::Playlists);
       }
       break;
     }
@@ -694,6 +743,18 @@ void Controller::apply_result(WorkerResult result) {
       if (result.list_kind == ListKind::Favorites) {
         request_selected_favorite_artwork();
       } else if (result.list_kind == ListKind::Playlists) {
+        const auto active_playlist = std::find_if(
+            view_.playlists.begin(), view_.playlists.end(),
+            [this](const BrowseItem& item) {
+              return item.id == view_.playback.active_playlist_object_id &&
+                     !item.title.empty();
+            });
+        if (active_playlist != view_.playlists.end()) {
+          view_.playback.playlist_title = active_playlist->title;
+          selected_playlist_title_ = active_playlist->title;
+          selected_playlist_object_id_ = active_playlist->id;
+          playlist_context_lookup_requested_id_.clear();
+        }
         request_selected_playlist_artwork();
       }
       show_toast(result.list_kind == ListKind::Queue ? "Queue refreshed"
@@ -704,6 +765,8 @@ void Controller::apply_result(WorkerResult result) {
       if (result.success) {
         if (result.replaces_playlist_context) {
           selected_playlist_title_ = result.context;
+          selected_playlist_object_id_ = result.context_id;
+          playlist_context_lookup_requested_id_.clear();
         }
         if (!result.quiet_success) {
           show_toast(result.text.empty() ? "Done" : result.text);
@@ -976,7 +1039,10 @@ void Controller::activate() {
         command.player = *selected;
         command.item = item;
         command.replaces_playlist_context = true;
-        if (from_playlists) command.playlist_title = item.title;
+        if (from_playlists) {
+          command.playlist_title = item.title;
+          command.playlist_object_id = item.id;
+        }
         const bool radio_station =
             item.uri.rfind("x-sonosapi-stream:", 0) == 0;
         const bool queued = enqueue(std::move(command));
@@ -1601,6 +1667,7 @@ void Controller::worker_loop() {
                "Queue item started");
         result.replaces_playlist_context = command.replaces_playlist_context;
         result.context = command.playlist_title;
+        result.context_id = command.playlist_object_id;
         break;
       case CommandType::PlayItem:
         action(adapter.play_item(command.player, command.item),
@@ -1609,12 +1676,14 @@ void Controller::worker_loop() {
                    : "Item started");
         result.replaces_playlist_context = command.replaces_playlist_context;
         result.context = command.playlist_title;
+        result.context_id = command.playlist_object_id;
         break;
       case CommandType::PlaySavedPlaylist:
         action(adapter.play_saved_playlist(command.player, command.item),
                "Saved playlist started");
         result.replaces_playlist_context = command.replaces_playlist_context;
         result.context = command.playlist_title;
+        result.context_id = command.playlist_object_id;
         break;
       case CommandType::Join:
         action(adapter.join_group(command.player, command.text),
