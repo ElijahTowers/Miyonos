@@ -79,8 +79,7 @@ entirely optional.
 Download `Miyonos-App-0.1.31.zip` from the [GitHub Releases page](https://github.com/ElijahTowers/Miyonos/releases). It contains only the `Miyonos` app folder.
 
 1. Unzip the download. It contains one folder: `Miyonos`.
-2. Put that folder in the OnionOS `App` folder, so the resulting path is
-   `App/Miyonos/config.json`.
+2. Put that folder in the OnionOS `App` folder.
 3. Safely eject the SD card, boot the Miyoo, and open **Apps → Miyonos**.
 
 To install over Wi-Fi, enable OnionOS **HTTP: Web-based file sync**, open the
