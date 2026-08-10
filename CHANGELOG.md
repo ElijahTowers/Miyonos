@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.32 — Group-first controls and reliable group volume
+
+- Now Playing always controls the active Sonos group. R1 switches to the next
+  group, while L1 opens the dedicated Speaker Volumes screen for individual
+  room adjustments. Existing untouched default button layouts upgrade to this
+  clearer behavior automatically.
+- Group plus/minus now uses Sonos' relative group-volume action and then
+  re-reads the real volume for the group and every visible member. The display
+  therefore stays aligned with the levels Sonos actually applied, including
+  volume limits and changes from another controller.
+
 ## 0.1.31 — Now Playing playlist cover
 
 - Now Playing has a dedicated lower-right playlist block with the selected

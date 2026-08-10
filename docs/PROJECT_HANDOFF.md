@@ -56,14 +56,14 @@ volume on Now Playing.
 
 | Item | Current state |
 | --- | --- |
-| Release version | `0.1.31` |
-| End-user download | `dist/Miyonos-App-0.1.31.zip` — a single `Miyonos` folder to put in `App` |
+| Release version | `0.1.32` |
+| End-user download | `dist/Miyonos-App-0.1.32.zip` — a single `Miyonos` folder to put in `App` |
 | macOS simulator | `dist/Miyonos Simulator.app` |
 | Last verified device | Miyoo Mini Plus on OnionOS 4.3.x |
 | Last observed device IP | Not recorded in the public repository; check **Apps → Tweaks → Network** on the device |
-| Last verified device state | Version 0.1.23 is installed. Version 0.1.28 validated the live playlist-start flow. Version 0.1.29 additionally read the live `Q:0` queue: all 50 returned tracks included an artwork reference. Version 0.1.31 retains the selected playlist name and artwork in Now Playing through generic queue metadata. Its physical retest is pending. |
-| Current 0.1.31 package ARM binary SHA-256 | `8f7f9ac687fac7acd27f68125996547b23d8280e5f431d86d5f561bdabac1cc1` |
-| Automated verification | 243 core checks, 131 simulator-input checks, 73 simulator-fixture checks, simulator screenshot/storage checks, and package integrity checks passed |
+| Last verified device state | Version 0.1.23 is installed. Version 0.1.28 validated the live playlist-start flow. Version 0.1.29 additionally read the live `Q:0` queue: all 50 returned tracks included an artwork reference. Version 0.1.32 makes Now Playing group-focused and refreshes every member after a relative group-volume change. Its physical retest is pending. |
+| Current 0.1.32 package ARM binary SHA-256 | `b2e0ce9a1f627a452fbf734316eba2fafe84f263f7d2fafa0d53e43a88dd5d36` |
+| Automated verification | 311 core checks, 131 simulator-input checks, 91 simulator-fixture checks, simulator screenshot/storage checks, and package integrity checks passed |
 
 The device address is only a local handoff record. Check **Apps → Tweaks →
 Network** on the Miyoo when a connection fails rather than assuming that this
@@ -122,7 +122,7 @@ device IP is shown at the top of **Apps → Tweaks → Network**.
 This is the simplest path for Windows, macOS, and Linux. It installs no helper
 on the computer.
 
-1. Extract `dist/Miyonos-App-0.1.31.zip`.
+1. Extract `dist/Miyonos-App-0.1.32.zip`.
 2. On the Miyoo, enable **Apps → Tweaks → Network → HTTP: Web-based file sync**.
 3. Open the device page in a browser, then open `App`.
 4. Upload the supplied `Miyonos` folder. Do not upload a nested folder and do
