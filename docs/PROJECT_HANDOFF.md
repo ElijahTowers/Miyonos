@@ -33,8 +33,9 @@ illustrations matched to the discovered Sonos model. The optional, default-off
 **Official Sonos product photos** setting permits only a fixed catalog of four
 direct `media.sonos.com` images for Beam, Roam, Era 100, and Arc; they are
 TLS-verified, cached locally, and never bundled or proxied. It shows each
-speaker's individual volume and mute state; Left/Right or L1/R1 selects a
-speaker, Up/Down adjusts only that speaker, and A toggles its mute.
+speaker's individual volume and mute state; Left/Right or R1 selects a
+speaker, Up/Down adjusts only that speaker, and A toggles its mute. L1 opens
+this overview directly.
 
 Favorites uses the same source-provided artwork policy: its selected entry
 shows a bounded cached cover when Sonos supplies one, otherwise **Cover
@@ -45,9 +46,9 @@ allowlist of observed Spotify and Sonos Radio/TuneIn endpoint forms with TLS
 certificate and hostname verification against the bundled offline trust roots.
 A radio proxy may make one verified redirect to either fixed TuneIn logo CDN;
 every other redirect is refused. It sends no Sonos login, cookies, playback
-data, or device identifiers and is not a general web client. L1/R1 cycles the
-volume target through Group and all visible individual speakers; Up/Down
-changes the selected target only.
+data, or device identifiers and is not a general web client. L1 opens Speaker
+Volumes; R1 cycles the volume target through Group and all visible individual
+speakers; Up/Down changes the selected target only.
 
 ## Current snapshot
 
@@ -246,9 +247,9 @@ complete:
 2. Confirm discovery or enter a known player under **Settings → Manual player
    IP**.
 3. On Now Playing, test D-pad Left/Right for previous/next track only with the
-   owner's approval because it changes playback. In a multi-room group, L1/R1
-   must cycle Group and every speaker; Up/Down must change the displayed
-   target only.
+   owner's approval because it changes playback. L1 must open Speaker Volumes.
+   In a multi-room group, R1 must cycle Group and every speaker; Up/Down must
+   change the displayed target only.
 4. Confirm the battery percentage appears in the Now Playing header. Play a
    music track with known cover art, then confirm that a TV or line-in source
    shows **Cover unavailable** instead of a misleading cover.
@@ -265,10 +266,10 @@ The full device checklist and evidence rules are in [TESTING.md](TESTING.md).
 
 ## Controls and recovery
 
-The default Now Playing layout is: L1/R1 previous/next volume target (Group
-and each speaker), Up/Down the focused target's volume, Left/Right previous/
-next track, A play/pause, X group mute, Y rooms, L2 queue, R2 favorites, Start
-menu, Select controls, Menu exit, and B back.
+The default Now Playing layout is: L1 Speaker Volumes, R1 next volume target
+(Group and each speaker), Up/Down the focused target's volume, Left/Right
+previous/next track, A play/pause, X group mute, Y rooms, L2 queue, R2
+favorites, Start menu, Select controls, Menu exit, and B back.
 
 Every physical control is configurable in **Settings → Button Mapping**.
 Changes are staged until saving and must retain actions for Up, Down, Confirm,

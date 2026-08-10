@@ -50,7 +50,9 @@ inline constexpr ButtonMapping kRefreshDefaultButtonMapping{{
     Action::Menu,      Action::Refresh,   Action::ExitButton,
 }};
 
-inline constexpr ButtonMapping kDefaultButtonMapping{{
+// Default layout before L1 became the dedicated Speaker Volumes shortcut.
+// Keep this so an existing untouched installation receives the new shortcut.
+inline constexpr ButtonMapping kSpeakerVolumesPreviousDefaultButtonMapping{{
     Action::Up,        Action::Down,      Action::Left,
     Action::Right,     Action::Confirm,   Action::Back,
     Action::Context,   Action::Rooms,     Action::PreviousSpeaker,
@@ -58,11 +60,20 @@ inline constexpr ButtonMapping kDefaultButtonMapping{{
     Action::Menu,      Action::Controls,  Action::ExitButton,
 }};
 
-inline constexpr std::array<Action, 21> kMappableActions{{
+inline constexpr ButtonMapping kDefaultButtonMapping{{
+    Action::Up,        Action::Down,      Action::Left,
+    Action::Right,     Action::Confirm,   Action::Back,
+    Action::Context,   Action::Rooms,     Action::SpeakerVolumes,
+    Action::NextSpeaker, Action::Queue,   Action::Favorites,
+    Action::Menu,      Action::Controls,  Action::ExitButton,
+}};
+
+inline constexpr std::array<Action, 22> kMappableActions{{
     Action::None,         Action::Up,           Action::Down,
     Action::Left,         Action::Right,        Action::Confirm,
     Action::Back,         Action::Context,      Action::Rooms,
-    Action::PreviousSpeaker, Action::NextSpeaker, Action::Previous,
+    Action::SpeakerVolumes, Action::PreviousSpeaker, Action::NextSpeaker,
+    Action::Previous,
     Action::Next,         Action::SeekBackward,
     Action::SeekForward,  Action::Queue,        Action::Favorites,
     Action::Menu,         Action::Controls,     Action::Refresh,
@@ -120,6 +131,7 @@ inline const char* action_id(Action action) {
     case Action::Back: return "back";
     case Action::Context: return "mute_context";
     case Action::Rooms: return "rooms";
+    case Action::SpeakerVolumes: return "speaker_volumes";
     case Action::PreviousSpeaker: return "previous_speaker";
     case Action::NextSpeaker: return "next_speaker";
     case Action::Previous: return "previous_track";
@@ -148,6 +160,7 @@ inline const char* action_name(Action action) {
     case Action::Back: return "Back / Cancel";
     case Action::Context: return "Mute / Context";
     case Action::Rooms: return "Rooms & Groups";
+    case Action::SpeakerVolumes: return "Speaker Volumes";
     case Action::PreviousSpeaker: return "Previous Speaker";
     case Action::NextSpeaker: return "Next Speaker";
     case Action::Previous: return "Previous Track";

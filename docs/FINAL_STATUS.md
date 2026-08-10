@@ -38,9 +38,10 @@ directly without trying to expand every item into the queue. Detailed,
 privacy-sanitized Sonos evidence is in
 [LIVE_SONOS_VALIDATION.md](LIVE_SONOS_VALIDATION.md).
 
-The Now Playing D-pad Left/Right actions select the previous/next track. L1/R1
-now cycles the volume target through Group and every controllable speaker in
-the active group; D-pad Up/Down changes only that target. Group uses Sonos'
+The Now Playing D-pad Left/Right actions select the previous/next track. L1
+opens Speaker Volumes, while R1 cycles the volume target through Group and
+every controllable speaker in the active group; D-pad Up/Down changes only
+that target. Group uses Sonos'
 group-volume service when available, while an individual target uses its own
 `RenderingControl` volume. X remains the existing group mute control.
 The Main Menu's Speaker Volumes screen presents every available member of the

@@ -87,8 +87,9 @@ that `data` folder when replacing the app files.
 
 ## Essential controls
 
-On the Now Playing screen: A plays/pauses; L1/R1 selects a speaker in the
-current group; Up/Down changes that speaker's volume; Left/Right change track;
+On the Now Playing screen: A plays/pauses; L1 opens Speaker Volumes; R1
+selects the next volume target in the current group; Up/Down changes that
+target's volume; Left/Right change track;
 X toggles group mute; Y opens Rooms & Groups;
 L2 opens Queue; R2 opens Favorites; Start opens the menu; Select opens the
 current Controls pop-up;
@@ -109,8 +110,9 @@ until another source or playlist is started. Now Playing also keeps that
 playlist's cover art in a dedicated lower-right block, separate from the
 current track cover on the left.
 Favorites also shows the selected favorite's source-provided cover art, or
-**Cover unavailable** when the Sonos item does not provide one. L1/R1 cycles
-the group-volume target together with each individual speaker.
+**Cover unavailable** when the Sonos item does not provide one. L1 opens
+Speaker Volumes; R1 cycles the group-volume target together with each
+individual speaker.
 
 Spotify Favorites and Sonos Radio stations can provide a public HTTPS cover
 instead of a local Sonos image. To show those covers, turn on

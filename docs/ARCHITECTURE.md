@@ -36,8 +36,9 @@ bounded 32-command queue and publishes into a bounded 32-result queue.
 Playback, browse, topology, discovery, and artwork work all use that worker.
 
 Individual speaker-volume updates are optimistic. Now Playing keeps a focused
-visible speaker in the active group; L1/R1 changes that focus and Up/Down sends
-`RenderingControl` volume only to that speaker. Pending volume commands are
+visible speaker in the active group; R1 changes that focus while L1 opens the
+Speaker Volumes overview, and Up/Down sends `RenderingControl` volume only to
+that speaker. Pending volume commands are
 replaced only by a newer value for the same speaker, so rapid changes to one
 room cannot discard another room's request. Other full queues give visible
 “please wait” feedback. Socket waits are bounded and observe the shutdown

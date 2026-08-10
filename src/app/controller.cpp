@@ -2087,6 +2087,9 @@ void Controller::handle(Action action) {
     } else if (action == Action::Rooms) {
       view_.pending_button_mapping = settings_.button_mapping;
       navigate(Screen::Rooms);
+    } else if (action == Action::SpeakerVolumes) {
+      view_.pending_button_mapping = settings_.button_mapping;
+      navigate(Screen::Speakers);
     }
     return;
   }
@@ -2120,6 +2123,10 @@ void Controller::handle(Action action) {
   }
   if (action == Action::Rooms) {
     navigate(Screen::Rooms);
+    return;
+  }
+  if (action == Action::SpeakerVolumes) {
+    navigate(Screen::Speakers);
     return;
   }
   if (action == Action::Back) {

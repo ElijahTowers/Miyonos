@@ -12,6 +12,7 @@ enum class Action {
   Back,
   Context,
   Rooms,
+  SpeakerVolumes,
   PreviousSpeaker,
   NextSpeaker,
   Previous,

@@ -71,10 +71,10 @@ def main() -> int:
             .strip()
             == VERSION
         )
-        # The bounded external-artwork allowlist needs the three original
-        # service roots plus Google Trust Services Root R4 for the current
-        # TuneIn logo CDN chain.
-        assert archive.read(trust_bundle).count(b"-----BEGIN CERTIFICATE-----") == 4
+        # The bounded artwork allowlist needs the three original service roots,
+        # Google Trust Services Root R4 for the TuneIn logo CDN, and Amazon
+        # Root CA 1 for the optional official Sonos product-photo CDN.
+        assert archive.read(trust_bundle).count(b"-----BEGIN CERTIFICATE-----") == 5
         icon_data = archive.read(icon)
         assert icon_data[:8] == b"\x89PNG\r\n\x1a\n"
         assert int.from_bytes(icon_data[16:20], "big") == 74

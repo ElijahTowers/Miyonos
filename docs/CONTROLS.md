@@ -11,7 +11,8 @@ source. All screens use semantic actions rather than raw SDL keys.
 | B | Back | Back/cancel |
 | X | Toggle group mute | Context action where shown |
 | Y | Rooms & Groups | Rooms & Groups |
-| L1 / R1 | Previous / next speaker or Group volume | Jump 20 rows |
+| L1 | Speaker Volumes | Speaker Volumes |
+| R1 | Next speaker or Group volume | Jump 20 rows |
 | L2 | Queue | Queue |
 | R2 | Favorites | Favorites |
 | Start | Main Menu | Main Menu |
@@ -35,13 +36,14 @@ cover.
 In **Favorites**, the selected item appears beside its source-provided cover
 art. Folders and providers that do not expose a usable cover show **Cover
 unavailable** instead. When enabled, supported Sonos Radio/TuneIn station
-logos use the same bounded cache. L1/R1 always cycles Group together with
-the visible individual speakers; Up/Down changes the currently shown target.
+logos use the same bounded cache. L1 opens Speaker Volumes; R1 cycles Group
+together with the visible individual speakers; Up/Down changes the currently
+shown target.
 
 **Speaker Volumes** in the Main Menu is a group overview. It shows each
 available speaker in the selected group with its room name, current individual
 volume, mute state, and a built-in illustration based on its Sonos model.
-Use Left/Right or L1/R1 to choose a speaker, Up/Down to change that speaker's
+Use Left/Right or R1 to choose a speaker, Up/Down to change that speaker's
 volume, A to mute or unmute it, and Select to refresh the displayed values.
 With **Settings → Official Sonos product photos** on, recognized models use a
 cached direct image from Sonos' official media CDN; the default remains the
@@ -58,8 +60,9 @@ This is also the quickest way to check a custom layout.
 
 Every physical control can be reassigned under **Settings → Button Mapping**.
 Available actions include navigation, play/pause, mute/context, rooms,
-previous/next speaker, previous/next track, seek backward/forward, Queue,
-Favorites, Main Menu, Controls, Refresh, Exit, and No action. Changes remain staged until
+Speaker Volumes, previous/next speaker, previous/next track, seek
+backward/forward, Queue, Favorites, Main Menu, Controls, Refresh, Exit, and
+No action. Changes remain staged until
 B is pressed and the layout passes its safety check. Up, Down, Confirm, Back,
 and Exit must each remain assigned to at least one button.
 
@@ -83,7 +86,8 @@ non-coordinator member. Miyonos refuses to remove the final member and will not
 remove the active coordinator through that action.
 
 Desktop alternatives are: arrows; Z or Space for A; X or Left Ctrl for B; A or
-Left Shift for X; S or Left Alt for Y; Q/E for L1; W/T for R1; 1/Tab for L2;
+Left Shift for X; S or Left Alt for Y; Q/E for L1 (Speaker Volumes); W/T for
+R1 (next volume target); 1/Tab for L2;
 2/Backspace for R2; Return for Start; R or Right Ctrl for Select; Escape for
 Menu.
 

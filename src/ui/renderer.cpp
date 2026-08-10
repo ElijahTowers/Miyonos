@@ -518,7 +518,7 @@ void Renderer::now_playing(const ViewState& view, const Settings& settings) {
   }
   if (active && active->member_uuids.size() > 1) {
     font_.draw(clipped(std::to_string(active->member_uuids.size()) +
-                           " rooms grouped  L1/R1 selects target",
+                           " rooms grouped  R1 selects next target",
                        playlist_active ? 34 : 54),
                292, group_y, 1, kMuted, group_width);
   }
@@ -1116,7 +1116,7 @@ void Renderer::help(const ViewState& view) {
       "D-Pad Left/Right  Previous/next track or page",
       "X  Mute, or switch Queue and favorite playlists",
       "Y  Rooms & Groups",
-      "L1/R1  Previous/next speaker or group volume",
+      "L1  Speaker Volumes     R1  Next volume target",
       "L2/R2  Queue/favorites",
       "START  Main Menu     SELECT  Controls",
       "MENU  Exit confirmation",

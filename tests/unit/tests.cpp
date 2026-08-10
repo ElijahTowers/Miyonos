@@ -318,10 +318,17 @@ void test_settings_and_cache() {
   unsafe.button_mapping.fill(Action::None);
   validate_settings(unsafe);
   CHECK(unsafe.button_mapping == kDefaultButtonMapping);
+  CHECK(kDefaultButtonMapping[button_index(PhysicalButton::L1)] ==
+        Action::SpeakerVolumes);
   CHECK(button_mapping_is_safe(saved.button_mapping));
   Settings previous_defaults;
   previous_defaults.button_mapping = kRefreshDefaultButtonMapping;
   CHECK(store.save(previous_defaults));
+  CHECK(store.load().button_mapping == kDefaultButtonMapping);
+  Settings latest_previous_defaults;
+  latest_previous_defaults.button_mapping =
+      kSpeakerVolumesPreviousDefaultButtonMapping;
+  CHECK(store.save(latest_previous_defaults));
   CHECK(store.load().button_mapping == kDefaultButtonMapping);
 
   ArtworkCache cache((fs::path(directory) / "art").string(), 1400);
@@ -631,6 +638,12 @@ void test_live_mock_if_requested() {
   controller.handle(Action::Context);
   CHECK(controller.view().screen == Screen::Queue);
   controller.handle(Action::Back);
+  controller.handle(Action::SpeakerVolumes);
+  CHECK(controller.view().screen == Screen::Speakers);
+  controller.handle(Action::SpeakerVolumes);
+  CHECK(controller.view().screen == Screen::Speakers);
+  controller.handle(Action::Back);
+  CHECK(controller.view().screen == Screen::NowPlaying);
   controller.handle(Action::PreviousSpeaker);
   CHECK(controller.view().group_volume_target);
   controller.handle(Action::NextSpeaker);
