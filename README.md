@@ -59,6 +59,12 @@ The Sonos local interface is unofficial. Models, sources, and firmware can
 expose different capabilities, so unsupported actions fail safely and leave
 the remote usable.
 
+## Support Miyonos
+
+If Miyonos is useful to you, you can support its continued development through
+[GitHub Sponsors](https://github.com/sponsors/ElijahTowers). Sponsorship is
+entirely optional.
+
 ## Install
 
 Download `Miyonos-App-0.1.31.zip` from the [GitHub Releases page](https://github.com/ElijahTowers/Miyonos/releases). It contains only the `Miyonos` app folder.
@@ -80,7 +86,8 @@ that `data` folder when replacing the app files.
 On the Now Playing screen: A plays/pauses; L1/R1 selects a speaker in the
 current group; Up/Down changes that speaker's volume; Left/Right change track;
 X toggles group mute; Y opens Rooms & Groups;
-L2 opens Queue; R2 opens Favorites; Start opens the menu; Select refreshes;
+L2 opens Queue; R2 opens Favorites; Start opens the menu; Select opens the
+current Controls pop-up;
 Menu asks to exit. B goes back. Every button can be changed in **Settings →
 Button mapping**. Holding Menu + Start for three seconds always restores the
 default layout.

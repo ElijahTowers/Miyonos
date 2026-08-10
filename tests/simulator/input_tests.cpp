@@ -64,7 +64,7 @@ void test_keyboard() {
       {SDLK_LALT, Action::Rooms},     {SDLK_s, Action::Rooms},
       {SDLK_q, Action::PreviousSpeaker}, {SDLK_w, Action::NextSpeaker},
       {SDLK_1, Action::Queue},        {SDLK_2, Action::Favorites},
-      {SDLK_RETURN, Action::Menu},    {SDLK_r, Action::Refresh},
+      {SDLK_RETURN, Action::Menu},    {SDLK_r, Action::Controls},
       {SDLK_ESCAPE, Action::ExitButton}, {SDLK_F12, Action::None},
   }};
   for (const auto& mapping : mappings) {
@@ -88,7 +88,7 @@ void test_mouse_and_hit_areas() {
       {118, 581, Action::Left},      {226, 581, Action::Right},
       {449, 529, Action::Context},   {408, 574, Action::Rooms},
       {490, 574, Action::Confirm},   {449, 619, Action::Back},
-      {255, 702, Action::Refresh},   {375, 702, Action::Menu},
+      {255, 702, Action::Controls},  {375, 702, Action::Menu},
       {317, 759, Action::ExitButton},
   }};
   for (const Hit& hit : hits) {
@@ -127,7 +127,7 @@ void test_gamepad() {
       {SDL_CONTROLLER_BUTTON_LEFTSHOULDER, Action::PreviousSpeaker},
       {SDL_CONTROLLER_BUTTON_RIGHTSHOULDER, Action::NextSpeaker},
       {SDL_CONTROLLER_BUTTON_START, Action::Menu},
-      {SDL_CONTROLLER_BUTTON_BACK, Action::Refresh},
+      {SDL_CONTROLLER_BUTTON_BACK, Action::Controls},
       {SDL_CONTROLLER_BUTTON_GUIDE, Action::ExitButton},
   }};
   for (const auto& mapping : mappings) {

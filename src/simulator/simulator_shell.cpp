@@ -47,7 +47,7 @@ constexpr std::array<Button, 15> kButtons{{
     {{384, 550, 48, 48}, Action::Rooms, "Y", Shape::Circle},
     {{466, 550, 48, 48}, Action::Confirm, "A", Shape::Circle},
     {{425, 595, 48, 48}, Action::Back, "B", Shape::Circle},
-    {{211, 688, 88, 28}, Action::Refresh, "SELECT", Shape::Pill},
+    {{211, 688, 88, 28}, Action::Controls, "SELECT", Shape::Pill},
     {{331, 688, 88, 28}, Action::Menu, "START", Shape::Pill},
     {{286, 744, 62, 30}, Action::ExitButton, "MENU", Shape::Pill},
 }};

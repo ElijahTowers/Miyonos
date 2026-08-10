@@ -40,7 +40,9 @@ inline constexpr ButtonMapping kLegacyDefaultButtonMapping{{
     Action::Menu,      Action::Refresh,   Action::ExitButton,
 }};
 
-inline constexpr ButtonMapping kDefaultButtonMapping{{
+// Default layout before the Controls overlay was introduced. Keep this so an
+// existing untouched installation receives the new, simpler Select behavior.
+inline constexpr ButtonMapping kRefreshDefaultButtonMapping{{
     Action::Up,        Action::Down,      Action::Left,
     Action::Right,     Action::Confirm,   Action::Back,
     Action::Context,   Action::Rooms,     Action::PreviousSpeaker,
@@ -48,14 +50,23 @@ inline constexpr ButtonMapping kDefaultButtonMapping{{
     Action::Menu,      Action::Refresh,   Action::ExitButton,
 }};
 
-inline constexpr std::array<Action, 20> kMappableActions{{
+inline constexpr ButtonMapping kDefaultButtonMapping{{
+    Action::Up,        Action::Down,      Action::Left,
+    Action::Right,     Action::Confirm,   Action::Back,
+    Action::Context,   Action::Rooms,     Action::PreviousSpeaker,
+    Action::NextSpeaker, Action::Queue,   Action::Favorites,
+    Action::Menu,      Action::Controls,  Action::ExitButton,
+}};
+
+inline constexpr std::array<Action, 21> kMappableActions{{
     Action::None,         Action::Up,           Action::Down,
     Action::Left,         Action::Right,        Action::Confirm,
     Action::Back,         Action::Context,      Action::Rooms,
     Action::PreviousSpeaker, Action::NextSpeaker, Action::Previous,
     Action::Next,         Action::SeekBackward,
     Action::SeekForward,  Action::Queue,        Action::Favorites,
-    Action::Menu,         Action::Refresh,      Action::ExitButton,
+    Action::Menu,         Action::Controls,     Action::Refresh,
+    Action::ExitButton,
 }};
 
 inline constexpr std::array<const char*, kPhysicalButtonCount>
@@ -118,6 +129,7 @@ inline const char* action_id(Action action) {
     case Action::Queue: return "queue";
     case Action::Favorites: return "favorites";
     case Action::Menu: return "main_menu";
+    case Action::Controls: return "controls";
     case Action::Refresh: return "refresh";
     case Action::ExitButton: return "exit";
     case Action::ResetButtonMapping: return "reset_button_mapping";
@@ -145,6 +157,7 @@ inline const char* action_name(Action action) {
     case Action::Queue: return "Queue";
     case Action::Favorites: return "Favorites";
     case Action::Menu: return "Main Menu";
+    case Action::Controls: return "Show Controls";
     case Action::Refresh: return "Refresh";
     case Action::ExitButton: return "Exit Miyonos";
     case Action::ResetButtonMapping: return "Restore Button Mapping";

@@ -67,6 +67,7 @@ struct ViewState {
   bool discovering = true;
   bool connected = false;
   bool busy = false;
+  bool controls_overlay = false;
   int selection = 0;
   std::array<int, 4> ip_octets{{192, 168, 1, 100}};
   int ip_octet = 0;

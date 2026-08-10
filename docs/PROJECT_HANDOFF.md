@@ -259,7 +259,7 @@ The full device checklist and evidence rules are in [TESTING.md](TESTING.md).
 The default Now Playing layout is: L1/R1 previous/next volume target (Group
 and each speaker), Up/Down the focused target's volume, Left/Right previous/
 next track, A play/pause, X group mute, Y rooms, L2 queue, R2 favorites, Start
-menu, Select refresh, Menu exit, and B back.
+menu, Select controls, Menu exit, and B back.
 
 Every physical control is configurable in **Settings → Button Mapping**.
 Changes are staged until saving and must retain actions for Up, Down, Confirm,

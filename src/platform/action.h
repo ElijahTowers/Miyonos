@@ -21,6 +21,7 @@ enum class Action {
   Queue,
   Favorites,
   Menu,
+  Controls,
   Refresh,
   ExitButton,
   ResetButtonMapping

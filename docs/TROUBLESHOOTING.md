@@ -38,7 +38,8 @@ release ZIP so `App/Miyonos/libs` is complete.
 
 ## Playback or rooms look stale
 
-Press Select to refresh. Group changes made by another controller can take one
+Use the main menu or the optional Refresh button mapping to refresh. Group
+changes made by another controller can take one
 poll interval to appear. After repeated failures Miyonos refreshes topology
 and retries discovery with backoff. A changed player address is replaced in
 the cache after successful discovery; use a current manual IP if needed.

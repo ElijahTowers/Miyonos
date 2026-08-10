@@ -45,6 +45,7 @@ int main(int argc, char** argv) {
   bool simulator = false;
   bool screen_only = false;
   bool live_sonos = false;
+  bool show_controls = false;
   bool data_directory_explicit = std::getenv("MIYONOS_DATA_DIR") != nullptr;
   std::string scenario = "grouped";
   std::string capture_path;
@@ -56,6 +57,7 @@ int main(int argc, char** argv) {
   const std::string capture_path;
   const std::string capture_shell_path;
   constexpr bool live_sonos = false;
+  constexpr bool show_controls = false;
   constexpr uint32_t capture_after_ms = 0;
 #endif
   std::string data_directory = default_data_directory(argc > 0 ? argv[0] : nullptr);
@@ -87,6 +89,9 @@ int main(int argc, char** argv) {
     } else if (argument == "--screen-only") {
       simulator = true;
       screen_only = true;
+    } else if (argument == "--show-controls") {
+      simulator = true;
+      show_controls = true;
     } else if (argument == "--live-sonos") {
       simulator = true;
       live_sonos = true;
@@ -112,7 +117,7 @@ int main(int argc, char** argv) {
 #ifdef MIYONOS_ENABLE_SIMULATOR
       std::cout
           << "       miyonos --simulator [--scenario NAME] "
-             "[--live-sonos] [--screen-only]\n"
+             "[--live-sonos] [--screen-only] [--show-controls]\n"
           << "Test capture: [--capture-frame PATH] [--capture-shell PATH] "
              "[--capture-after-ms N]\n";
 #endif
@@ -252,7 +257,7 @@ int main(int argc, char** argv) {
       }
       miyonos::AppRuntime runtime(
           {mode, data_directory, capture_path, capture_shell_path,
-           scenario, live_sonos, capture_after_ms});
+           scenario, live_sonos, show_controls, capture_after_ms});
       exit_status = runtime.run(frames);
     }
   }

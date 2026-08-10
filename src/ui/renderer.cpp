@@ -263,7 +263,7 @@ void Renderer::discovery(const ViewState& view) {
   font_.draw_centered("Searching the local Wi-Fi network", 320, 1, kMuted);
   font_.draw_centered("No cloud account or internet connection is required",
                       346, 1, kMuted);
-  hints("B  Back", "SELECT  Refresh");
+  hints("B  Back", "SELECT  Controls");
 }
 
 void Renderer::draw_fallback_artwork(const SDL_Rect& area) {
@@ -522,12 +522,8 @@ void Renderer::now_playing(const ViewState& view, const Settings& settings) {
                        playlist_active ? 34 : 54),
                292, group_y, 1, kMuted, group_width);
   }
-  font_.draw("A Play/Pause    X Group mute    L1/R1 Target", 20, 365, 1,
-             kCream);
-  font_.draw("D-Pad Up/Down Target volume    Left/Right Track", 20, 390, 1,
-             kCream);
   if (settings.button_hints != ButtonHints::Never) {
-    hints("L2  Queue", "R2  Favorites    START  Menu");
+    hints("SELECT  Controls", "L2  Queue    R2  Favorites");
   }
 }
 
@@ -707,7 +703,7 @@ void Renderer::media_list(const ViewState& view,
   hints("B  Back    D-Pad  Browse",
         view.screen == Screen::Queue
             ? "A  Play    X  Favorite playlists"
-            : "A  Open/Play    SELECT  Refresh");
+        : "A  Open/Play");
 }
 
 void Renderer::favorites(const ViewState& view) {
@@ -720,7 +716,7 @@ void Renderer::favorites(const ViewState& view) {
         204, 2, kCream);
     font_.draw_centered(view.busy ? view.status : "Press SELECT to retry", 246,
                         1, kMuted);
-    hints("B  Back", "SELECT  Refresh");
+    hints("B  Back", "SELECT  Controls");
     return;
   }
 
@@ -769,7 +765,7 @@ void Renderer::favorites(const ViewState& view) {
   font_.draw_centered(selected.container ? "A opens this folder"
                                         : "A starts this favorite",
                       360, 1, kMuted, 516);
-  hints("B  Back    D-Pad  Browse", "A  Open/Play    SELECT  Refresh");
+  hints("B  Back    D-Pad  Browse", "A  Open/Play");
 }
 
 void Renderer::playlists(const ViewState& view) {
@@ -908,8 +904,7 @@ void Renderer::button_mapping(const ViewState& view) {
     actions.emplace_back(action_name(view.pending_button_mapping[index]));
   }
   list_rows(buttons, actions, view.selection);
-  hints("Back Save   Confirm/Left/Right Change",
-        "Context Default   Refresh Reset all");
+  hints("B Save   X Default", "Hold MENU+START  Restore all");
 }
 
 void Renderer::ip_editor(const ViewState& view) {
@@ -942,7 +937,7 @@ void Renderer::help(const ViewState& view) {
       "Y  Rooms & Groups",
       "L1/R1  Previous/next speaker or group volume",
       "L2/R2  Queue/favorites",
-      "START  Main Menu     SELECT  Refresh",
+      "START  Main Menu     SELECT  Controls",
       "MENU  Exit confirmation",
       "MENU + START (hold 3 sec)  Restore buttons",
       "Custom layout  Settings > Button Mapping"};
@@ -950,6 +945,48 @@ void Renderer::help(const ViewState& view) {
     font_.draw(lines[i], 26, 112 + static_cast<int>(i) * 28, 1,
                i < 2 ? kMint : kCream);
   hints("B  Back", "No touch screen required");
+}
+
+void Renderer::controls_overlay(const ViewState& view,
+                                const Settings& settings) {
+  SDL_SetRenderDrawBlendMode(renderer_, SDL_BLENDMODE_BLEND);
+  fill(renderer_, SDL_Rect{0, 0, 640, 480}, SDL_Color{0, 0, 0, 168});
+  SDL_SetRenderDrawBlendMode(renderer_, SDL_BLENDMODE_NONE);
+  fill(renderer_, SDL_Rect{30, 38, 580, 404}, kCream);
+  fill(renderer_, SDL_Rect{40, 48, 560, 384}, kNavy);
+  font_.draw_centered("Controls", 67, 3, kCream);
+  font_.draw_centered("Your current button layout", 101, 1, kMuted);
+
+  constexpr std::size_t kRowsPerColumn = 8;
+  constexpr int kLeftX = 62;
+  constexpr int kRightX = 330;
+  constexpr int kFirstY = 132;
+  constexpr int kRowHeight = 28;
+  for (std::size_t index = 0; index < kPhysicalButtonCount; ++index) {
+    const bool right_column = index >= kRowsPerColumn;
+    const std::size_t row = right_column ? index - kRowsPerColumn : index;
+    const int x = right_column ? kRightX : kLeftX;
+    const int y = kFirstY + static_cast<int>(row) * kRowHeight;
+    const auto button = static_cast<PhysicalButton>(index);
+    font_.draw(physical_button_name(button), x, y, 1, kMint, 98);
+    font_.draw(clipped(action_name(settings.button_mapping[index]), 25),
+               x + 108, y, 1, kCream, 150);
+  }
+  const auto controls = std::find(settings.button_mapping.begin(),
+                                  settings.button_mapping.end(),
+                                  Action::Controls);
+  const bool has_controls_button = controls != settings.button_mapping.end();
+  const std::string controls_button = has_controls_button
+      ? physical_button_name(static_cast<PhysicalButton>(
+            std::distance(settings.button_mapping.begin(), controls)))
+      : "a mapped button";
+  font_.draw_centered(has_controls_button
+                          ? controls_button + " opens this guide"
+                          : "Assign Show Controls in Button Mapping",
+                      370, 1, kMuted);
+  font_.draw_centered("A, B, or " + controls_button + " closes it", 398, 1,
+                      kMint);
+  (void)view;
 }
 
 void Renderer::about(const ViewState& view) {
@@ -1066,6 +1103,7 @@ void Renderer::draw(const ViewState& view, const Settings& settings_value) {
     case Screen::Offline: offline(view); break;
   }
   toast(view);
+  if (view.controls_overlay) controls_overlay(view, settings_value);
   if (settings_value.dim_timeout_seconds > 0 &&
       monotonic_ms() - view.last_input_ms >
           static_cast<uint64_t>(settings_value.dim_timeout_seconds) * 1000) {

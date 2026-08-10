@@ -308,6 +308,10 @@ void test_settings_and_cache() {
   validate_settings(unsafe);
   CHECK(unsafe.button_mapping == kDefaultButtonMapping);
   CHECK(button_mapping_is_safe(saved.button_mapping));
+  Settings previous_defaults;
+  previous_defaults.button_mapping = kRefreshDefaultButtonMapping;
+  CHECK(store.save(previous_defaults));
+  CHECK(store.load().button_mapping == kDefaultButtonMapping);
 
   ArtworkCache cache((fs::path(directory) / "art").string(), 1400);
   std::string png(900, 'x');
@@ -454,6 +458,10 @@ void test_live_mock_if_requested() {
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
   }
   CHECK(controller.view().screen == Screen::NowPlaying);
+  controller.handle(Action::Controls);
+  CHECK(controller.view().controls_overlay);
+  controller.handle(Action::Back);
+  CHECK(!controller.view().controls_overlay);
   const Screen menu_screens[] = {Screen::Rooms, Screen::Queue,
                                  Screen::Favorites, Screen::Settings,
                                  Screen::Help, Screen::About,

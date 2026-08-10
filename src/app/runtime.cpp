@@ -44,6 +44,7 @@ int AppRuntime::run(FramePresenter& frames) {
   bool window_closed = false;
   bool stay_awake_file = false;
   bool captured = false;
+  bool controls_shown = false;
   int exit_status = 0;
 #ifdef MIYONOS_ENABLE_SIMULATOR
   const uint32_t started_at = SDL_GetTicks();
@@ -71,6 +72,14 @@ int AppRuntime::run(FramePresenter& frames) {
     if (repeated != Action::None) controller.handle(repeated);
 
     controller.update();
+#ifdef MIYONOS_ENABLE_SIMULATOR
+    if (options_.show_controls_on_start && !controls_shown &&
+        controller.view().screen != Screen::Splash &&
+        controller.view().screen != Screen::Discovery) {
+      controller.handle(Action::Controls);
+      controls_shown = true;
+    }
+#endif
     if (controller.settings().prevent_sleep) {
       SDL_DisableScreenSaver();
       if (options_.mode == RuntimeMode::OnionOS && !stay_awake_file) {

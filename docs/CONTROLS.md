@@ -15,7 +15,7 @@ source. All screens use semantic actions rather than raw SDL keys.
 | L2 | Queue | Queue |
 | R2 | Favorites | Favorites |
 | Start | Main Menu | Main Menu |
-| Select | Refresh | Refresh current screen |
+| Select | Controls pop-up | Controls pop-up |
 | Menu | Exit confirmation | Exit confirmation |
 
 In **Queue**, X opens **Favorite Playlists**. Queue reads Sonos' `Q:0` track
@@ -42,10 +42,14 @@ public HTTPS cover, turn on **Settings → External cover art over HTTPS**. This
 default-off setting is limited to verified Spotify and Sonos Radio/TuneIn cover
 URLs and never uses a Sonos or music-service login.
 
+Press **Select** at any time for a compact pop-up that shows every physical
+button and its current assignment. Press A, B, or Select again to close it.
+This is also the quickest way to check a custom layout.
+
 Every physical control can be reassigned under **Settings → Button Mapping**.
 Available actions include navigation, play/pause, mute/context, rooms,
 previous/next speaker, previous/next track, seek backward/forward, Queue,
-Favorites, Main Menu, Refresh, Exit, and No action. Changes remain staged until
+Favorites, Main Menu, Controls, Refresh, Exit, and No action. Changes remain staged until
 B is pressed and the layout passes its safety check. Up, Down, Confirm, Back,
 and Exit must each remain assigned to at least one button.
 

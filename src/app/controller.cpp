@@ -1633,6 +1633,18 @@ void Controller::handle(Action action) {
   view_.last_input_ms = monotonic_ms();
   if (action == Action::ResetButtonMapping) {
     restore_button_mapping();
+    view_.controls_overlay = false;
+    return;
+  }
+  if (view_.controls_overlay) {
+    if (action == Action::Controls || action == Action::Back ||
+        action == Action::Confirm) {
+      view_.controls_overlay = false;
+    } else if (action == Action::ExitButton) {
+      view_.controls_overlay = false;
+      if (settings_.confirm_exit) navigate(Screen::ConfirmExit);
+      else exit_requested_ = true;
+    }
     return;
   }
   if (view_.screen == Screen::ConfirmExit) {
@@ -1648,6 +1660,10 @@ void Controller::handle(Action action) {
     } else if (action == Action::Confirm) {
       confirm_pending();
     }
+    return;
+  }
+  if (action == Action::Controls) {
+    view_.controls_overlay = true;
     return;
   }
   if (view_.screen == Screen::ButtonMapping) {

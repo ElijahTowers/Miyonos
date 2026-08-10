@@ -179,7 +179,8 @@ Settings SettingsStore::load(std::string* warning) const {
       settings.button_mapping[index] = action;
     }
   }
-  if (settings.button_mapping == kLegacyDefaultButtonMapping) {
+  if (settings.button_mapping == kLegacyDefaultButtonMapping ||
+      settings.button_mapping == kRefreshDefaultButtonMapping) {
     settings.button_mapping = kDefaultButtonMapping;
   }
   const std::vector<std::string> known = {

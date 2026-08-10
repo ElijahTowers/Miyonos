@@ -29,6 +29,20 @@ grep -qx "$ACTUAL" <<<"$EXPECTED" || {
 }
 file "$OUTPUT/grouped-frame.bmp" | grep -q '640 x 480 x 32'
 
+MIYONOS_SCREENSHOT_TIME_MS=1000 SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
+  "$BUILD/miyonos" --screen-only --show-controls --scenario grouped \
+  --data-dir "$DATA_DIR" --capture-after-ms 4500 \
+  --capture-frame "$OUTPUT/controls-overlay.bmp"
+CONTROLS_FRAME="$(shasum -a 256 "$OUTPUT/controls-overlay.bmp" | awk '{print $1}')"
+EXPECTED_CONTROLS="$(awk '$1 == "controls-overlay.bmp" {print $2}' "$REFERENCE")"
+[[ "$CONTROLS_FRAME" == "$EXPECTED_CONTROLS" ]] || {
+  echo "The controls overlay reference image changed." >&2
+  echo "Expected: ${EXPECTED_CONTROLS:-missing}" >&2
+  echo "Actual:   $CONTROLS_FRAME" >&2
+  exit 1
+}
+file "$OUTPUT/controls-overlay.bmp" | grep -q '640 x 480 x 32'
+
 MIYONOS_SCREENSHOT_TIME_MS=1000 MIYONOS_DISABLE_IMAGE_DECODER=1 \
   SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
   "$BUILD/miyonos" --screen-only --scenario grouped \

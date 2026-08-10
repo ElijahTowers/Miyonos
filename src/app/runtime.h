@@ -16,6 +16,7 @@ struct AppRuntimeOptions {
   std::string capture_shell_path;
   std::string scenario = "grouped";
   bool live_sonos = false;
+  bool show_controls_on_start = false;
   uint32_t capture_after_ms = 0;
 };
 
