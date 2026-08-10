@@ -546,6 +546,12 @@ std::string SimulatorSonosFixture::response_for(
     volume_ = std::max(0, std::min(100, integer_field(body, "DesiredVolume", 0)));
     return envelope(action, action == "SetVolume" ? kRc : kGrc);
   }
+  if (action == "SetRelativeGroupVolume") {
+    volume_ = std::max(
+        0, std::min(100, volume_ + integer_field(body, "Adjustment", 0)));
+    return envelope(action, kGrc,
+                    "<NewVolume>" + std::to_string(volume_) + "</NewVolume>");
+  }
   if (action == "SetMute" || action == "SetGroupMute") {
     muted_ = field(body, "DesiredMute", "0") == "1";
     return envelope(action, action == "SetMute" ? kRc : kGrc);

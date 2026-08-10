@@ -55,8 +55,11 @@ with bounded exponential backoff.
 service URLs instead of assuming fixed control paths. The adapter parses
 ZoneGroupTopology, routes group transport to its coordinator, uses
 GroupRenderingControl for existing group-level state where advertised, and
-uses per-player RenderingControl for the focused speaker's volume. UI and
-settings code only see typed domain objects and results.
+uses its relative-volume action for button-based group adjustments. After a
+group change, the controller re-reads each member rather than deriving
+individual volume levels from the group total. Per-player RenderingControl is
+used for the focused speaker's volume. UI and settings code only see typed
+domain objects and results.
 
 ## Persistence and caching
 

@@ -35,6 +35,10 @@ afterward and the UI changes only from the confirmed response.
   relative-time and track-number seek, URI playback, join, and leave.
 - `RenderingControl`: player volume and mute.
 - `GroupRenderingControl`: group volume and mute when the service is present.
+  A group-volume button uses `SetRelativeGroupVolume` on the coordinator, so
+  one press means one relative group change rather than a stale absolute
+  target. Miyonos then reads the group and every visible member again; the
+  per-speaker screen always reflects the levels Sonos actually applied.
 - `ContentDirectory`: Queue tracks (`Q:0`) and Favorites (`FV:2`), 60 items
   per page with additional pages loaded on demand. Real players can return technical
   queue-instance entries from `Q:`, so the Queue screen reads `Q:0` to show

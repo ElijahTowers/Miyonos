@@ -935,6 +935,23 @@ ProtocolResult<bool> SonosAdapter::set_volume(const Player& player, int volume,
   return {response.ok(), response.error, response.upnp_error_code};
 }
 
+ProtocolResult<bool> SonosAdapter::adjust_group_volume(
+    const Player& coordinator, int adjustment) {
+  // SetRelativeGroupVolume is the Sonos operation intended for physical
+  // volume up/down controls. Unlike an absolute group target, it applies the
+  // requested change from the coordinator's latest group-volume snapshot.
+  adjustment = std::max(-100, std::min(100, adjustment));
+  if (adjustment == 0) return {true, {}, 0};
+  if (!service(coordinator, "GroupRenderingControl")) {
+    return {false, "Group volume is not supported by this speaker.", 0};
+  }
+  auto response = soap(coordinator, "GroupRenderingControl",
+                       "SetRelativeGroupVolume",
+                       {{"InstanceID", "0"},
+                        {"Adjustment", std::to_string(adjustment)}});
+  return {response.ok(), response.error, response.upnp_error_code};
+}
+
 ProtocolResult<bool> SonosAdapter::set_mute(const Player& player, bool muted,
                                              bool group) {
   const bool use_group = group && service(player, "GroupRenderingControl");

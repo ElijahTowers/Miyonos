@@ -881,6 +881,7 @@ void Controller::select_group(std::size_t index, bool opened_by_user) {
   }
   request_poll();
   request_speaker_volume();
+  request_group_speaker_volumes();
 }
 
 void Controller::apply_result(WorkerResult result) {
@@ -1382,6 +1383,13 @@ void Controller::apply_result(WorkerResult result) {
                    2400);
       }
       if (result.context == "speaker-volume-sync") {
+        request_group_speaker_volumes();
+      } else if (result.context == "group-volume") {
+        // The coordinator applies a group-relative change asynchronously to
+        // every room. Read both group and room values again rather than
+        // inventing per-speaker values locally; this also handles 0/100
+        // limits and changes made in another Sonos controller.
+        request_poll();
         request_group_speaker_volumes();
       }
       break;
@@ -2292,20 +2300,31 @@ void Controller::handle(Action action) {
       }
       const int delta =
           (action == Action::Up ? settings_.volume_step : -settings_.volume_step);
-      const int intended = clamp_volume(view_.speaker_volume + delta);
+      const int previous_volume = view_.speaker_volume;
+      const int intended = clamp_volume(previous_volume + delta);
+      if (intended == previous_volume) return;
       view_.speaker_volume = intended;
-      if (view_.group_volume_target) view_.playback.volume = intended;
-      else {
+      if (view_.group_volume_target && view_.playback.group_volume) {
+        view_.playback.volume = intended;
+      } else {
         const SpeakerVolume volume{intended, view_.speaker_muted};
         speaker_volumes_[target->uuid] = volume;
         view_.speaker_volumes[target->uuid] = volume;
       }
       volume_feedback_until_ms_ = monotonic_ms() + 1200;
       Command command;
-      command.type = CommandType::Volume;
       command.player = *target;
-      command.value = intended;
-      command.flag = view_.group_volume_target && view_.playback.group_volume;
+      if (view_.group_volume_target && view_.playback.group_volume) {
+        // A D-pad press is an increment, not a slider position. Let Sonos
+        // make the matching relative adjustment for every member of the
+        // group, retaining each room's individual offset.
+        command.type = CommandType::AdjustGroupVolume;
+        command.value = intended - previous_volume;
+      } else {
+        command.type = CommandType::Volume;
+        command.value = intended;
+        command.flag = false;
+      }
       enqueue(std::move(command));
     } else if (action == Action::SeekBackward ||
                action == Action::SeekForward) {
@@ -2439,6 +2458,11 @@ void Controller::worker_loop() {
       case CommandType::Volume:
         action(adapter.set_volume(command.player, command.value, command.flag),
                "");
+        result.quiet_success = true;
+        break;
+      case CommandType::AdjustGroupVolume:
+        action(adapter.adjust_group_volume(command.player, command.value), "");
+        result.context = "group-volume";
         result.quiet_success = true;
         break;
       case CommandType::SyncSpeakerVolumes: {

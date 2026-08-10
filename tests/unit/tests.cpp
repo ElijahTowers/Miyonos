@@ -2,6 +2,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <string>
 #include <thread>
 #include <unistd.h>
@@ -461,6 +462,10 @@ void test_live_mock_if_requested() {
   stream_favorite.metadata = container_favorite.metadata;
   CHECK(adapter.play_item(*mock_player, stream_favorite).ok());
   CHECK(adapter.set_volume(*mock_player, 33, true).ok());
+  CHECK(adapter.adjust_group_volume(*mock_player, 2).ok());
+  const auto adjusted_group_member = adapter.get_speaker_volume(*mock_player);
+  CHECK(adjusted_group_member.ok());
+  CHECK(adjusted_group_member.value.volume == 35);
   CHECK(adapter.set_mute(*mock_player, true, true).ok());
   CHECK(adapter.pause(*mock_player).ok());
   CHECK(adapter.stop(*mock_player).ok());
@@ -679,6 +684,72 @@ void test_live_mock_if_requested() {
   CHECK(controller.view().screen == Screen::NowPlaying);
   controller.handle(Action::PreviousSpeaker);
   CHECK(controller.view().group_volume_target);
+  const int group_volume_before = controller.view().speaker_volume;
+  std::map<std::string, int> member_volumes_before;
+  for (const auto& member :
+       controller.view().topology.groups.front().member_uuids) {
+    const auto volume = controller.view().speaker_volumes.find(member);
+    CHECK(volume != controller.view().speaker_volumes.end());
+    if (volume != controller.view().speaker_volumes.end()) {
+      member_volumes_before[member] = volume->second.volume;
+    }
+  }
+  controller.handle(Action::Up);
+  const int group_volume_after_up =
+      clamp_volume(group_volume_before + controller.settings().volume_step);
+  const auto group_volume_up_deadline = std::chrono::steady_clock::now() +
+                                        std::chrono::seconds(3);
+  while (std::chrono::steady_clock::now() < group_volume_up_deadline) {
+    controller.update();
+    bool every_member_updated = true;
+    for (const auto& before : member_volumes_before) {
+      const auto current = controller.view().speaker_volumes.find(before.first);
+      every_member_updated = every_member_updated &&
+          current != controller.view().speaker_volumes.end() &&
+          current->second.volume == clamp_volume(
+              before.second + controller.settings().volume_step);
+    }
+    if (every_member_updated &&
+        controller.view().speaker_volume == group_volume_after_up) {
+      break;
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+  }
+  CHECK(controller.view().speaker_volume == group_volume_after_up);
+  for (const auto& before : member_volumes_before) {
+    const auto current = controller.view().speaker_volumes.find(before.first);
+    CHECK(current != controller.view().speaker_volumes.end());
+    if (current != controller.view().speaker_volumes.end()) {
+      CHECK(current->second.volume ==
+            clamp_volume(before.second + controller.settings().volume_step));
+    }
+  }
+  controller.handle(Action::Down);
+  const auto group_volume_down_deadline = std::chrono::steady_clock::now() +
+                                          std::chrono::seconds(3);
+  while (std::chrono::steady_clock::now() < group_volume_down_deadline) {
+    controller.update();
+    bool every_member_restored = true;
+    for (const auto& before : member_volumes_before) {
+      const auto current = controller.view().speaker_volumes.find(before.first);
+      every_member_restored = every_member_restored &&
+          current != controller.view().speaker_volumes.end() &&
+          current->second.volume == before.second;
+    }
+    if (every_member_restored &&
+        controller.view().speaker_volume == group_volume_before) {
+      break;
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+  }
+  CHECK(controller.view().speaker_volume == group_volume_before);
+  for (const auto& before : member_volumes_before) {
+    const auto current = controller.view().speaker_volumes.find(before.first);
+    CHECK(current != controller.view().speaker_volumes.end());
+    if (current != controller.view().speaker_volumes.end()) {
+      CHECK(current->second.volume == before.second);
+    }
+  }
   controller.handle(Action::NextSpeaker);
   CHECK(!controller.view().group_volume_target);
   controller.handle(Action::ExitButton);

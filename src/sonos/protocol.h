@@ -95,6 +95,11 @@ class SonosAdapter {
                                        std::size_t one_based_track);
   ProtocolResult<bool> set_volume(const Player& player, int volume,
                                   bool group);
+  // Group volume buttons express an increment rather than an absolute target.
+  // Sending this to the coordinator lets Sonos preserve each room's own
+  // relative level while moving the whole group together.
+  ProtocolResult<bool> adjust_group_volume(const Player& coordinator,
+                                           int adjustment);
   ProtocolResult<bool> set_mute(const Player& player, bool muted, bool group);
   ProtocolResult<bool> play_item(const Player& coordinator,
                                  const BrowseItem& item,

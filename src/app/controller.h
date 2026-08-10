@@ -117,6 +117,7 @@ class Controller {
     Next,
     Seek,
     Volume,
+    AdjustGroupVolume,
     SyncSpeakerVolumes,
     GetSpeakerVolume,
     Mute,

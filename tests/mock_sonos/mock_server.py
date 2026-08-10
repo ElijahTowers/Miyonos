@@ -424,6 +424,10 @@ class Handler(http.server.BaseHTTPRequestHandler):
         elif action in ("SetVolume", "SetGroupVolume"):
             State.volume = max(0, min(100, int(self.field(body, "DesiredVolume", "0"))))
             response = envelope(action, GRC if "Group" in action else RC)
+        elif action == "SetRelativeGroupVolume":
+            adjustment = int(self.field(body, "Adjustment", "0"))
+            State.volume = max(0, min(100, State.volume + adjustment))
+            response = envelope(action, GRC, f"<NewVolume>{State.volume}</NewVolume>")
         elif action in ("SetMute", "SetGroupMute"):
             State.muted = self.field(body, "DesiredMute", "0") in ("1", "true")
             response = envelope(action, GRC if "Group" in action else RC)
