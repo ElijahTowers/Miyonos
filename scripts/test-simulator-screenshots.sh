@@ -11,7 +11,7 @@ mkdir -p "$OUTPUT"
 RUN_ROOT="$(mktemp -d "$ROOT/build/simulator/screenshot-run.XXXXXX")"
 DATA_DIR="$RUN_ROOT/SDCARD/App/Miyonos/data"
 mkdir -p "$DATA_DIR"
-printf 'schema_version=2\nvolume_step=3\nconfirm_exit=1\n' \
+printf 'schema_version=2\ncontent_defaults_version=1\nvolume_step=3\nconfirm_exit=1\nofficial_sonos_product_photos=0\n' \
   > "$DATA_DIR/settings.ini"
 MIYONOS_SCREENSHOT_TIME_MS=1000 SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
   "$BUILD/miyonos" --screen-only --scenario grouped \
@@ -45,7 +45,7 @@ file "$OUTPUT/controls-overlay.bmp" | grep -q '640 x 480 x 32'
 
 QUEUE_DATA="$RUN_ROOT/queue/SDCARD/App/Miyonos/data"
 mkdir -p "$QUEUE_DATA"
-printf 'schema_version=2\nvolume_step=3\nconfirm_exit=1\n' > "$QUEUE_DATA/settings.ini"
+printf 'schema_version=2\ncontent_defaults_version=1\nvolume_step=3\nconfirm_exit=1\nofficial_sonos_product_photos=0\n' > "$QUEUE_DATA/settings.ini"
 MIYONOS_SCREENSHOT_TIME_MS=1000 SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
   "$BUILD/miyonos" --screen-only --show-queue --scenario grouped \
   --data-dir "$QUEUE_DATA" --capture-after-ms 6000 \
@@ -62,7 +62,7 @@ file "$OUTPUT/queue-layout.bmp" | grep -q '640 x 480 x 32'
 
 SPEAKERS_DATA="$RUN_ROOT/speakers/SDCARD/App/Miyonos/data"
 mkdir -p "$SPEAKERS_DATA"
-printf 'schema_version=2\nvolume_step=3\nconfirm_exit=1\n' > "$SPEAKERS_DATA/settings.ini"
+printf 'schema_version=2\ncontent_defaults_version=1\nvolume_step=3\nconfirm_exit=1\nofficial_sonos_product_photos=0\n' > "$SPEAKERS_DATA/settings.ini"
 MIYONOS_SCREENSHOT_TIME_MS=1000 SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
   "$BUILD/miyonos" --screen-only --show-speakers --scenario grouped \
   --data-dir "$SPEAKERS_DATA" --capture-after-ms 6000 \
@@ -93,7 +93,7 @@ file "$OUTPUT/playlist-now-playing.bmp" | grep -q '640 x 480 x 32'
 
 TAIL_DATA="$RUN_ROOT/mixed-favorites/SDCARD/App/Miyonos/data"
 mkdir -p "$TAIL_DATA"
-printf 'schema_version=2\nvolume_step=3\nconfirm_exit=1\n' > "$TAIL_DATA/settings.ini"
+printf 'schema_version=2\ncontent_defaults_version=1\nvolume_step=3\nconfirm_exit=1\nofficial_sonos_product_photos=0\n' > "$TAIL_DATA/settings.ini"
 MIYONOS_SCREENSHOT_TIME_MS=1000 SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
   "$BUILD/miyonos" --screen-only --show-playlist-tail \
   --scenario mixed-favorites --data-dir "$TAIL_DATA" --capture-after-ms 7000 \

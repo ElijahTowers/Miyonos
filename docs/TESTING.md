@@ -16,7 +16,7 @@ cache validation/eviction, bounded command coalescing, two-page queue browse,
 live adapter actions, active saved-playlist tracks and cover metadata,
 replacement-queue saved-playlist playback, Favorite artwork metadata,
 individual/group volume-target cycling, controller navigation/modal safety, and
-strict default-off external HTTPS cover URL acceptance/rejection, including
+strict external HTTPS cover URL acceptance/rejection, including
 the Sonos Radio/TuneIn proxy and redirect destination boundary.
 
 The legacy Python mock server supports `one`, `normal`, `multi-room`, `grouped`,
@@ -112,7 +112,7 @@ Render a deterministic UI preview without a display:
       with its separate lower-right playlist cover.
 - [ ] Favorite and nested favorite container open/play. The selected Favorite
       shows source-provided cover art, or **Cover unavailable** when absent.
-- [ ] With internet access and **External cover art over HTTPS** explicitly on,
+- [ ] With internet access and the default **External cover art over HTTPS**,
       a Spotify Favorite with a canonical public cover URL and a supported
       Sonos Radio/TuneIn station both show their selected cover. Starting the
       radio station must show a progress message, not a transient UPnP error.
@@ -123,7 +123,7 @@ Render a deterministic UI preview without a display:
       the correct room, model illustration, mute state, and individual volume.
       Left/Right and R1 change the selection; Up/Down and A affect only the
       selected speaker.
-- [ ] With **Official Sonos product photos** explicitly on and internet access,
+- [ ] With the default **Official Sonos product photos** and internet access,
       supported Beam, Roam, Era 100, or Arc cards show the direct official
       image after a short load. Turn the setting off again and confirm the
       local illustration returns without any internet request.

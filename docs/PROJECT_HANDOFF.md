@@ -28,9 +28,10 @@ services can still impose their own source-specific restrictions; Miyonos does
 not bypass those restrictions.
 
 The Main Menu also includes **Speaker Volumes**, a local visual overview of
-every available speaker in the selected group. By default it uses built-in
-illustrations matched to the discovered Sonos model. The optional, default-off
-**Official Sonos product photos** setting permits only a fixed catalog of four
+every available speaker in the selected group. By default it uses an official
+photo for recognized models, otherwise a built-in illustration matched to the
+discovered Sonos model. The optional, default-on **Official Sonos product
+photos** setting permits only a fixed catalog of four
 direct `media.sonos.com` images for Beam, Roam, Era 100, and Arc; they are
 TLS-verified, cached locally, and never bundled or proxied. It shows each
 speaker's individual volume and mute state; Left/Right or R1 selects a
@@ -41,7 +42,7 @@ Favorites uses the same source-provided artwork policy: its selected entry
 shows a bounded cached cover when Sonos supplies one, otherwise **Cover
 unavailable**. Spotify Favorites and Sonos Radio stations can provide a public
 HTTPS cover instead of a local Sonos image. **External cover art over HTTPS**
-is therefore a default-off setting that permits only an explicit fixed
+is therefore a default-on setting that permits only an explicit fixed
 allowlist of observed Spotify and Sonos Radio/TuneIn endpoint forms with TLS
 certificate and hostname verification against the bundled offline trust roots.
 A radio proxy may make one verified redirect to either fixed TuneIn logo CDN;

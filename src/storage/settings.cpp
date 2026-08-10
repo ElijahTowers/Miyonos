@@ -148,9 +148,19 @@ Settings SettingsStore::load(std::string* warning) const {
       parse_int(get("artwork_cache_mb", "20"), 20);
   settings.auto_artwork = parse_bool(get("auto_artwork", "1"), true);
   settings.spotify_https_artwork =
-      parse_bool(get("spotify_https_artwork", "0"), false);
+      parse_bool(get("spotify_https_artwork", "1"), true);
   settings.official_sonos_product_photos =
-      parse_bool(get("official_sonos_product_photos", "0"), false);
+      parse_bool(get("official_sonos_product_photos", "1"), true);
+  // Before this setting revision, artwork downloads were opt-in. Apply the
+  // new recommended defaults once to existing installations, then preserve
+  // any choice the owner makes afterwards.
+  const int content_defaults_version =
+      parse_int(get("content_defaults_version", "0"), 0);
+  if (content_defaults_version < 1) {
+    settings.auto_artwork = true;
+    settings.spotify_https_artwork = true;
+    settings.official_sonos_product_photos = true;
+  }
   const auto polling = get("polling", "balanced");
   settings.polling = polling == "battery"
                          ? PollingIntensity::BatterySaver
@@ -195,7 +205,8 @@ Settings SettingsStore::load(std::string* warning) const {
   const std::vector<std::string> known = {
       "schema_version", "startup_mode", "startup_room_uuid", "volume_step",
       "seek_seconds", "artwork_cache_mb", "auto_artwork",
-      "spotify_https_artwork", "official_sonos_product_photos", "polling",
+      "spotify_https_artwork", "official_sonos_product_photos",
+      "content_defaults_version", "polling",
       "dim_timeout_seconds", "prevent_sleep", "manual_ips", "button_hints",
       "confirm_exit", "diagnostics_mode", "last_group_id", "last_room_uuid",
       "cached_ips", "playlist_context_group_id", "playlist_context_title",
@@ -241,6 +252,7 @@ bool SettingsStore::save(const Settings& input, std::string* error) const {
       settings.spotify_https_artwork ? "1" : "0";
   fields["official_sonos_product_photos"] =
       settings.official_sonos_product_photos ? "1" : "0";
+  fields["content_defaults_version"] = "1";
   fields["polling"] = settings.polling == PollingIntensity::BatterySaver
                           ? "battery"
                           : settings.polling == PollingIntensity::Responsive

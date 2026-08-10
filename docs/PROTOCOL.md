@@ -45,7 +45,7 @@ afterward and the UI changes only from the confirmed response.
   renderer retains no more than eight 64-pixel cover textures.
 - HTTP GET: bounded artwork retrieval, including Sonos-relative `/getaa` URLs.
   JPEG and PNG covers are cached locally and decoded by the bundled target
-  image runtime. **External cover art over HTTPS** is an optional, default-off
+  image runtime. **External cover art over HTTPS** is an optional, default-on
   exception for the strict public Spotify, Spotify-in-Sonos, and Sonos
   Radio/TuneIn cover endpoint forms exposed by Sonos Favorites. It uses a fixed
   host/path allowlist, TLS 1.2+, a bundled offline trust bundle, hostname
@@ -53,7 +53,7 @@ afterward and the UI changes only from the confirmed response.
   remain forbidden. A Sonos Radio proxy may make exactly one verified redirect
   to either fixed TuneIn logo CDN; all other redirects are rejected.
 - **Speaker Volumes** can optionally use a similarly constrained path for
-  official product photography. **Official Sonos product photos** is off by
+  official product photography. **Official Sonos product photos** is on by
   default and permits only four exact 480-pixel PNG URLs published by
   `media.sonos.com` for recognized Beam, Roam, Era 100, and Arc models. It
   never sends model, room, or account data to Sonos; the image URL is selected

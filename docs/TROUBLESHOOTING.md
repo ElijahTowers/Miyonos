@@ -9,8 +9,8 @@ address of any visible Sonos player with the D-pad, and press A. Miyonos can
 discover the rest of the topology from that player.
 
 The app does not need internet access for Sonos control. Internet failure only
-affects the music source itself and, if explicitly enabled, Spotify cover art;
-LAN control continues.
+affects the music source itself and the default public cover/product-photo
+downloads; LAN control continues.
 
 ## The app exits immediately or shows black
 
@@ -55,15 +55,15 @@ expected, explicit state whenever no valid bounded image is available,
 including many TV, line-in, and radio sources.
 
 Some Spotify Favorites and Sonos Radio stations provide public artwork rather
-than a local Sonos image. To fetch those optional covers, first turn on
-**Settings → External cover art over HTTPS**. The setting is off by default and
-does not use or ask for any Sonos or music-service login. Version 0.1.21
+than a local Sonos image. **Settings → External cover art over HTTPS** is on
+by default and does not use or ask for any Sonos or music-service login.
+Version 0.1.21
 supports the strict real-world Spotify and Spotify-in-Sonos endpoint forms,
 plus three fixed Sonos Radio proxies and one verified redirect to either fixed
 TuneIn logo CDN. It includes the three offline root certificates required by
 those fixed hosts. Check that Wi-Fi and the Miyoo's system time are correct:
 certificate verification intentionally refuses a connection when the clock is
-far wrong. If it remains unavailable, leave the switch off;
+far wrong. If it remains unavailable, turn the switch off;
 the player and the rest of Miyonos continue to work locally.
 
 ## A radio station first shows an error, then plays

@@ -10,8 +10,9 @@ INSTALL FROM AN SD CARD
 
 Miyonos stores settings, logs, and artwork only in App/Miyonos/data.
 Installing an update over the app does not intentionally remove that folder.
-External cover art over HTTPS is optional and off by default. It can be enabled
-from Settings after installation; Sonos control itself remains local.
+External cover art over HTTPS and official Sonos product photos are optional
+and on by default. They can be turned off in Settings; Sonos control itself
+remains local.
 
 If Miyonos immediately returns to the menu, see App/Miyonos/data/logs.
 If launch.sh lost its executable bit during a network copy, run:

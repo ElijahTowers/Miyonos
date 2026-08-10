@@ -45,14 +45,15 @@ available speaker in the selected group with its room name, current individual
 volume, mute state, and a built-in illustration based on its Sonos model.
 Use Left/Right or R1 to choose a speaker, Up/Down to change that speaker's
 volume, A to mute or unmute it, and Select to refresh the displayed values.
-With **Settings → Official Sonos product photos** on, recognized models use a
-cached direct image from Sonos' official media CDN; the default remains the
-built-in illustration and makes no internet request.
+With **Settings → Official Sonos product photos** on (the default), recognized
+models use a cached direct image from Sonos' official media CDN. Turn the
+setting off to use only the built-in illustration and make no product-photo
+internet request.
 
 For Spotify Favorites and supported Sonos Radio stations that provide only a
-public HTTPS cover, turn on **Settings → External cover art over HTTPS**. This
-default-off setting is limited to verified Spotify and Sonos Radio/TuneIn cover
-URLs and never uses a Sonos or music-service login.
+public HTTPS cover, **Settings → External cover art over HTTPS** is on by
+default. This setting is limited to verified Spotify and Sonos Radio/TuneIn
+cover URLs and never uses a Sonos or music-service login.
 
 Press **Select** at any time for a compact pop-up that shows every physical
 button and its current assignment. Press A, B, or Select again to close it.

@@ -20,8 +20,8 @@ struct Settings {
   int seek_seconds = 10;
   int artwork_cache_mb = 20;
   bool auto_artwork = true;
-  bool spotify_https_artwork = false;
-  bool official_sonos_product_photos = false;
+  bool spotify_https_artwork = true;
+  bool official_sonos_product_photos = true;
   PollingIntensity polling = PollingIntensity::Balanced;
   int dim_timeout_seconds = 120;
   bool prevent_sleep = true;

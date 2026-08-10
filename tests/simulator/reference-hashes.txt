@@ -2,7 +2,7 @@
 # Desktop hosts with an image decoder show the code-generated cover. Minimal
 # Linux hosts without SDL2_image retain the intentional fallback-art path.
 grouped-frame-with-artwork.bmp 227872e1463a873d68a1907b6ff93d40b14ae516e71716a16cf677471f678705
-grouped-frame-fallback.bmp be5d79c16a42df7c30be76d42accc5610d041ad72d9446eeda3de3210832f85c
+grouped-frame-fallback.bmp ef341c6d4abe93b8d0e52f2f8945dddcfee069cfb856b992ac0ebad4380715f3
 controls-overlay.bmp b641e0a3aa1233634aa332dff640a37a89f7136de94a2261f87df70e65706a1b
 queue-layout.bmp be6fb80d51676c38a35adccf6ad29003fbf73f10833802d248860794826020f0
 speakers-overview.bmp a9bd795a74d8b6d8c7479e970471872703ed01518538f038badb6a1324749ff3

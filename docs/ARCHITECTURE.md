@@ -5,7 +5,7 @@ Miyonos is deliberately split into six layers:
 - `platform`: SDL input, monotonic time, local battery-gauge reads, logging,
   and Onion launch behavior;
 - `network`: bounded IPv4 LAN HTTP/SSDP transport plus a deliberately narrow,
-  opt-in, certificate-verified external cover client;
+  certificate-verified external cover client;
 - `sonos`: XML, SOAP, service discovery, topology, media, and typed actions;
 - `domain` and `app`: player/group/playback models and the navigation/state
   controller;
@@ -72,7 +72,7 @@ entries above the configured cap. Current-track, selected Favorite, and
 selected Saved Playlist artwork use separate bounded requests while sharing
 that on-card cache. The renderer holds at most one decoded artwork texture.
 Local Sonos artwork remains plain IPv4 HTTP. The separate external-cover path
-is off by default and accepts only a fixed allowlist of strict Spotify,
+is on by default and accepts only a fixed allowlist of strict Spotify,
 Spotify-in-Sonos, and observed Sonos Radio/TuneIn public cover endpoints:
 40- or 64-hex image IDs, 640-pixel mosaics, seed-mix artwork, regional Spotify
 CDN images, the fixed Sonos Spotify folder image, and three Sonos Radio artwork
@@ -81,7 +81,7 @@ fixed TuneIn logo CDN; every other redirect is rejected. It uses a bundled
 five-root trust bundle with TLS hostname verification and the same
 response/cache limits. It sends no account, cookie, playback, or device data.
 It is not a general web client. The same worker also supports the separate,
-default-off **Official Sonos product photos** setting: it may fetch only four
+default-on **Official Sonos product photos** setting: it may fetch only four
 exact, direct 480-pixel PNG URLs from `media.sonos.com`, selected from the
 locally discovered Beam, Roam, Era 100, or Arc model. Product photos are not
 bundled or proxied; no redirects or dynamically supplied URLs are accepted.

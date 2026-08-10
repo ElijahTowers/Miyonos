@@ -76,7 +76,7 @@ does not expose usable artwork.
 
 Versions 0.1.14 through 0.1.21 add a narrow, explicit solution for Favorites
 whose Sonos metadata exposes public artwork instead of a local Sonos image.
-**External cover art over HTTPS** remains off by default. When enabled, it
+**External cover art over HTTPS** is now on by default. It
 accepts only an explicit fixed allowlist of observed Spotify,
 Spotify-in-Sonos, and Sonos Radio/TuneIn endpoint forms: 40- or 64-hex
 `i.scdn.co` images, regional Spotify CDN images, 640-pixel mosaics, seed
@@ -301,8 +301,8 @@ following remain explicitly unclaimed:
 - a physical direct Sonos Radio start and its supported Sonos Radio/TuneIn
   station logo on 0.1.21; TV, line-in, AirPlay, unusual favorites, and
   providers that omit cover metadata;
-- a physical Spotify-Favorite cover download with the explicitly enabled
-  setting. The corrected request path, target ARM package, system clock, and
+- a physical Spotify-Favorite cover download with the default-enabled setting.
+  The corrected request path, target ARM package, system clock, and
   complete trusted root bundle are verified, but the resulting cover has not
   yet been seen on the device;
 - measured Miyoo RAM/CPU/battery use and the one-hour stability checklist.
@@ -330,7 +330,7 @@ tested paths.
 ## Next priorities
 
 1. Confirm collection and stream Favorites, Favorite cover preview, the new
-   opt-in Spotify cover path, group volume targeting, and saved-playlist
+   default-enabled Spotify cover path, group volume targeting, and saved-playlist
    replacement on 0.1.21, then run the
    battery, key, MainUI, sleep/resume, Wi-Fi, and one-hour stability checklist.
 2. Validate controlled playback/group changes and additional real media

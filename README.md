@@ -2,9 +2,10 @@
 
 Miyonos turns a Miyoo Mini Plus running OnionOS into a fast, button-first,
 local Sonos remote. It uses the speakers' LAN UPnP/SOAP interface: there is no
-Miyonos account, cloud service, API key, analytics, or advertising. It makes
-no internet request by default; an owner can separately opt in to verified
-external cover or official Sonos product-photo downloads.
+Miyonos account, cloud service, API key, analytics, or advertising. Sonos
+control stays on the LAN. By default, Miyonos also retrieves only approved
+public cover images and official Sonos product photos; either image feature can
+be turned off in Settings.
 
 ![Miyonos Now Playing preview](docs/images/now-playing.png)
 
@@ -27,10 +28,10 @@ double-buffered framebuffer. It includes:
 - paged browsing of the current Sonos Queue with a selected-track cover view,
   selected-cover views for Sonos Favorites and Favorite Playlists, direct
   Favorites playback, and an individual Speaker Volumes overview;
-- an optional **External cover art over HTTPS** switch. It is off by default
+- an optional **External cover art over HTTPS** switch. It is on by default
   and accepts only verified public Spotify and Sonos Radio/TuneIn cover URLs;
   it never sends a Sonos login, cookies, playback data, or device identifiers;
-- an optional **Official Sonos product photos** switch. It is off by default,
+- an optional **Official Sonos product photos** switch. It is on by default,
   downloads only a fixed catalog of direct Sonos `media.sonos.com` product
   images for recognized models, and stores them in the same bounded local cache;
 - offline recovery, bounded retries, confirmations, rotating logs, settings,
@@ -56,8 +57,8 @@ smoke test remains in progress. See
 - OnionOS 4.3.x; the release is built against assumptions verified for
   OnionOS 4.3.1-1
 - Miyoo and Sonos products on the same IPv4 LAN
-- Internet access only if **Settings → External cover art over HTTPS** or
-  **Settings → Official Sonos product photos** is enabled
+- Internet access for the default public cover and official product-photo
+  downloads; both can be disabled in Settings
 
 The Sonos local interface is unofficial. Models, sources, and firmware can
 expose different capabilities, so unsupported actions fail safely and leave
@@ -115,21 +116,20 @@ Speaker Volumes; R1 cycles the group-volume target together with each
 individual speaker.
 
 Spotify Favorites and Sonos Radio stations can provide a public HTTPS cover
-instead of a local Sonos image. To show those covers, turn on
-**Settings → External cover art over HTTPS**. The switch is optional and off
-by default. It permits a fixed allowlist of strict Spotify and Sonos
-Radio/TuneIn cover URLs with certificate and hostname verification against the
-bundled offline trust roots. Radio artwork may use one fixed, verified redirect
-from a Sonos proxy to a TuneIn image CDN; no Sonos or music-service credentials
-are used.
+instead of a local Sonos image. **Settings → External cover art over HTTPS**
+is on by default and can be turned off. It permits a fixed allowlist of strict
+Spotify and Sonos Radio/TuneIn cover URLs with certificate and hostname
+verification against the bundled offline trust roots. Radio artwork may use one
+fixed, verified redirect from a Sonos proxy to a TuneIn image CDN; no Sonos or
+music-service credentials are used.
 
-To use Sonos' own product photography on **Main Menu → Speaker Volumes**, turn
-on **Settings → Official Sonos product photos**. The switch is optional and off
-by default. Miyonos downloads only four exact, 480-pixel image URLs published
-on Sonos' `media.sonos.com` CDN for recognized Beam, Roam, Era 100, and Arc
-models; it does not bundle, upload, or proxy those images. The photos are
-TLS-verified and cached on the SD card. A model without a catalog entry keeps
-the built-in illustration.
+To use Sonos' own product photography on **Main Menu → Speaker Volumes**, keep
+**Settings → Official Sonos product photos** on (the default), or turn it on
+again if it was disabled. Miyonos downloads only four exact, 480-pixel image
+URLs published on Sonos' `media.sonos.com` CDN for recognized Beam, Roam, Era
+100, and Arc models; it does not bundle, upload, or proxy those images. The
+photos are TLS-verified and cached on the SD card. A model without a catalog
+entry keeps the built-in illustration.
 
 See [docs/CONTROLS.md](docs/CONTROLS.md) for all screens and desktop keys.
 

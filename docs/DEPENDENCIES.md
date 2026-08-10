@@ -9,7 +9,7 @@ code was copied from the research projects.
 | Miyoo SDL2 port | `steward-fu/sdl2` commit `0631abc8e8916db6f9bc7e2afd0c22913d092a29` | `Mini` video driver, SDL2, SDL2_image, and target graphics/runtime libraries |
 | Miyoo toolchain | `mini_toolchain-v1.0.tar.gz` | GCC 8.2.1 ARM hard-float cross-compiler |
 | IJG libjpeg | release `9d`; toolchain ABI `9.4.0` | JPEG decoding for Sonos cover artwork through SDL2_image |
-| OpenSSL | toolchain `1.1.1l` | Statically linked TLS 1.2 and hostname verification for the opt-in Spotify-cover path only |
+| OpenSSL | toolchain `1.1.1l` | Statically linked TLS 1.2 and hostname verification for the allowlisted external artwork and official product-photo paths |
 | Toolchain SHA-256 | `8addff71be4b015a4e1aef51e43635e50978d558a1675f5b1664124e8437d071` | Verified before extraction |
 | Sonos API docs | tag `v1.4.1`, commit `ece20b10b007af68df6f10087f855b5d13773720` | Cross-check of local UPnP action/service behavior |
 | Docker base | `ubuntu:22.04`, observed digest `sha256:0e0a0fc6d18feda9db1590da249ac93e8d5abfea8f4c3c0c849ce512b5ef8982` | Reproducible amd64 host for the Linux-only toolchain |

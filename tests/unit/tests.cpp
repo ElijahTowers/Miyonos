@@ -289,6 +289,8 @@ void test_settings_and_cache() {
   {
     std::ofstream input(fs::path(directory) / "settings.ini");
     input << "schema_version=99\nvolume_step=5\nseek_seconds=15\n"
+             "auto_artwork=0\nspotify_https_artwork=0\n"
+             "official_sonos_product_photos=0\n"
              "manual_ips=192.168.1.8,invalid\nbutton_left=next_track\n"
              "future_option=keep-me\n";
   }
@@ -301,6 +303,9 @@ void test_settings_and_cache() {
   CHECK(settings.manual_ips.size() == 1);
   CHECK(settings.button_mapping[button_index(PhysicalButton::Left)] ==
         Action::Next);
+  CHECK(settings.auto_artwork);
+  CHECK(settings.spotify_https_artwork);
+  CHECK(settings.official_sonos_product_photos);
   CHECK(settings.unknown_fields["future_option"] == "keep-me");
   settings.volume_step = 3;
   settings.spotify_https_artwork = true;
@@ -314,6 +319,14 @@ void test_settings_and_cache() {
         Action::Next);
   CHECK(saved.unknown_fields["future_option"] == "keep-me");
   CHECK(!fs::exists(fs::path(directory) / "settings.ini.tmp"));
+  settings.auto_artwork = false;
+  settings.spotify_https_artwork = false;
+  settings.official_sonos_product_photos = false;
+  CHECK(store.save(settings));
+  const Settings owner_disabled_artwork = store.load();
+  CHECK(!owner_disabled_artwork.auto_artwork);
+  CHECK(!owner_disabled_artwork.spotify_https_artwork);
+  CHECK(!owner_disabled_artwork.official_sonos_product_photos);
   Settings unsafe;
   unsafe.button_mapping.fill(Action::None);
   validate_settings(unsafe);
