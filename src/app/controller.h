@@ -3,6 +3,7 @@
 #include <array>
 #include <atomic>
 #include <map>
+#include <set>
 #include <string>
 #include <thread>
 #include <vector>
@@ -44,6 +45,7 @@ struct ViewState {
   Topology topology;
   PlaybackSnapshot playback;
   std::vector<BrowseItem> queue;
+  std::vector<std::string> queue_artwork_paths;
   std::vector<BrowseItem> favorites;
   std::vector<BrowseItem> playlists;
   std::size_t queue_total = 0;
@@ -121,7 +123,7 @@ class Controller {
     ClearLogs
   };
 
-  enum class ArtworkTarget { NowPlaying, Favorite, Playlist };
+  enum class ArtworkTarget { NowPlaying, Favorite, Playlist, Queue };
 
   struct Command {
     CommandType type = CommandType::Poll;
@@ -180,6 +182,7 @@ class Controller {
   void request_speaker_volume();
   void request_selected_favorite_artwork();
   void request_selected_playlist_artwork();
+  void request_queue_artwork();
   void request_browse(ListKind kind, const std::string& object_id = {},
                       std::size_t start_index = 0);
   void select_group(std::size_t index);
@@ -242,6 +245,9 @@ class Controller {
   std::string last_artwork_url_;
   std::string last_favorite_artwork_url_;
   std::string last_playlist_artwork_url_;
+  std::vector<std::string> queue_artwork_urls_;
+  std::string queue_artwork_inflight_url_;
+  std::set<std::string> failed_queue_artwork_urls_;
   std::map<std::string, SpeakerVolume> speaker_volumes_;
   std::map<Screen, int> selections_;
   std::string queue_object_ = "Q:0";

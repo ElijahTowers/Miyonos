@@ -94,7 +94,9 @@ Render a deterministic UI preview without a display:
 - [ ] Music, radio, TV audio, podcast, AirPlay/Spotify Connect metadata degrade
       cleanly when fields or actions are unavailable.
 - [ ] Seekable media seeks; non-seekable media explains without track skipping.
-- [ ] Queue pages past 60, page jumps, selection, refresh, and play work. It
+- [ ] Queue pages past 60, page jumps, selection, refresh, play, and the
+      visible per-track cover thumbnails work. Covers must load lazily without
+      making controls unresponsive. It
       must match the active Sonos Queue (`Q:0`), including after a Favorite
       Playlist was started. X must switch to Favorite Playlists, show the
       selected cover when supplied, and A must replace—not append to—the active

@@ -8,7 +8,7 @@ external cover downloads.
 
 ![Miyonos Now Playing preview](docs/images/now-playing.png)
 
-Version 0.1.28 is a technical preview with real Sonos LAN validation, robust
+Version 0.1.29 is a technical preview with real Sonos LAN validation, robust
 source-provided cover retrieval, a local Miyoo battery gauge, a local
 simulator, and sharp native 640 × 480 output through the device's
 double-buffered framebuffer. It includes:
@@ -24,8 +24,9 @@ double-buffered framebuffer. It includes:
   hardware fuel gauge without network access;
 - editable mappings for every physical button, protected by a lockout check
   and a fixed hardware recovery chord;
-- paged browsing of the current Sonos Queue, selected-cover views for Sonos
-  Favorites and Favorite Playlists, and direct Favorites playback;
+- paged browsing of the current Sonos Queue with small per-track cover art,
+  selected-cover views for Sonos Favorites and Favorite Playlists, and direct
+  Favorites playback;
 - an optional **External cover art over HTTPS** switch. It is off by default
   and accepts only verified public Spotify and Sonos Radio/TuneIn cover URLs;
   it never sends a Sonos login, cookies, playback data, or device identifiers;
@@ -36,7 +37,7 @@ double-buffered framebuffer. It includes:
 
 The desktop/mock suite and ARM cross-build pass. Discovery, playback metadata,
 cover retrieval, topology, and an idempotent volume write have also been
-validated against a real mixed-model Sonos household. Version 0.1.28 reads the
+validated against a real mixed-model Sonos household. Version 0.1.29 reads the
 real Sonos `Q:0` track container and starts playlist-shaped Spotify Favorites
 as clean queue replacements. It also accepts
 the strict Spotify, Spotify-in-Sonos, and Sonos Radio/TuneIn cover endpoint
@@ -60,7 +61,7 @@ the remote usable.
 
 ## Install
 
-Download `Miyonos-App-0.1.28.zip` from the [GitHub Releases page](https://github.com/ElijahTowers/Miyonos/releases). It contains only the `Miyonos` app folder.
+Download `Miyonos-App-0.1.29.zip` from the [GitHub Releases page](https://github.com/ElijahTowers/Miyonos/releases). It contains only the `Miyonos` app folder.
 
 1. Unzip the download. It contains one folder: `Miyonos`.
 2. Put that folder in the OnionOS `App` folder, so the resulting path is
@@ -84,7 +85,10 @@ Menu asks to exit. B goes back. Every button can be changed in **Settings →
 Button mapping**. Holding Menu + Start for three seconds always restores the
 default layout.
 
-In Queue, X switches to **Favorite Playlists**. That view contains the
+In Queue, each visible track has its own cover-art thumbnail when Sonos
+provides one. Miyonos loads only nearby queue covers, one at a time, into the
+same bounded artwork cache; a small music placeholder is shown while a cover
+is unavailable. X switches to **Favorite Playlists**. That view contains the
 playlist-shaped Favorites supplied by Sonos, including Spotify playlists. It
 shows the selected playlist's source-provided cover art. Press A to play it;
 Miyonos immediately opens Now Playing, shows the selected playlist name, and

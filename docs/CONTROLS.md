@@ -20,7 +20,9 @@ source. All screens use semantic actions rather than raw SDL keys.
 
 In **Queue**, X opens **Favorite Playlists**. Queue reads Sonos' `Q:0` track
 container, so it shows the actual upcoming tracks rather than technical queue
-instances. **Favorite Playlists** filters the playlist-shaped Favorites that
+instances. Each visible Queue row shows its own source-provided cover-art
+thumbnail when available; covers are fetched lazily, one at a time, and use
+the existing bounded artwork cache. **Favorite Playlists** filters the playlist-shaped Favorites that
 Sonos exposes, including Spotify playlists; X returns to Queue. The selected
 playlist's cover art appears beside its name; A replaces the active Sonos
 queue with that playlist and immediately opens Now Playing with the selected

@@ -1,11 +1,11 @@
-# Miyonos 0.1.28 final status
+# Miyonos 0.1.29 final status
 
 Status: **real Sonos LAN integration, cover retrieval, simulator, and release
 packages are complete; sharp direct framebuffer output is visually and
-digitally verified. Version 0.1.28 was additionally validated against the
-owner's live Sonos household: a playlist-shaped Sonos Favorite immediately
-opened Now Playing, retained its playlist name, replaced the old queue, and
-returned the real upcoming-track list. Its physical-device retest is pending.**
+digitally verified. The live playlist-start flow was validated in 0.1.28;
+version 0.1.29 additionally read the owner's live `Q:0` queue, where all 50
+returned tracks included an artwork reference. Its physical-device retest is
+pending.**
 
 ## Delivered
 
@@ -18,10 +18,12 @@ logs. Queue reads Sonos' actual `Q:0` track container rather than its technical
 queue-instance container. X in Queue opens **Favorite Playlists**, which
 filters playlist-shaped Sonos Favorites (including Spotify playlists); A
 replaces the active queue, opens Now Playing immediately, and retains the
-selected playlist name. It uses no Miyonos account, cloud service, API key,
-analytics, or Sonos cloud authorization.
+selected playlist name. Queue rows show compact source-provided cover art for
+the visible tracks, loading at most one uncached image at a time. It uses no
+Miyonos account, cloud service, API key, analytics, or Sonos cloud
+authorization.
 
-Version 0.1.28 retains the adapter validated against a real Sonos household
+Version 0.1.29 retains the adapter validated against a real Sonos household
 and the target cover-art path fixed in 0.1.3. Physical
 testing showed that both the rejected 640 × 480 Mini GFX route and its accepted
 320 × 240 scale route were unsuitable for a complete sharp interface. Miyonos

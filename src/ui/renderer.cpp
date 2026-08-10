@@ -155,6 +155,7 @@ Renderer::Renderer(SDL_Renderer* renderer) : renderer_(renderer), font_(renderer
 
 Renderer::~Renderer() {
   release_artwork();
+  release_queue_thumbnails();
   if (image_library_) dlclose(image_library_);
 }
 
@@ -163,6 +164,14 @@ void Renderer::release_artwork() {
   artwork_texture_ = nullptr;
   artwork_path_.clear();
   artwork_width_ = artwork_height_ = 0;
+}
+
+void Renderer::release_queue_thumbnails() {
+  for (auto& [path, thumbnail] : queue_thumbnails_) {
+    (void)path;
+    if (thumbnail.texture) SDL_DestroyTexture(thumbnail.texture);
+  }
+  queue_thumbnails_.clear();
 }
 
 void Renderer::background() {
@@ -311,6 +320,85 @@ void Renderer::draw_artwork(const std::string& path, const SDL_Rect& area) {
       static_cast<int>(artwork_height_ * scale)};
   fill(renderer_, area, kPanel);
   SDL_RenderCopy(renderer_, artwork_texture_, nullptr, &destination);
+}
+
+void Renderer::draw_queue_thumbnail_fallback(const SDL_Rect& area) {
+  fill(renderer_, area, kPanel);
+  const int inset = std::max(3, area.w / 8);
+  fill(renderer_, SDL_Rect{area.x + inset, area.y + inset,
+                           area.w - inset * 2, area.h - inset * 2},
+       kPanelLight);
+  const int note = std::max(5, area.w / 8);
+  fill(renderer_, SDL_Rect{area.x + area.w / 2 - note / 2,
+                           area.y + area.h / 4, note, area.h / 2},
+       kMint);
+  fill(renderer_, SDL_Rect{area.x + area.w / 2 - note / 2,
+                           area.y + area.h / 4, area.w / 4, note},
+       kMint);
+  fill(renderer_, SDL_Rect{area.x + area.w / 2 - note,
+                           area.y + area.h * 3 / 5, note * 2, note},
+       kCoral);
+}
+
+void Renderer::draw_queue_thumbnail(const std::string& path,
+                                    const SDL_Rect& area) {
+  if (path.empty() || !image_load_) {
+    draw_queue_thumbnail_fallback(area);
+    return;
+  }
+
+  auto found = queue_thumbnails_.find(path);
+  if (found == queue_thumbnails_.end()) {
+    SDL_Surface* source = image_load_(path.c_str());
+    SDL_Texture* texture = nullptr;
+    if (source && source->w > 0 && source->h > 0 && source->w <= 2048 &&
+        source->h <= 2048 &&
+        static_cast<uint64_t>(source->w) * source->h <= 4ULL * 1024 * 1024) {
+      // Keep the on-device thumbnail cache deliberately tiny. Storing full
+      // album-size textures for six rows would use too much memory on Miyoo.
+      constexpr int kThumbnailPixels = 64;
+      SDL_Surface* thumbnail = SDL_CreateRGBSurfaceWithFormat(
+          0, kThumbnailPixels, kThumbnailPixels, 32, SDL_PIXELFORMAT_RGBA32);
+      if (thumbnail) {
+        SDL_FillRect(thumbnail, nullptr,
+                     SDL_MapRGBA(thumbnail->format, kPanel.r, kPanel.g,
+                                 kPanel.b, kPanel.a));
+        const double scale = std::min(
+            static_cast<double>(kThumbnailPixels) / source->w,
+            static_cast<double>(kThumbnailPixels) / source->h);
+        const int width = std::max(1, static_cast<int>(source->w * scale));
+        const int height = std::max(1, static_cast<int>(source->h * scale));
+        SDL_Rect destination{(kThumbnailPixels - width) / 2,
+                             (kThumbnailPixels - height) / 2, width, height};
+        if (SDL_BlitScaled(source, nullptr, thumbnail, &destination) == 0) {
+          texture = SDL_CreateTextureFromSurface(renderer_, thumbnail);
+        }
+        SDL_FreeSurface(thumbnail);
+      }
+    }
+    if (source) SDL_FreeSurface(source);
+    found = queue_thumbnails_
+                .emplace(path, ThumbnailTexture{texture, 0})
+                .first;
+    found->second.last_used = ++queue_thumbnail_tick_;
+    constexpr std::size_t kMaximumQueueThumbnails = 8;
+    while (queue_thumbnails_.size() > kMaximumQueueThumbnails) {
+      auto oldest = queue_thumbnails_.begin();
+      for (auto entry = queue_thumbnails_.begin();
+           entry != queue_thumbnails_.end(); ++entry) {
+        if (entry->second.last_used < oldest->second.last_used) oldest = entry;
+      }
+      if (oldest->second.texture) SDL_DestroyTexture(oldest->second.texture);
+      queue_thumbnails_.erase(oldest);
+    }
+  }
+  found->second.last_used = ++queue_thumbnail_tick_;
+  if (!found->second.texture) {
+    draw_queue_thumbnail_fallback(area);
+    return;
+  }
+  fill(renderer_, area, kPanel);
+  SDL_RenderCopy(renderer_, found->second.texture, nullptr, &area);
 }
 
 void Renderer::draw_marquee(const std::string& text, int x, int y, int scale,
@@ -497,9 +585,71 @@ void Renderer::rooms(const ViewState& view, bool editor) {
   hints("B  Back", editor ? "A  Toggle room" : "A  Select    X  Group editor");
 }
 
+void Renderer::queue_list(const ViewState& view) {
+  status_bar(view, "Queue");
+  if (view.queue.empty()) {
+    const bool failed = !view.busy && !view.error.empty();
+    font_.draw_centered(
+        view.busy ? "Loading..."
+                  : failed ? "Could not load this list" : "Nothing here yet",
+        204, 2, kCream);
+    font_.draw_centered(view.busy ? view.status : "Press SELECT to retry", 246,
+                        1, kMuted);
+    hints("B  Back    D-Pad  Browse", "A  Play    X  Favorite playlists");
+    return;
+  }
+
+  constexpr int kRowHeight = 62;
+  constexpr int kVisibleRows = 6;
+  const int count = static_cast<int>(view.queue.size());
+  int start = std::max(0, view.selection - kVisibleRows / 2);
+  start = std::min(start, std::max(0, count - kVisibleRows));
+  for (int row = 0; row < kVisibleRows && start + row < count; ++row) {
+    const int index = start + row;
+    const int y = 48 + row * kRowHeight;
+    const bool selected = index == view.selection;
+    if (selected) {
+      fill(renderer_, SDL_Rect{12, y - 3, 616, kRowHeight - 3}, kCream);
+    } else if (row % 2 == 0) {
+      fill(renderer_, SDL_Rect{12, y - 3, 616, kRowHeight - 3}, kPanel);
+    }
+    const SDL_Color main = selected ? kDark : kCream;
+    const SDL_Color sub = selected ? SDL_Color{63, 82, 98, 255} : kMuted;
+    const SDL_Color number = selected ? kDark : kMint;
+    const std::string number_label =
+        index + 1 == view.playback.track.queue_position
+            ? ">"
+            : std::to_string(index + 1);
+    font_.draw(number_label, 22, y + 19, 1, number, 24);
+    const std::string artwork =
+        index < static_cast<int>(view.queue_artwork_paths.size())
+            ? view.queue_artwork_paths[index]
+            : "";
+    draw_queue_thumbnail(artwork, SDL_Rect{54, y + 3, 52, 52});
+    const BrowseItem& item = view.queue[index];
+    font_.draw(clipped(item.title.empty() ? "Untitled track" : item.title, 46),
+               120, y + 5, 2, main, 490);
+    std::string detail = item.artist;
+    if (!item.album.empty()) {
+      if (!detail.empty()) detail += " - ";
+      detail += item.album;
+    }
+    if (item.duration_seconds > 0) {
+      if (!detail.empty()) detail += "   ";
+      detail += format_duration(item.duration_seconds);
+    }
+    font_.draw(clipped(detail, 72), 120, y + 34, 1, sub, 490);
+  }
+  hints("B  Back    D-Pad  Browse", "A  Play    X  Favorite playlists");
+}
+
 void Renderer::media_list(const ViewState& view,
                           const std::vector<BrowseItem>& items,
                           const std::string& title) {
+  if (view.screen == Screen::Queue) {
+    queue_list(view);
+    return;
+  }
   status_bar(view, title);
   std::vector<std::string> primary;
   std::vector<std::string> secondary;

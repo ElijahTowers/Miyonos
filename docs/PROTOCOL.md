@@ -40,7 +40,9 @@ afterward and the UI changes only from the confirmed response.
   queue-instance entries from `Q:`, so the Queue screen reads `Q:0` to show
   actual upcoming tracks. The Queue X view filters playlist-shaped Favorites,
   including Spotify playlists; browse metadata includes `albumArtURI` when
-  Sonos provides one.
+  Sonos provides one. Queue artwork is fetched lazily for only the visible
+  rows plus a one-row buffer; at most one uncached cover is in flight, and the
+  renderer retains no more than eight 64-pixel cover textures.
 - HTTP GET: bounded artwork retrieval, including Sonos-relative `/getaa` URLs.
   JPEG and PNG covers are cached locally and decoded by the bundled target
   image runtime. **External cover art over HTTPS** is an optional, default-off

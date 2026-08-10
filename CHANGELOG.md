@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.29 — Queue track cover art
+
+- Queue rows now show a compact cover-art thumbnail for each visible track.
+- Queue cover retrieval is lazy and serialized: Miyonos reads the existing
+  bounded disk cache first, requests only the nearby rows, and keeps only eight
+  64-pixel textures in memory so the Miyoo remains responsive on long queues.
+
 ## 0.1.28 — Real Sonos playlist and queue routing
 
 - Queue now reads Sonos' track container `Q:0`, rather than the `Q:` index

@@ -540,6 +540,18 @@ void test_live_mock_if_requested() {
   CHECK(controller.view().screen == Screen::Queue);
   CHECK(!controller.view().queue.empty());
   CHECK(controller.view().queue.front().title == "Road Trip Track 1");
+  const auto queue_artwork_deadline = std::chrono::steady_clock::now() +
+                                      std::chrono::seconds(3);
+  while (std::chrono::steady_clock::now() < queue_artwork_deadline &&
+         (controller.view().queue_artwork_paths.empty() ||
+          controller.view().queue_artwork_paths.front().empty())) {
+    controller.update();
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+  }
+  CHECK(controller.view().queue_artwork_paths.size() ==
+        controller.view().queue.size());
+  CHECK(!controller.view().queue_artwork_paths.empty());
+  CHECK(!controller.view().queue_artwork_paths.front().empty());
   controller.handle(Action::Context);
   CHECK(controller.view().screen == Screen::Playlists);
   controller.handle(Action::Context);

@@ -2,6 +2,8 @@
 
 #include <SDL.h>
 
+#include <cstdint>
+#include <map>
 #include <string>
 
 #include "app/controller.h"
@@ -26,6 +28,7 @@ class Renderer {
   void rooms(const ViewState& view, bool editor);
   void media_list(const ViewState& view, const std::vector<BrowseItem>& items,
                   const std::string& title);
+  void queue_list(const ViewState& view);
   void favorites(const ViewState& view);
   void playlists(const ViewState& view);
   void menu(const ViewState& view);
@@ -43,10 +46,18 @@ class Renderer {
                  int top_y = 62);
   void draw_fallback_artwork(const SDL_Rect& area);
   void draw_artwork(const std::string& path, const SDL_Rect& area);
+  void draw_queue_thumbnail(const std::string& path, const SDL_Rect& area);
+  void draw_queue_thumbnail_fallback(const SDL_Rect& area);
   void draw_marquee(const std::string& text, int x, int y, int scale,
                     SDL_Color color, int width, uint64_t now);
   std::string setting_value(int index, const Settings& settings) const;
   void release_artwork();
+  void release_queue_thumbnails();
+
+  struct ThumbnailTexture {
+    SDL_Texture* texture = nullptr;
+    uint64_t last_used = 0;
+  };
 
   SDL_Renderer* renderer_;
   BitmapFont font_;
@@ -56,6 +67,8 @@ class Renderer {
   std::string artwork_path_;
   int artwork_width_ = 0;
   int artwork_height_ = 0;
+  std::map<std::string, ThumbnailTexture> queue_thumbnails_;
+  uint64_t queue_thumbnail_tick_ = 0;
 };
 
 }  // namespace miyonos

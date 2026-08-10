@@ -298,6 +298,63 @@ void Controller::request_selected_playlist_artwork() {
   enqueue(std::move(command));
 }
 
+void Controller::request_queue_artwork() {
+  if (!settings_.auto_artwork || view_.screen != Screen::Queue ||
+      view_.queue.empty()) {
+    return;
+  }
+  const Player* selected = coordinator();
+  if (!selected) return;
+
+  // Queue cover art is intentionally lazy: only the six visible rows plus one
+  // row above and below them may be requested, and only one uncached cover is
+  // ever in flight. This keeps playback controls responsive on the Miyoo and
+  // avoids turning a long queue into a burst of network requests.
+  if (view_.queue_artwork_paths.size() != view_.queue.size()) {
+    view_.queue_artwork_paths.assign(view_.queue.size(), {});
+  }
+  if (queue_artwork_urls_.size() != view_.queue.size()) {
+    queue_artwork_urls_.assign(view_.queue.size(), {});
+  }
+  for (std::size_t index = 0; index < view_.queue.size(); ++index) {
+    const std::string url = artwork_url(*selected,
+                                        view_.queue[index].artwork_uri,
+                                        settings_.spotify_https_artwork);
+    if (url != queue_artwork_urls_[index]) {
+      queue_artwork_urls_[index] = url;
+      view_.queue_artwork_paths[index].clear();
+    }
+  }
+
+  constexpr int kVisibleRows = 6;
+  const int count = static_cast<int>(view_.queue.size());
+  int start = std::max(0, view_.selection - kVisibleRows / 2);
+  start = std::min(start, std::max(0, count - kVisibleRows));
+  const int first = std::max(0, start - 1);
+  const int last = std::min(count, start + kVisibleRows + 1);
+
+  for (int index = first; index < last; ++index) {
+    const std::string& url = queue_artwork_urls_[index];
+    if (url.empty() || failed_queue_artwork_urls_.count(url) != 0) continue;
+    const std::string cached = artwork_cache_.find(url);
+    if (!cached.empty()) {
+      view_.queue_artwork_paths[index] = cached;
+      continue;
+    }
+    if (!queue_artwork_inflight_url_.empty()) continue;
+    Command command;
+    command.type = CommandType::DownloadArtwork;
+    command.player = *selected;
+    command.text = url;
+    command.flag = settings_.spotify_https_artwork;
+    command.artwork_target = ArtworkTarget::Queue;
+    if (enqueue(std::move(command))) {
+      queue_artwork_inflight_url_ = url;
+    }
+    return;
+  }
+}
+
 void Controller::request_browse(ListKind kind, const std::string& object_id,
                                 std::size_t start_index) {
   const Player* selected = coordinator();
@@ -752,6 +809,11 @@ void Controller::apply_result(WorkerResult result) {
                               : &view_.playlists_total;
       if (result.start_index == 0) {
         *target = std::move(result.browse.items);
+        if (result.list_kind == ListKind::Queue) {
+          view_.queue_artwork_paths.assign(target->size(), {});
+          queue_artwork_urls_.assign(target->size(), {});
+          failed_queue_artwork_urls_.clear();
+        }
       } else if (result.start_index == target->size()) {
         const std::size_t remaining =
             kMaximumBrowseItems > target->size()
@@ -762,6 +824,10 @@ void Controller::apply_result(WorkerResult result) {
         target->insert(target->end(),
                        std::make_move_iterator(result.browse.items.begin()),
                        std::make_move_iterator(result.browse.items.begin() + count));
+        if (result.list_kind == ListKind::Queue) {
+          view_.queue_artwork_paths.resize(target->size());
+          queue_artwork_urls_.resize(target->size());
+        }
       }
       // When a complete page contained a Sonos navigation placeholder that
       // was intentionally filtered by the protocol layer, keep pagination
@@ -789,6 +855,8 @@ void Controller::apply_result(WorkerResult result) {
           playlist_context_lookup_requested_id_.clear();
         }
         request_selected_playlist_artwork();
+      } else if (result.list_kind == ListKind::Queue) {
+        request_queue_artwork();
       }
       show_toast(result.list_kind == ListKind::Queue ? "Queue refreshed"
                                                     : "Library refreshed");
@@ -840,6 +908,25 @@ void Controller::apply_result(WorkerResult result) {
         artwork_path = &view_.playlist_artwork_path;
         last_artwork_url = &last_playlist_artwork_url_;
       }
+      if (result.artwork_target == ArtworkTarget::Queue) {
+        if (result.context == queue_artwork_inflight_url_) {
+          queue_artwork_inflight_url_.clear();
+        }
+        if (result.success) {
+          for (std::size_t index = 0; index < queue_artwork_urls_.size() &&
+                                      index < view_.queue_artwork_paths.size();
+               ++index) {
+            if (queue_artwork_urls_[index] == result.context) {
+              view_.queue_artwork_paths[index] = result.text;
+            }
+          }
+        } else {
+          failed_queue_artwork_urls_.insert(result.context);
+          view_.diagnostics.last_error = result.text;
+        }
+        request_queue_artwork();
+        break;
+      }
       if (result.context != *last_artwork_url) break;
       if (result.success) {
         *artwork_path = result.text;
@@ -853,9 +940,13 @@ void Controller::apply_result(WorkerResult result) {
       view_.artwork_path.clear();
       view_.favorite_artwork_path.clear();
       view_.playlist_artwork_path.clear();
+      view_.queue_artwork_paths.assign(view_.queue.size(), {});
       last_artwork_url_.clear();
       last_favorite_artwork_url_.clear();
       last_playlist_artwork_url_.clear();
+      queue_artwork_urls_.assign(view_.queue.size(), {});
+      queue_artwork_inflight_url_.clear();
+      failed_queue_artwork_urls_.clear();
       show_toast(result.success ? "Artwork cache cleared"
                                : "Artwork cache could not be cleared");
       break;
@@ -1032,6 +1123,7 @@ void Controller::move_selection(int delta) {
   view_.selection =
       std::max(0, std::min<int>(static_cast<int>(size - 1),
                                view_.selection + delta));
+  if (view_.screen == Screen::Queue) request_queue_artwork();
   if (view_.screen == Screen::Favorites) request_selected_favorite_artwork();
   if (view_.screen == Screen::Playlists) request_selected_playlist_artwork();
   if (delta <= 0 || view_.busy ||
@@ -1263,8 +1355,22 @@ void Controller::adjust_setting(int direction) {
       artwork_cache_.set_maximum_bytes(
           static_cast<std::size_t>(settings_.artwork_cache_mb) * 1024 * 1024);
       break;
-    case 4: settings_.auto_artwork = !settings_.auto_artwork; break;
-    case 5: settings_.spotify_https_artwork = !settings_.spotify_https_artwork; break;
+    case 4:
+      settings_.auto_artwork = !settings_.auto_artwork;
+      if (!settings_.auto_artwork) {
+        view_.queue_artwork_paths.assign(view_.queue.size(), {});
+        queue_artwork_urls_.assign(view_.queue.size(), {});
+        failed_queue_artwork_urls_.clear();
+      } else {
+        request_queue_artwork();
+      }
+      break;
+    case 5:
+      settings_.spotify_https_artwork = !settings_.spotify_https_artwork;
+      queue_artwork_urls_.assign(view_.queue.size(), {});
+      failed_queue_artwork_urls_.clear();
+      request_queue_artwork();
+      break;
     case 6: {
       int value = static_cast<int>(settings_.polling);
       settings_.polling =
