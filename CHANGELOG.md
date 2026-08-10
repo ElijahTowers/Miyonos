@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.26 — Queue matches Sonos
+
+- Queue now always reads Sonos' active `Q:` queue and no longer substitutes a
+  saved-playlist browser view while a Saved Playlist is playing.
+- This prevents duplicate-looking entries and makes Queue match the list shown
+  by Sonos itself. Saved Playlists remains a separate view under X.
+
 ## 0.1.25 — Reliable Now Playing playlist context
 
 - Shows the active Saved Playlist on Now Playing even when a Sonos player

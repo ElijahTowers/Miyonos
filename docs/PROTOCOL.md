@@ -35,12 +35,10 @@ afterward and the UI changes only from the confirmed response.
   relative-time and track-number seek, URI playback, join, and leave.
 - `RenderingControl`: player volume and mute.
 - `GroupRenderingControl`: group volume and mute when the service is present.
-- `ContentDirectory`: Queue (`Q:`), Favorites (`FV:2`), saved playlists
-  (`SQ:`), and the active saved-playlist object reported by `GetMediaInfo`
-  (for example `SQ:1`), 60 items per page and at most 240 loaded per list. The
-  Queue screen uses that active playlist object when a saved playlist is
-  playing. Saved-playlist browse metadata includes `albumArtURI` when Sonos
-  provides one.
+- `ContentDirectory`: Queue (`Q:`), Favorites (`FV:2`), and saved playlists
+  (`SQ:`), 60 items per page and at most 240 loaded per list. The Queue screen
+  always reads `Q:`, so it matches the active Sonos queue exactly. Saved-playlist
+  browse metadata includes `albumArtURI` when Sonos provides one.
 - HTTP GET: bounded artwork retrieval, including Sonos-relative `/getaa` URLs.
   JPEG and PNG covers are cached locally and decoded by the bundled target
   image runtime. **External cover art over HTTPS** is an optional, default-off

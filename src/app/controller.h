@@ -189,8 +189,6 @@ class Controller {
   const Player* coordinator() const;
   const Player* volume_target() const;
   void cycle_volume_target(int direction);
-  std::string queue_object_for_current_playback() const;
-  bool queue_is_current_playlist() const;
   void navigate(Screen screen);
   void switch_queue_playlist();
   void back();

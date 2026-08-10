@@ -8,7 +8,7 @@ external cover downloads.
 
 ![Miyonos Now Playing preview](docs/images/now-playing.png)
 
-Version 0.1.25 is a technical preview with real Sonos LAN validation, robust
+Version 0.1.26 is a technical preview with real Sonos LAN validation, robust
 source-provided cover retrieval, a local Miyoo battery gauge, a local
 simulator, and sharp native 640 × 480 output through the device's
 double-buffered framebuffer. It includes:
@@ -24,9 +24,8 @@ double-buffered framebuffer. It includes:
   hardware fuel gauge without network access;
 - editable mappings for every physical button, protected by a lockout check
   and a fixed hardware recovery chord;
-- paged Queue browsing that shows the current Sonos saved playlist when one is
-  playing, plus selected-cover views for Saved Playlists and Sonos Favorites,
-  and Favorites playback;
+- paged browsing of the current Sonos Queue, plus selected-cover views for
+  Saved Playlists and Sonos Favorites, and Favorites playback;
 - an optional **External cover art over HTTPS** switch. It is off by default
   and accepts only verified public Spotify and Sonos Radio/TuneIn cover URLs;
   it never sends a Sonos login, cookies, playback data, or device identifiers;
@@ -37,7 +36,7 @@ double-buffered framebuffer. It includes:
 
 The desktop/mock suite and ARM cross-build pass. Discovery, playback metadata,
 cover retrieval, topology, and an idempotent volume write have also been
-validated against a real mixed-model Sonos household. Version 0.1.25 accepts
+validated against a real mixed-model Sonos household. Version 0.1.26 accepts
 the strict Spotify, Spotify-in-Sonos, and Sonos Radio/TuneIn cover endpoint
 forms that real Sonos Favorites expose. A direct radio Favorite waits for its
 buffering transition to settle, recognizes Sonos' rewritten session flags, and
@@ -59,7 +58,7 @@ the remote usable.
 
 ## Install
 
-Download `Miyonos-App-0.1.25.zip` from the [GitHub Releases page](https://github.com/ElijahTowers/Miyonos/releases). It contains only the `Miyonos` app folder.
+Download `Miyonos-App-0.1.26.zip` from the [GitHub Releases page](https://github.com/ElijahTowers/Miyonos/releases). It contains only the `Miyonos` app folder.
 
 1. Unzip the download. It contains one folder: `Miyonos`.
 2. Put that folder in the OnionOS `App` folder, so the resulting path is

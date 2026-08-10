@@ -20,10 +20,10 @@ cloud-login requirement.
 It discovers speakers, chooses rooms and groups, shows now-playing metadata,
 cover art, and the Miyoo's local battery percentage, controls
 playback/volume/group mute, browses Queue and Favorites, and persists its
-local settings on the SD card. When a saved Sonos playlist is active, Queue
-lists that playlist's upcoming tracks. X in Queue opens Saved Playlists, which
-shows the selected playlist's source-provided cover art. Starting a playlist
-replaces the active Sonos queue before playback begins. Individual music
+local settings on the SD card. Queue always lists the active Sonos queue; X in
+Queue opens Saved Playlists, which shows the selected playlist's source-provided
+cover art. Starting a playlist replaces the active Sonos queue before playback
+begins. Individual music
 services can still impose their own source-specific restrictions; Miyonos does
 not bypass those restrictions.
 
@@ -44,13 +44,13 @@ changes the selected target only.
 
 | Item | Current state |
 | --- | --- |
-| Release version | `0.1.25` |
-| End-user download | `dist/Miyonos-App-0.1.25.zip` — a single `Miyonos` folder to put in `App` |
+| Release version | `0.1.26` |
+| End-user download | `dist/Miyonos-App-0.1.26.zip` — a single `Miyonos` folder to put in `App` |
 | macOS simulator | `dist/Miyonos Simulator.app` |
 | Last verified device | Miyoo Mini Plus on OnionOS 4.3.x |
 | Last observed device IP | Not recorded in the public repository; check **Apps → Tweaks → Network** on the device |
-| Last verified device state | Version 0.1.23 is installed. Version 0.1.25 adds a resilient Now Playing Saved Playlist label when a player reports only an `SQ:` identifier; its physical retest is pending. |
-| Current 0.1.25 package ARM binary SHA-256 | `07b9a10db32f731ce45c31851068883c922adf144ac4ea0727992d1b3cab011c` |
+| Last verified device state | Version 0.1.23 is installed. Version 0.1.26 makes Queue read Sonos' live `Q:` list only and keeps Saved Playlists separate; its physical retest is pending. |
+| Current 0.1.26 package ARM binary SHA-256 | `f0384967618bc0038702771d08a7f14fbb3e1ede7ae9dd2d178576696108138a` |
 | Automated verification | 218 core checks, 131 simulator-input checks, 68 simulator-fixture checks, simulator screenshot/storage checks, and package integrity checks passed |
 
 The device address is only a local handoff record. Check **Apps → Tweaks →
@@ -110,7 +110,7 @@ device IP is shown at the top of **Apps → Tweaks → Network**.
 This is the simplest path for Windows, macOS, and Linux. It installs no helper
 on the computer.
 
-1. Extract `dist/Miyonos-App-0.1.25.zip`.
+1. Extract `dist/Miyonos-App-0.1.26.zip`.
 2. On the Miyoo, enable **Apps → Tweaks → Network → HTTP: Web-based file sync**.
 3. Open the device page in a browser, then open `App`.
 4. Upload the supplied `Miyonos` folder. Do not upload a nested folder and do

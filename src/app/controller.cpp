@@ -293,16 +293,6 @@ void Controller::request_selected_playlist_artwork() {
   enqueue(std::move(command));
 }
 
-bool Controller::queue_is_current_playlist() const {
-  return view_.playback.active_playlist_object_id.rfind("SQ:", 0) == 0;
-}
-
-std::string Controller::queue_object_for_current_playback() const {
-  return queue_is_current_playlist()
-             ? view_.playback.active_playlist_object_id
-             : "Q:";
-}
-
 void Controller::request_browse(ListKind kind, const std::string& object_id,
                                 std::size_t start_index) {
   const Player* selected = coordinator();
@@ -315,9 +305,10 @@ void Controller::request_browse(ListKind kind, const std::string& object_id,
   command.player = *selected;
   command.list_kind = kind;
   command.text = object_id.empty()
-                     ? (kind == ListKind::Queue
-                            ? queue_object_for_current_playback()
-                            : kind == ListKind::Favorites ? "FV:2" : "SQ:")
+                     ? (kind == ListKind::Queue ? "Q:"
+                                                 : kind == ListKind::Favorites
+                                                       ? "FV:2"
+                                                       : "SQ:")
                      : object_id;
   command.index = start_index;
   if (start_index == 0) {
@@ -328,8 +319,7 @@ void Controller::request_browse(ListKind kind, const std::string& object_id,
   view_.busy = true;
   view_.error.clear();
   view_.status = kind == ListKind::Queue
-                     ? queue_is_current_playlist() ? "Loading current playlist..."
-                                                   : "Loading queue..."
+                     ? "Loading queue..."
                      : kind == ListKind::Favorites ? "Loading favorites..."
                                                    : "Loading Sonos playlists...";
   enqueue(std::move(command));

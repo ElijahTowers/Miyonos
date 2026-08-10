@@ -879,10 +879,7 @@ void Renderer::draw(const ViewState& view, const Settings& settings_value) {
     case Screen::Rooms: rooms(view, false); break;
     case Screen::GroupEditor: rooms(view, true); break;
     case Screen::Queue:
-      media_list(view, view.queue,
-                 view.playback.active_playlist_object_id.rfind("SQ:", 0) == 0
-                     ? "Current Playlist"
-                     : "Queue");
+      media_list(view, view.queue, "Queue");
       break;
     case Screen::Favorites:
       favorites(view);
