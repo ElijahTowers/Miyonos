@@ -75,6 +75,7 @@ struct ViewState {
   bool discovering = true;
   bool connected = false;
   bool busy = false;
+  bool idle_battery_saver_active = false;
   bool controls_overlay = false;
   int selection = 0;
   std::array<int, 4> ip_octets{{192, 168, 1, 100}};
@@ -96,6 +97,9 @@ class Controller {
   void stop();
   void update();
   void handle(Action action);
+  // Called for every physical button press, including a button deliberately
+  // mapped to no action, so the idle screen wakes immediately.
+  void note_user_activity();
   void record_input_code(int code) { view_.diagnostics.last_input_code = code; }
   const ViewState& view() const { return view_; }
   const Settings& settings() const { return settings_; }
@@ -250,6 +254,8 @@ class Controller {
   void export_diagnostics();
   void refresh_diagnostics();
   int polling_interval_ms() const;
+  int topology_interval_ms() const;
+  void update_idle_battery_saver(uint64_t now);
   void request_confirmation(PendingConfirmation pending,
                             const std::string& title,
                             const std::string& message);
@@ -265,6 +271,7 @@ class Controller {
   BoundedQueue<Command> artwork_commands_{8};
   BoundedQueue<WorkerResult> results_{64};
   std::atomic<bool> cancelled_{false};
+  std::atomic<bool> artwork_paused_{false};
   std::thread worker_;
   std::thread artwork_worker_;
   bool exit_requested_ = false;

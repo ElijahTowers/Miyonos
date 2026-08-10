@@ -24,6 +24,9 @@ struct Settings {
   bool official_sonos_product_photos = true;
   PollingIntensity polling = PollingIntensity::Balanced;
   int dim_timeout_seconds = 120;
+  // After a minute without input, Miyonos uses a black, low-refresh screen
+  // and slows background work. Sonos playback continues on the speakers.
+  bool idle_battery_saver = true;
   bool prevent_sleep = true;
   std::vector<std::string> manual_ips;
   ButtonHints button_hints = ButtonHints::Briefly;

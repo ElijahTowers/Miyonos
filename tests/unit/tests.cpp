@@ -306,15 +306,18 @@ void test_settings_and_cache() {
   CHECK(settings.auto_artwork);
   CHECK(settings.spotify_https_artwork);
   CHECK(settings.official_sonos_product_photos);
+  CHECK(settings.idle_battery_saver);
   CHECK(settings.unknown_fields["future_option"] == "keep-me");
   settings.volume_step = 3;
   settings.spotify_https_artwork = true;
   settings.official_sonos_product_photos = true;
+  settings.idle_battery_saver = false;
   CHECK(store.save(settings));
   Settings saved = store.load();
   CHECK(saved.volume_step == 3);
   CHECK(saved.spotify_https_artwork);
   CHECK(saved.official_sonos_product_photos);
+  CHECK(!saved.idle_battery_saver);
   CHECK(saved.button_mapping[button_index(PhysicalButton::Left)] ==
         Action::Next);
   CHECK(saved.unknown_fields["future_option"] == "keep-me");
@@ -555,12 +558,12 @@ void test_live_mock_if_requested() {
   for (int row = 0; row < 4; ++row) controller.handle(Action::Down);
   controller.handle(Action::Confirm);
   controller.handle(Action::Previous);
-  for (int row = 0; row < 10; ++row) controller.handle(Action::Down);
+  for (int row = 0; row < 11; ++row) controller.handle(Action::Down);
   controller.handle(Action::Confirm);
   CHECK(controller.view().screen == Screen::IpEditor);
   controller.handle(Action::Back);
   controller.handle(Action::Previous);
-  for (int row = 0; row < 13; ++row) controller.handle(Action::Down);
+  for (int row = 0; row < 14; ++row) controller.handle(Action::Down);
   controller.handle(Action::Confirm);
   CHECK(controller.view().screen == Screen::ButtonMapping);
   controller.handle(Action::Confirm);

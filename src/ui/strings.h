@@ -17,13 +17,13 @@ inline constexpr std::array<const char*, 8> kMainMenu = {
     "Rooms & Groups", "Speaker Volumes", "Queue", "Favorites",
     "Settings",       "Help",            "About", "Diagnostics"};
 
-inline constexpr std::array<const char*, 18> kSettings = {
+inline constexpr std::array<const char*, 19> kSettings = {
     "Startup room or group", "Sonos volume step", "Seek interval",
     "Artwork cache size", "Automatic artwork", "External cover art over HTTPS",
     "Official Sonos product photos", "Polling intensity", "Screen dim timeout",
-    "Prevent sleep", "Manual player IP", "Button hints", "Confirm before exit",
-    "Button mapping", "Clear artwork cache", "Forget discovered system",
-    "Reset all settings", "Diagnostics mode"};
+    "Idle battery saver", "Prevent sleep", "Manual player IP", "Button hints",
+    "Confirm before exit", "Button mapping", "Clear artwork cache",
+    "Forget discovered system", "Reset all settings", "Diagnostics mode"};
 
 inline constexpr std::array<const char*, 3> kOfflineActions = {
     "Search Again", "Enter Player IP", "Open Help"};

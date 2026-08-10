@@ -169,6 +169,8 @@ Settings SettingsStore::load(std::string* warning) const {
                                : PollingIntensity::Balanced;
   settings.dim_timeout_seconds =
       parse_int(get("dim_timeout_seconds", "120"), 120);
+  settings.idle_battery_saver =
+      parse_bool(get("idle_battery_saver", "1"), true);
   settings.prevent_sleep = parse_bool(get("prevent_sleep", "1"), true);
   settings.manual_ips = split(get("manual_ips"));
   const auto hints = get("button_hints", "briefly");
@@ -207,7 +209,8 @@ Settings SettingsStore::load(std::string* warning) const {
       "seek_seconds", "artwork_cache_mb", "auto_artwork",
       "spotify_https_artwork", "official_sonos_product_photos",
       "content_defaults_version", "polling",
-      "dim_timeout_seconds", "prevent_sleep", "manual_ips", "button_hints",
+      "dim_timeout_seconds", "idle_battery_saver", "prevent_sleep",
+      "manual_ips", "button_hints",
       "confirm_exit", "diagnostics_mode", "last_group_id", "last_room_uuid",
       "cached_ips", "playlist_context_group_id", "playlist_context_title",
       "playlist_context_object_id", "playlist_context_artwork_uri",
@@ -260,6 +263,7 @@ bool SettingsStore::save(const Settings& input, std::string* error) const {
                                 : "balanced";
   fields["dim_timeout_seconds"] =
       std::to_string(settings.dim_timeout_seconds);
+  fields["idle_battery_saver"] = settings.idle_battery_saver ? "1" : "0";
   fields["prevent_sleep"] = settings.prevent_sleep ? "1" : "0";
   fields["manual_ips"] = join(settings.manual_ips);
   fields["button_hints"] = settings.button_hints == ButtonHints::Always

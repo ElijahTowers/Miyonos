@@ -1041,22 +1041,23 @@ std::string Renderer::setting_value(int index, const Settings& settings) const {
       return settings.dim_timeout_seconds == 0
                  ? "Never"
                  : std::to_string(settings.dim_timeout_seconds) + " seconds";
-    case 9: return yes_no(settings.prevent_sleep);
-    case 10:
+    case 9: return settings.idle_battery_saver ? "After 60 seconds" : "Off";
+    case 10: return yes_no(settings.prevent_sleep);
+    case 11:
       return settings.manual_ips.empty()
                  ? "None"
                  : std::to_string(settings.manual_ips.size()) + " saved";
-    case 11:
+    case 12:
       return settings.button_hints == ButtonHints::Always
                  ? "Always"
                  : settings.button_hints == ButtonHints::Never ? "Never"
                                                                 : "Briefly";
-    case 12: return yes_no(settings.confirm_exit);
-    case 13: return "Open";
-    case 14: return "Press A";
+    case 13: return yes_no(settings.confirm_exit);
+    case 14: return "Open";
     case 15: return "Press A";
     case 16: return "Press A";
-    case 17: return yes_no(settings.diagnostics_mode);
+    case 17: return "Press A";
+    case 18: return yes_no(settings.diagnostics_mode);
     default: return {};
   }
 }
@@ -1256,6 +1257,15 @@ void Renderer::confirm_action(const ViewState& view) {
 }
 
 void Renderer::draw(const ViewState& view, const Settings& settings_value) {
+  // This path deliberately avoids layout, texture work, and alpha compositing.
+  // AppRuntime presents it only once per second while the idle battery saver is
+  // active, rather than drawing the regular UI at 30 FPS.
+  if (view.idle_battery_saver_active) {
+    SDL_SetRenderDrawColor(renderer_, 0, 0, 0, 255);
+    SDL_RenderClear(renderer_);
+    SDL_RenderPresent(renderer_);
+    return;
+  }
   background();
   switch (view.screen) {
     case Screen::Splash: splash(view); break;

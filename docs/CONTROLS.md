@@ -80,6 +80,15 @@ Held D-pad input starts with the operating system's repeat delay and is then
 limited to one accepted repeat every 160 ms. Volume retains its conservative
 configured step and pending network updates are coalesced.
 
+## Idle battery saver
+
+**Settings → Idle battery saver** is enabled by default. After 60 seconds with
+no physical-button input, Miyonos replaces the screen with black, presents at
+one frame per second instead of 30, pauses queued artwork downloads, and uses
+slower Sonos polling. Any physical button wakes the UI immediately, including
+one assigned to **No action**. The Sonos speakers continue their playback;
+this setting only reduces work performed by Miyonos.
+
 In the IPv4 editor, Left/Right selects an octet, Up/Down changes it, A validates
 and saves, B cancels, and X clears saved manual addresses.
 

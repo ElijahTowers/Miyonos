@@ -36,6 +36,10 @@ double-buffered framebuffer. It includes:
   images for recognized models, and stores them in the same bounded local cache;
 - offline recovery, bounded retries, confirmations, rotating logs, settings,
   diagnostics, help, and a polished 640 × 480 interface;
+- a default-on **Idle battery saver**: after 60 seconds without input it shows
+  a black screen, lowers presentation from 30 FPS to one frame per second,
+  pauses queued cover downloads, and slows Sonos polling without interrupting
+  speaker playback; and
 - a self-contained OnionOS package and a double-clickable macOS simulator with
   safe built-in Sonos scenarios and an optional Live Sonos mode.
 
@@ -97,6 +101,19 @@ current Controls pop-up;
 Menu asks to exit. B goes back. Every button can be changed in **Settings →
 Button mapping**. Holding Menu + Start for three seconds always restores the
 default layout.
+
+## Battery-saving idle mode
+
+**Settings → Idle battery saver** is on by default. After 60 seconds without a
+button press, Miyonos turns its display black, stops the normal 30 FPS drawing
+loop, defers new cover-art downloads, checks a playing Sonos source every 15
+seconds and a paused source every 60 seconds, and refreshes the topology every
+two minutes. Press any physical button to wake the same screen immediately.
+Sonos continues playing independently while Miyonos is idle.
+
+This reduces Miyonos-specific use while it remains open; it cannot create a
+hardware deep-sleep state for the Miyoo. For OnionOS to manage its normal sleep
+behaviour too, set **Settings → Prevent sleep** to **No**.
 
 In **Speaker Volumes**, use X (**Sync all**) to set every visible speaker in
 the current group to the selected speaker's individual volume. A still mutes

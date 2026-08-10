@@ -2,6 +2,7 @@
 
 #include <SDL.h>
 
+#include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
@@ -56,24 +57,46 @@ int AppRuntime::run(FramePresenter& frames) {
   const uint32_t started_at = SDL_GetTicks();
 #endif
   uint32_t next_frame = SDL_GetTicks();
+  uint32_t next_idle_frame = next_frame;
+  auto process_event = [&](const SDL_Event& event) {
+    if (event.type == SDL_QUIT) {
+      running = false;
+      window_closed = true;
+      return;
+    }
+    // Wake before translating the input, so even an intentionally unmapped
+    // physical button restores the UI immediately.
+    if (event.type == SDL_KEYDOWN ||
+        event.type == SDL_CONTROLLERBUTTONDOWN
+#ifdef MIYONOS_ENABLE_SIMULATOR
+        || event.type == SDL_MOUSEBUTTONDOWN
+#endif
+    ) {
+      controller.note_user_activity();
+    }
+    const Action action = input.translate(event);
+    if (controller.settings().diagnostics_mode &&
+        (event.type == SDL_KEYDOWN ||
+         event.type == SDL_CONTROLLERBUTTONDOWN)) {
+      controller.record_input_code(input.last_keycode());
+    }
+    if (action != Action::None) controller.handle(action);
+  };
   while (running && !controller.exit_requested()) {
     input.set_diagnostics(controller.settings().diagnostics_mode);
     input.set_button_mapping(controller.settings().button_mapping);
+    if (controller.view().idle_battery_saver_active) {
+      // Never make a button wait for the one-second black-frame cadence.
+      // This keeps wake latency bounded while removing the active 30 FPS loop.
+      SDL_Event idle_event;
+      if (SDL_WaitEventTimeout(&idle_event, 100)) process_event(idle_event);
+    }
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
-      if (event.type == SDL_QUIT) {
-        running = false;
-        window_closed = true;
-        break;
-      }
-      const Action action = input.translate(event);
-      if (controller.settings().diagnostics_mode &&
-          (event.type == SDL_KEYDOWN ||
-           event.type == SDL_CONTROLLERBUTTONDOWN)) {
-        controller.record_input_code(input.last_keycode());
-      }
-      if (action != Action::None) controller.handle(action);
+      process_event(event);
+      if (!running) break;
     }
+    if (!running) break;
     const Action repeated = input.repeat_action(SDL_GetTicks());
     if (repeated != Action::None) controller.handle(repeated);
 
@@ -138,12 +161,19 @@ int AppRuntime::run(FramePresenter& frames) {
       }
     }
 
-    renderer.draw(controller.view(), controller.settings());
-    if (!frames.present()) {
-      std::cerr << "Miyonos could not present its display: "
-                << frames.error() << '\n';
-      exit_status = 1;
-      break;
+    const bool idle_battery_saver =
+        controller.view().idle_battery_saver_active;
+    const uint32_t now = SDL_GetTicks();
+    if (!idle_battery_saver ||
+        static_cast<Sint32>(now - next_idle_frame) >= 0) {
+      renderer.draw(controller.view(), controller.settings());
+      if (!frames.present()) {
+        std::cerr << "Miyonos could not present its display: "
+                  << frames.error() << '\n';
+        exit_status = 1;
+        break;
+      }
+      next_idle_frame = now + 1000;
     }
 #ifdef MIYONOS_ENABLE_SIMULATOR
     if ((!options_.capture_path.empty() ||
@@ -165,12 +195,16 @@ int AppRuntime::run(FramePresenter& frames) {
       running = false;
     }
 #endif
+    if (idle_battery_saver) {
+      next_frame = SDL_GetTicks();
+      continue;
+    }
     next_frame += 33;
-    const uint32_t now = SDL_GetTicks();
-    if (next_frame > now) {
-      SDL_Delay(next_frame - now);
+    const uint32_t frame_now = SDL_GetTicks();
+    if (next_frame > frame_now) {
+      SDL_Delay(next_frame - frame_now);
     } else {
-      next_frame = now;
+      next_frame = frame_now;
     }
   }
 

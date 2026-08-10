@@ -24,6 +24,10 @@ namespace miyonos {
 namespace {
 
 constexpr std::size_t kBrowsePageSize = 60;
+constexpr uint64_t kIdleBatterySaverDelayMs = 60 * 1000;
+constexpr int kIdlePlayingPollIntervalMs = 15000;
+constexpr int kIdlePausedPollIntervalMs = 60000;
+constexpr int kIdleTopologyIntervalMs = 120000;
 
 std::string queue_fingerprint(const std::vector<BrowseItem>& items) {
   if (items.empty()) return {};
@@ -197,6 +201,10 @@ void Controller::stop() {
 }
 
 bool Controller::enqueue(Command command) {
+  if (command.type == CommandType::DownloadArtwork &&
+      artwork_paused_.load()) {
+    return false;
+  }
   if (command.type == CommandType::DownloadArtwork ||
       command.type == CommandType::ClearCache) {
     if (!artwork_commands_.try_push(std::move(command))) {
@@ -220,6 +228,15 @@ bool Controller::enqueue(Command command) {
     return false;
   }
   return true;
+}
+
+void Controller::note_user_activity() {
+  view_.last_input_ms = monotonic_ms();
+  if (view_.idle_battery_saver_active) {
+    view_.idle_battery_saver_active = false;
+    artwork_paused_.store(false);
+    MIYONOS_LOG("power", "Idle battery saver woke on input");
+  }
 }
 
 void Controller::begin_discovery() {
@@ -286,6 +303,7 @@ void Controller::request_speaker_product_photos() {
     failed_speaker_product_photo_urls_.clear();
     return;
   }
+  if (artwork_paused_.load()) return;
   const Group* group = active_group();
   if (!group) return;
 
@@ -338,6 +356,7 @@ void Controller::request_selected_favorite_artwork() {
     last_favorite_artwork_url_.clear();
     return;
   }
+  if (artwork_paused_.load()) return;
   const Player* selected = coordinator();
   if (!selected) return;
   const BrowseItem& favorite = view_.favorites[view_.selection];
@@ -373,6 +392,7 @@ void Controller::request_selected_playlist_artwork() {
     last_playlist_artwork_url_.clear();
     return;
   }
+  if (artwork_paused_.load()) return;
   const Player* selected = coordinator();
   if (!selected) return;
   const BrowseItem& playlist = view_.playlists[view_.selection];
@@ -408,6 +428,7 @@ void Controller::request_now_playing_playlist_artwork(
     last_now_playing_playlist_artwork_url_.clear();
     return;
   }
+  if (artwork_paused_.load()) return;
   const Player* selected = coordinator();
   if (!selected) return;
   const std::string url = artwork_url(*selected, playlist.artwork_uri,
@@ -446,6 +467,7 @@ void Controller::request_queue_artwork() {
       view_.queue.empty()) {
     return;
   }
+  if (artwork_paused_.load()) return;
   const Player* selected = coordinator();
   if (!selected) return;
 
@@ -571,6 +593,7 @@ void Controller::validate_playlist_context() {
 void Controller::restore_playlist_context_artwork() {
   view_.now_playing_playlist_artwork_title = selected_playlist_title_;
   if (!settings_.auto_artwork || selected_playlist_artwork_uri_.empty()) return;
+  if (artwork_paused_.load()) return;
   const Player* selected = coordinator();
   if (!selected) return;
   const std::string url = artwork_url(*selected, selected_playlist_artwork_uri_,
@@ -1110,12 +1133,14 @@ void Controller::apply_result(WorkerResult result) {
             selected ? artwork_url(*selected, view_.playback.track.artwork_uri,
                                    settings_.spotify_https_artwork) : "";
         if (!url.empty() && url != last_artwork_url_) {
-          last_artwork_url_ = url;
-          view_.artwork_path.clear();
           const std::string cached = artwork_cache_.find(url);
           if (!cached.empty()) {
+            last_artwork_url_ = url;
+            view_.artwork_path.clear();
             view_.artwork_path = cached;
-          } else if (selected) {
+          } else if (selected && !artwork_paused_.load()) {
+            last_artwork_url_ = url;
+            view_.artwork_path.clear();
             Command command;
             command.type = CommandType::DownloadArtwork;
             command.player = *selected;
@@ -1454,9 +1479,10 @@ void Controller::apply_result(WorkerResult result) {
 }
 
 void Controller::update() {
+  const uint64_t now = monotonic_ms();
+  update_idle_battery_saver(now);
   WorkerResult result;
   while (results_.try_pop(result)) apply_result(std::move(result));
-  const uint64_t now = monotonic_ms();
   if (view_.screen == Screen::Splash && now - view_.last_input_ms > 650) {
     view_.screen = Screen::Discovery;
   }
@@ -1475,7 +1501,9 @@ void Controller::update() {
     request_poll();
   }
   if (view_.connected && !view_.topology.players.empty() &&
-      now - last_topology_requested_ms_ >= 30000 && commands_.size() < 4) {
+      now - last_topology_requested_ms_ >=
+          static_cast<uint64_t>(topology_interval_ms()) &&
+      commands_.size() < 4) {
     request_topology();
   }
   if (view_.playback.state == TransportState::Playing &&
@@ -1491,6 +1519,11 @@ void Controller::update() {
 }
 
 int Controller::polling_interval_ms() const {
+  if (view_.idle_battery_saver_active) {
+    return view_.playback.state == TransportState::Playing
+               ? kIdlePlayingPollIntervalMs
+               : kIdlePausedPollIntervalMs;
+  }
   if (view_.playback.state == TransportState::Playing) {
     return settings_.polling == PollingIntensity::Responsive
                ? 1000
@@ -1499,6 +1532,22 @@ int Controller::polling_interval_ms() const {
   return settings_.polling == PollingIntensity::Responsive
              ? 3000
              : settings_.polling == PollingIntensity::BatterySaver ? 10000 : 6000;
+}
+
+int Controller::topology_interval_ms() const {
+  return view_.idle_battery_saver_active ? kIdleTopologyIntervalMs : 30000;
+}
+
+void Controller::update_idle_battery_saver(uint64_t now) {
+  const bool should_be_active =
+      settings_.idle_battery_saver && view_.last_input_ms > 0 &&
+      now - view_.last_input_ms >= kIdleBatterySaverDelayMs;
+  if (should_be_active == view_.idle_battery_saver_active) return;
+  view_.idle_battery_saver_active = should_be_active;
+  artwork_paused_.store(should_be_active);
+  MIYONOS_LOG("power", should_be_active
+                           ? "Idle battery saver entered"
+                           : "Idle battery saver left");
 }
 
 void Controller::show_toast(const std::string& message, uint64_t duration_ms) {
@@ -1576,7 +1625,7 @@ void Controller::restore_button_mapping() {
   save_settings();
   history_.clear();
   view_.screen = Screen::Settings;
-  view_.selection = 13;
+  view_.selection = 14;
   show_toast("Default button mapping restored", 2400);
 }
 
@@ -1616,7 +1665,7 @@ std::size_t Controller::list_size(Screen screen) const {
           }));
     }
     case Screen::Menu: return 8;
-    case Screen::Settings: return 18;
+    case Screen::Settings: return 19;
     case Screen::ButtonMapping: return kPhysicalButtonCount;
     case Screen::Diagnostics: return 3;
     case Screen::Offline: return 3;
@@ -1746,17 +1795,17 @@ void Controller::activate() {
       break;
     }
     case Screen::Settings:
-      if (view_.selection == 10) enter_ip_editor();
-      else if (view_.selection == 13) enter_button_mapping();
-      else if (view_.selection == 14) {
+      if (view_.selection == 11) enter_ip_editor();
+      else if (view_.selection == 14) enter_button_mapping();
+      else if (view_.selection == 15) {
         request_confirmation(PendingConfirmation::ClearArtwork,
                              "Clear Artwork Cache?",
                              "Downloaded artwork will be removed.");
-      } else if (view_.selection == 15) {
+      } else if (view_.selection == 16) {
         request_confirmation(PendingConfirmation::ForgetSystem,
                              "Forget Sonos System?",
                              "Cached rooms and addresses will be removed.");
-      } else if (view_.selection == 16) {
+      } else if (view_.selection == 17) {
         request_confirmation(PendingConfirmation::ResetSettings,
                              "Reset All Settings?",
                              "Miyonos defaults will be restored.");
@@ -1927,15 +1976,16 @@ void Controller::adjust_setting(int direction) {
       settings_.dim_timeout_seconds = values[(index + direction + 6) % 6];
       break;
     }
-    case 9: settings_.prevent_sleep = !settings_.prevent_sleep; break;
-    case 11: {
+    case 9: settings_.idle_battery_saver = !settings_.idle_battery_saver; break;
+    case 10: settings_.prevent_sleep = !settings_.prevent_sleep; break;
+    case 12: {
       int value = static_cast<int>(settings_.button_hints);
       settings_.button_hints =
           static_cast<ButtonHints>((value + direction + 3) % 3);
       break;
     }
-    case 12: settings_.confirm_exit = !settings_.confirm_exit; break;
-    case 17:
+    case 13: settings_.confirm_exit = !settings_.confirm_exit; break;
+    case 18:
       settings_.diagnostics_mode = !settings_.diagnostics_mode;
       Logger::instance().set_verbose(settings_.diagnostics_mode);
       break;
@@ -2067,7 +2117,7 @@ void Controller::confirm_pending() {
 
 void Controller::handle(Action action) {
   if (action == Action::None) return;
-  view_.last_input_ms = monotonic_ms();
+  note_user_activity();
   if (action == Action::ResetButtonMapping) {
     restore_button_mapping();
     view_.controls_overlay = false;
@@ -2507,6 +2557,14 @@ void Controller::artwork_worker_loop() {
     Command command;
     if (!artwork_commands_.wait_pop(command, 200)) continue;
     if (command.type == CommandType::Stop) break;
+    // Keep queued artwork off the network while the user is away. A download
+    // that was already inside the HTTP client is allowed to finish safely;
+    // subsequent cached-cover requests wait here until the next button press.
+    while (command.type == CommandType::DownloadArtwork &&
+           artwork_paused_.load() && !cancelled_.load()) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+    if (cancelled_.load()) break;
     WorkerResult result;
     if (command.type == CommandType::ClearCache) {
       result.type = ResultType::CacheCleared;
