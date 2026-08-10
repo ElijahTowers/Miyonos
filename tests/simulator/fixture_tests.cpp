@@ -140,6 +140,21 @@ void test_content_scenarios() {
           "Road Trip Track 1");
   }
   {
+    Session session("mixed-favorites");
+    SonosAdapter adapter;
+    const auto players = discover(adapter);
+    if (players.empty()) return;
+    const auto first = adapter.browse(players.front(), "FV:2", 0, 60);
+    const auto second = adapter.browse(players.front(), "FV:2", 60, 60);
+    CHECK(first.ok());
+    CHECK(second.ok());
+    CHECK(first.value.total_matches == 180);
+    CHECK(first.value.items.size() == 60);
+    CHECK(second.value.items.size() == 60);
+    CHECK(is_playlist_favorite(first.value.items[3]));
+    CHECK(is_playlist_favorite(second.value.items[3]));
+  }
+  {
     Session session("no-artwork");
     HttpClient client;
     const auto missing = client.get("http://127.0.0.1:1400/getaa?u=mock");

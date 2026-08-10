@@ -307,7 +307,8 @@ The exact hardware matrix is in [TESTING.md](TESTING.md).
 - Cover art appears only when the current source exposes a reachable supported
   image in either current-track or active-media metadata; otherwise Miyonos
   deliberately shows **Cover unavailable** and fallback artwork.
-- At most 240 entries from the active media container are held at once.
+- Queue, Favorites, and Favorite Playlists load further 60-item pages on
+  demand; there is no fixed 240-entry browsing cap.
 - Directly playable favorites and saved playlists are supported; global music
   service search/authentication and unusual provider-specific item types are
   intentionally unsupported with explicit feedback.
@@ -325,5 +326,4 @@ tested paths.
    battery, key, MainUI, sleep/resume, Wi-Fi, and one-hour stability checklist.
 2. Validate controlled playback/group changes and additional real media
    sources while preserving explicit user confirmation for disruptive actions.
-3. Add optional UPnP event subscriptions and a sliding browse window to reduce
-   polling and allow navigation beyond the current 240-item memory cap.
+3. Add optional UPnP event subscriptions to reduce polling further.

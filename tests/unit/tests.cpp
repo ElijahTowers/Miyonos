@@ -547,6 +547,14 @@ void test_live_mock_if_requested() {
   CHECK(controller.view().now_playing_playlist_artwork_title ==
         selected_playlist);
   CHECK(!controller.view().now_playing_playlist_artwork_path.empty());
+  const auto context_deadline = std::chrono::steady_clock::now() +
+                                std::chrono::seconds(3);
+  while (std::chrono::steady_clock::now() < context_deadline &&
+         controller.settings().playlist_context_queue_fingerprint.empty()) {
+    controller.update();
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+  }
+  CHECK(!controller.settings().playlist_context_queue_fingerprint.empty());
   // Real playlist Favorites become a generic Sonos queue and do not keep a
   // playlist title in their later metadata polls. Re-selecting the same group
   // models the periodic topology refresh that must preserve Miyonos' context.
@@ -604,6 +612,41 @@ void test_live_mock_if_requested() {
   controller.handle(Action::Back);
   CHECK(controller.view().screen == Screen::NowPlaying);
   controller.stop();
+  Controller restarted(directory);
+  restarted.start();
+  const auto restarted_deadline = std::chrono::steady_clock::now() +
+                                  std::chrono::seconds(5);
+  while (std::chrono::steady_clock::now() < restarted_deadline &&
+         restarted.view().playback.playlist_title != selected_playlist) {
+    restarted.update();
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+  }
+  CHECK(restarted.view().screen == Screen::NowPlaying);
+  CHECK(restarted.view().playback.playlist_title == selected_playlist);
+  CHECK(restarted.view().now_playing_playlist_artwork_title ==
+        selected_playlist);
+  restarted.stop();
+
+  // A playlist started by another Sonos controller has authoritative metadata.
+  // It must replace, rather than inherit, the generic-queue fallback that was
+  // persisted for the earlier Miyonos-started playlist.
+  CHECK(adapter.play_saved_playlist(*mock_player,
+                                    saved_playlists.value.items.front())
+            .ok());
+  Controller externally_changed(directory);
+  externally_changed.start();
+  const auto changed_deadline = std::chrono::steady_clock::now() +
+                                std::chrono::seconds(5);
+  while (std::chrono::steady_clock::now() < changed_deadline &&
+         externally_changed.view().playback.playlist_title !=
+             saved_playlists.value.items.front().title) {
+    externally_changed.update();
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+  }
+  CHECK(externally_changed.view().playback.playlist_title ==
+        saved_playlists.value.items.front().title);
+  CHECK(externally_changed.settings().playlist_context_queue_fingerprint.empty());
+  externally_changed.stop();
   fs::remove_all(directory);
 }
 

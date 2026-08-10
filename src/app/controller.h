@@ -39,6 +39,11 @@ enum class Screen {
 };
 
 enum class ListKind { Queue, Favorites, Playlists };
+enum class BrowseIntent {
+  Display,
+  CapturePlaylistContext,
+  ValidatePlaylistContext
+};
 
 struct ViewState {
   Screen screen = Screen::Splash;
@@ -139,6 +144,7 @@ class Controller {
     Player player;
     BrowseItem item;
     ListKind list_kind = ListKind::Queue;
+    BrowseIntent browse_intent = BrowseIntent::Display;
     std::string text;
     std::vector<std::string> ips;
     std::string playlist_title;
@@ -149,6 +155,7 @@ class Controller {
     bool replaces_playlist_context = false;
     ArtworkTarget artwork_target = ArtworkTarget::NowPlaying;
     std::size_t index = 0;
+    std::size_t visible_offset = 0;
   };
 
   enum class ResultType {
@@ -170,10 +177,12 @@ class Controller {
     PlaybackSnapshot playback;
     BrowsePage browse;
     ListKind list_kind = ListKind::Queue;
+    BrowseIntent browse_intent = BrowseIntent::Display;
     std::string text;
     std::string context;
     std::string context_id;
     std::size_t start_index = 0;
+    std::size_t visible_offset = 0;
     int value = 0;
     bool flag = false;
     bool success = false;
@@ -183,6 +192,7 @@ class Controller {
   };
 
   void worker_loop();
+  void artwork_worker_loop();
   void apply_result(WorkerResult result);
   bool enqueue(Command command);
   void begin_discovery();
@@ -194,7 +204,12 @@ class Controller {
   void request_now_playing_playlist_artwork(const BrowseItem& playlist);
   void request_queue_artwork();
   void request_browse(ListKind kind, const std::string& object_id = {},
-                      std::size_t start_index = 0);
+                      std::size_t start_index = 0,
+                      BrowseIntent intent = BrowseIntent::Display);
+  void capture_playlist_context();
+  void validate_playlist_context();
+  void restore_playlist_context_artwork();
+  void clear_playlist_context();
   void select_group(std::size_t index, bool opened_by_user = true);
   Player* player_by_uuid(const std::string& uuid);
   const Player* player_by_uuid(const std::string& uuid) const;
@@ -233,9 +248,11 @@ class Controller {
   ViewState view_;
   std::vector<Screen> history_;
   BoundedQueue<Command> commands_{32};
-  BoundedQueue<WorkerResult> results_{32};
+  BoundedQueue<Command> artwork_commands_{8};
+  BoundedQueue<WorkerResult> results_{64};
   std::atomic<bool> cancelled_{false};
   std::thread worker_;
+  std::thread artwork_worker_;
   bool exit_requested_ = false;
   uint64_t last_poll_requested_ms_ = 0;
   uint64_t last_topology_requested_ms_ = 0;
@@ -245,6 +262,7 @@ class Controller {
   int poll_failures_ = 0;
   std::string selected_playlist_title_;
   std::string selected_playlist_object_id_;
+  std::string selected_playlist_artwork_uri_;
   std::string playlist_context_lookup_requested_id_;
   std::string pending_playlist_title_;
   std::string pending_playlist_object_id_;
@@ -253,6 +271,7 @@ class Controller {
   std::string playlist_artwork_path_before_start_;
   std::string playlist_artwork_title_before_start_;
   std::string playlist_artwork_url_before_start_;
+  std::string playlist_artwork_uri_before_start_;
   bool playlist_start_acknowledged_ = false;
   std::string active_station_title_;
   std::string last_artwork_url_;
@@ -262,6 +281,10 @@ class Controller {
   std::vector<std::string> queue_artwork_urls_;
   std::string queue_artwork_inflight_url_;
   std::set<std::string> failed_queue_artwork_urls_;
+  std::size_t playlists_next_raw_index_ = 0;
+  bool playlists_has_more_ = false;
+  bool playlist_context_validation_pending_ = false;
+  uint64_t last_playlist_context_validation_ms_ = 0;
   std::map<std::string, SpeakerVolume> speaker_volumes_;
   std::map<Screen, int> selections_;
   std::string queue_object_ = "Q:0";

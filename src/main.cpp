@@ -46,6 +46,8 @@ int main(int argc, char** argv) {
   bool screen_only = false;
   bool live_sonos = false;
   bool show_controls = false;
+  bool show_playlist = false;
+  bool show_playlist_tail = false;
   bool data_directory_explicit = std::getenv("MIYONOS_DATA_DIR") != nullptr;
   std::string scenario = "grouped";
   std::string capture_path;
@@ -58,6 +60,8 @@ int main(int argc, char** argv) {
   const std::string capture_shell_path;
   constexpr bool live_sonos = false;
   constexpr bool show_controls = false;
+  constexpr bool show_playlist = false;
+  constexpr bool show_playlist_tail = false;
   constexpr uint32_t capture_after_ms = 0;
 #endif
   std::string data_directory = default_data_directory(argc > 0 ? argv[0] : nullptr);
@@ -92,6 +96,12 @@ int main(int argc, char** argv) {
     } else if (argument == "--show-controls") {
       simulator = true;
       show_controls = true;
+    } else if (argument == "--show-playlist") {
+      simulator = true;
+      show_playlist = true;
+    } else if (argument == "--show-playlist-tail") {
+      simulator = true;
+      show_playlist_tail = true;
     } else if (argument == "--live-sonos") {
       simulator = true;
       live_sonos = true;
@@ -117,7 +127,8 @@ int main(int argc, char** argv) {
 #ifdef MIYONOS_ENABLE_SIMULATOR
       std::cout
           << "       miyonos --simulator [--scenario NAME] "
-             "[--live-sonos] [--screen-only] [--show-controls]\n"
+             "[--live-sonos] [--screen-only] [--show-controls] "
+             "[--show-playlist] [--show-playlist-tail]\n"
           << "Test capture: [--capture-frame PATH] [--capture-shell PATH] "
              "[--capture-after-ms N]\n";
 #endif
@@ -128,7 +139,8 @@ int main(int argc, char** argv) {
 #ifdef MIYONOS_ENABLE_SIMULATOR
   const std::set<std::string> scenarios{
       "normal",       "multi-room", "grouped", "long-queue",
-      "no-artwork",   "slow",       "offline", "coordinator-change"};
+      "mixed-favorites", "no-artwork", "slow", "offline",
+      "coordinator-change"};
   if (simulator && !live_sonos && scenarios.count(scenario) == 0) {
     std::cerr << "Unknown simulator scenario: " << scenario << '\n';
     return 2;
@@ -257,7 +269,8 @@ int main(int argc, char** argv) {
       }
       miyonos::AppRuntime runtime(
           {mode, data_directory, capture_path, capture_shell_path,
-           scenario, live_sonos, show_controls, capture_after_ms});
+           scenario, live_sonos, show_controls, show_playlist,
+           show_playlist_tail, capture_after_ms});
       exit_status = runtime.run(frames);
     }
   }

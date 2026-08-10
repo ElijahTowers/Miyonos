@@ -94,13 +94,19 @@ std::string didl_item(int identifier) {
          ".mp3</res></item>";
 }
 
-std::string didl_playlist_favorite() {
-  return "<item id=\"FV:2/3\" parentID=\"FV:2\" restricted=\"true\">"
-         "<dc:title>Road Trip Playlist</dc:title>"
+std::string didl_playlist_favorite(int identifier = 3) {
+  const std::string number = std::to_string(identifier);
+  const std::string title = identifier == 3
+      ? "Road Trip Playlist"
+      : "Playlist Favorite " + number;
+  return "<item id=\"FV:2/" + number +
+         "\" parentID=\"FV:2\" restricted=\"true\">"
+         "<dc:title>" + title + "</dc:title>"
          "<dc:creator>Miyonos Ensemble</dc:creator>"
          "<upnp:class>object.item.sonos-favorite</upnp:class>"
          "<upnp:albumArtURI>/getaa?s=1&amp;u=mock</upnp:albumArtURI>"
-         "<res>x-rincon-cpcontainer:1006206cspotify%3Aplaylist%3Aroad-trip</res>"
+         "<res>x-rincon-cpcontainer:1006206cspotify%3Aplaylist%3Afixture-" +
+         number + "</res>"
          "</item>";
 }
 
@@ -554,11 +560,21 @@ std::string SimulatorSonosFixture::response_for(
         ++count;
       }
     } else if (object_id == "FV:2") {
-      items = "<container id=\"FV:2/1\" parentID=\"FV:2\">"
-              "<dc:title>Morning Collection</dc:title>"
-              "<upnp:class>object.container</upnp:class></container>" +
-              didl_item(2) + didl_playlist_favorite();
-      total = count = 3;
+      if (scenario_ == "mixed-favorites") {
+        total = 180;
+        for (int index = start + 1;
+             index <= total && index <= start + requested; ++index) {
+          items += index % 4 == 0 ? didl_playlist_favorite(index)
+                                  : didl_item(index);
+          ++count;
+        }
+      } else {
+        items = "<container id=\"FV:2/1\" parentID=\"FV:2\">"
+                "<dc:title>Morning Collection</dc:title>"
+                "<upnp:class>object.container</upnp:class></container>" +
+                didl_item(2) + didl_playlist_favorite();
+        total = count = 3;
+      }
     } else if (object_id == "SQ:") {
       items = didl_saved_playlist(1) + didl_saved_playlist(2);
       total = count = 2;

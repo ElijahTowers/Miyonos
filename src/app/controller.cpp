@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <fstream>
 #include <ifaddrs.h>
+#include <iomanip>
 #include <iterator>
 #include <arpa/inet.h>
 #include <net/if.h>
@@ -22,7 +23,29 @@ namespace miyonos {
 namespace {
 
 constexpr std::size_t kBrowsePageSize = 60;
-constexpr std::size_t kMaximumBrowseItems = 240;
+
+std::string queue_fingerprint(const std::vector<BrowseItem>& items) {
+  if (items.empty()) return {};
+  std::uint64_t hash = 1469598103934665603ULL;
+  const auto append = [&hash](const std::string& value) {
+    for (const unsigned char character : value) {
+      hash ^= character;
+      hash *= 1099511628211ULL;
+    }
+    hash ^= 0xff;
+    hash *= 1099511628211ULL;
+  };
+  const std::size_t count = std::min<std::size_t>(8, items.size());
+  for (std::size_t index = 0; index < count; ++index) {
+    append(items[index].id);
+    append(items[index].title);
+    append(items[index].artist);
+    append(items[index].uri);
+  }
+  std::ostringstream result;
+  result << std::hex << std::setw(16) << std::setfill('0') << hash;
+  return result.str();
+}
 
 bool is_saved_playlist_object_id(const std::string& object_id) {
   return lowercase(object_id).rfind("sq:", 0) == 0;
@@ -142,31 +165,45 @@ Controller::Controller(std::string data_directory)
 Controller::~Controller() { stop(); }
 
 void Controller::start() {
-  if (worker_.joinable()) return;
+  if (worker_.joinable() || artwork_worker_.joinable()) return;
   cancelled_.store(false);
   Logger::instance().initialize((fs::path(data_directory_) / "logs").string(),
                                 settings_.diagnostics_mode);
   MIYONOS_LOG("app", "Miyonos " MIYONOS_VERSION " starting");
   worker_ = std::thread(&Controller::worker_loop, this);
+  artwork_worker_ = std::thread(&Controller::artwork_worker_loop, this);
   view_.screen = Screen::Splash;
   view_.status = "Checking Wi-Fi...";
   begin_discovery();
 }
 
 void Controller::stop() {
-  if (!worker_.joinable()) return;
+  if (!worker_.joinable() && !artwork_worker_.joinable()) return;
   cancelled_.store(true);
   Command stop_command;
   stop_command.type = CommandType::Stop;
   commands_.try_push(std::move(stop_command));
+  Command artwork_stop_command;
+  artwork_stop_command.type = CommandType::Stop;
+  artwork_commands_.try_push(std::move(artwork_stop_command));
   commands_.close();
-  worker_.join();
+  artwork_commands_.close();
+  if (worker_.joinable()) worker_.join();
+  if (artwork_worker_.joinable()) artwork_worker_.join();
   results_.close();
   save_settings();
   MIYONOS_LOG("app", "Miyonos stopped cleanly");
 }
 
 bool Controller::enqueue(Command command) {
+  if (command.type == CommandType::DownloadArtwork ||
+      command.type == CommandType::ClearCache) {
+    if (!artwork_commands_.try_push(std::move(command))) {
+      show_toast("Artwork is still loading.");
+      return false;
+    }
+    return true;
+  }
   if (command.type == CommandType::Volume) {
     const std::string player_uuid = command.player.uuid;
     const bool group_volume = command.flag;
@@ -397,7 +434,7 @@ void Controller::request_queue_artwork() {
 }
 
 void Controller::request_browse(ListKind kind, const std::string& object_id,
-                                std::size_t start_index) {
+                                std::size_t start_index, BrowseIntent intent) {
   const Player* selected = coordinator();
   if (!selected) {
     show_toast("Select an available room first.");
@@ -407,6 +444,7 @@ void Controller::request_browse(ListKind kind, const std::string& object_id,
   command.type = CommandType::Browse;
   command.player = *selected;
   command.list_kind = kind;
+  command.browse_intent = intent;
   command.text = object_id.empty()
                      ? (kind == ListKind::Queue ? "Q:0"
                                                  : kind == ListKind::Favorites
@@ -414,18 +452,87 @@ void Controller::request_browse(ListKind kind, const std::string& object_id,
                                                        : "FV:2")
                      : object_id;
   command.index = start_index;
-  if (start_index == 0) {
+  command.visible_offset = kind == ListKind::Queue
+                               ? view_.queue.size()
+                               : kind == ListKind::Favorites
+                                     ? view_.favorites.size()
+                                     : view_.playlists.size();
+  if (start_index == 0 && intent == BrowseIntent::Display) {
     if (kind == ListKind::Queue) queue_object_ = command.text;
     else if (kind == ListKind::Favorites) favorites_object_ = command.text;
-    else playlists_object_ = command.text;
+    else {
+      playlists_object_ = command.text;
+      playlists_next_raw_index_ = 0;
+      playlists_has_more_ = false;
+    }
   }
-  view_.busy = true;
-  view_.error.clear();
-  view_.status = kind == ListKind::Queue
-                     ? "Loading queue..."
-                     : kind == ListKind::Favorites ? "Loading favorites..."
-                                                   : "Loading favorite playlists...";
+  if (intent == BrowseIntent::Display) {
+    view_.busy = true;
+    view_.error.clear();
+    view_.status = kind == ListKind::Queue
+                       ? "Loading queue..."
+                       : kind == ListKind::Favorites
+                             ? "Loading favorites..."
+                             : "Loading favorite playlists...";
+  }
+  if (!enqueue(std::move(command)) && intent == BrowseIntent::Display) {
+    view_.busy = false;
+  }
+}
+
+void Controller::capture_playlist_context() {
+  if (selected_playlist_title_.empty() || !active_group()) {
+    return;
+  }
+  request_browse(ListKind::Queue, "Q:0", 0,
+                 BrowseIntent::CapturePlaylistContext);
+}
+
+void Controller::validate_playlist_context() {
+  if (playlist_context_validation_pending_ ||
+      settings_.playlist_context_group_id != view_.active_group_id ||
+      settings_.playlist_context_title.empty() ||
+      settings_.playlist_context_queue_fingerprint.empty()) {
+    return;
+  }
+  const uint64_t now = monotonic_ms();
+  if (now - last_playlist_context_validation_ms_ < 15000) return;
+  last_playlist_context_validation_ms_ = now;
+  playlist_context_validation_pending_ = true;
+  request_browse(ListKind::Queue, "Q:0", 0,
+                 BrowseIntent::ValidatePlaylistContext);
+}
+
+void Controller::restore_playlist_context_artwork() {
+  view_.now_playing_playlist_artwork_title = selected_playlist_title_;
+  if (!settings_.auto_artwork || selected_playlist_artwork_uri_.empty()) return;
+  const Player* selected = coordinator();
+  if (!selected) return;
+  const std::string url = artwork_url(*selected, selected_playlist_artwork_uri_,
+                                      settings_.spotify_https_artwork);
+  if (url.empty()) return;
+  last_now_playing_playlist_artwork_url_ = url;
+  const std::string cached = artwork_cache_.find(url);
+  if (!cached.empty()) {
+    view_.now_playing_playlist_artwork_path = cached;
+    return;
+  }
+  Command command;
+  command.type = CommandType::DownloadArtwork;
+  command.player = *selected;
+  command.text = url;
+  command.flag = settings_.spotify_https_artwork;
+  command.artwork_target = ArtworkTarget::NowPlayingPlaylist;
   enqueue(std::move(command));
+}
+
+void Controller::clear_playlist_context() {
+  settings_.playlist_context_group_id.clear();
+  settings_.playlist_context_title.clear();
+  settings_.playlist_context_object_id.clear();
+  settings_.playlist_context_artwork_uri.clear();
+  settings_.playlist_context_queue_fingerprint.clear();
+  save_settings();
 }
 
 Player* Controller::player_by_uuid(const std::string& uuid) {
@@ -553,6 +660,7 @@ void Controller::select_group(std::size_t index, bool opened_by_user) {
     // the queue advances to later tracks.
     selected_playlist_title_.clear();
     selected_playlist_object_id_.clear();
+    selected_playlist_artwork_uri_.clear();
     playlist_context_lookup_requested_id_.clear();
     pending_playlist_title_.clear();
     pending_playlist_object_id_.clear();
@@ -561,6 +669,7 @@ void Controller::select_group(std::size_t index, bool opened_by_user) {
     playlist_artwork_path_before_start_.clear();
     playlist_artwork_title_before_start_.clear();
     playlist_artwork_url_before_start_.clear();
+    playlist_artwork_uri_before_start_.clear();
     playlist_start_acknowledged_ = false;
     view_.now_playing_playlist_artwork_path.clear();
     view_.now_playing_playlist_artwork_title.clear();
@@ -579,7 +688,9 @@ void Controller::select_group(std::size_t index, bool opened_by_user) {
 }
 
 void Controller::apply_result(WorkerResult result) {
-  view_.busy = false;
+  if (result.type != ResultType::Artwork && result.type != ResultType::CacheCleared) {
+    view_.busy = false;
+  }
   switch (result.type) {
     case ResultType::Discovery:
       view_.discovering = false;
@@ -689,6 +800,13 @@ void Controller::apply_result(WorkerResult result) {
         break;
       }
       poll_failures_ = 0;
+      // Keep track of whether Sonos itself supplied playlist metadata before
+      // Miyonos applies any remembered generic-queue context below. If another
+      // controller selects a saved playlist, that live metadata is more
+      // authoritative than the locally remembered playlist that came before it.
+      const bool sonos_reported_playlist_context =
+          !result.playback.playlist_title.empty() ||
+          is_saved_playlist_object_id(result.playback.active_playlist_object_id);
       bool needs_playlist_lookup = false;
       const bool playlist_start_pending = !pending_playlist_object_id_.empty();
       if (playlist_start_pending) {
@@ -712,6 +830,7 @@ void Controller::apply_result(WorkerResult result) {
           playlist_artwork_path_before_start_.clear();
           playlist_artwork_title_before_start_.clear();
           playlist_artwork_url_before_start_.clear();
+          playlist_artwork_uri_before_start_.clear();
           playlist_start_acknowledged_ = false;
         }
       } else {
@@ -754,6 +873,7 @@ void Controller::apply_result(WorkerResult result) {
         } else {
           selected_playlist_title_.clear();
           selected_playlist_object_id_.clear();
+          selected_playlist_artwork_uri_.clear();
           playlist_context_lookup_requested_id_.clear();
         }
       }
@@ -782,6 +902,21 @@ void Controller::apply_result(WorkerResult result) {
         view_.now_playing_playlist_artwork_path.clear();
         view_.now_playing_playlist_artwork_title.clear();
         last_now_playing_playlist_artwork_url_.clear();
+      }
+      if (is_queue_playback(view_.playback) &&
+          settings_.playlist_context_group_id == view_.active_group_id &&
+          !settings_.playlist_context_queue_fingerprint.empty()) {
+        if (sonos_reported_playlist_context) {
+          // The queue now has a live, non-generic identity. Discard the old
+          // fallback instead of allowing it to overwrite the current source.
+          clear_playlist_context();
+        } else {
+          validate_playlist_context();
+        }
+      } else if (!is_queue_playback(view_.playback) &&
+                 settings_.playlist_context_group_id == view_.active_group_id &&
+                 !settings_.playlist_context_queue_fingerprint.empty()) {
+        clear_playlist_context();
       }
       if (view_.group_volume_target) {
         if (monotonic_ms() < volume_feedback_until_ms_ &&
@@ -849,8 +984,53 @@ void Controller::apply_result(WorkerResult result) {
     }
     case ResultType::Browse: {
       if (!result.success) {
+        if (result.browse_intent == BrowseIntent::ValidatePlaylistContext) {
+          playlist_context_validation_pending_ = false;
+        }
         view_.error = result.text;
-        show_toast("Could not load this list.");
+        if (result.browse_intent == BrowseIntent::Display)
+          show_toast("Could not load this list.");
+        break;
+      }
+      const std::size_t raw_number_returned = result.browse.number_returned;
+      const std::size_t raw_total_matches = result.browse.total_matches;
+      if (result.browse_intent == BrowseIntent::ValidatePlaylistContext) {
+        playlist_context_validation_pending_ = false;
+        if (queue_fingerprint(result.browse.items) ==
+            settings_.playlist_context_queue_fingerprint) {
+          selected_playlist_title_ = settings_.playlist_context_title;
+          selected_playlist_object_id_ = settings_.playlist_context_object_id;
+          selected_playlist_artwork_uri_ =
+              settings_.playlist_context_artwork_uri;
+          view_.playback.playlist_title = selected_playlist_title_;
+          restore_playlist_context_artwork();
+        } else {
+          const bool displaying_remembered_context =
+              view_.playback.playlist_title ==
+              settings_.playlist_context_title;
+          selected_playlist_title_.clear();
+          selected_playlist_object_id_.clear();
+          selected_playlist_artwork_uri_.clear();
+          if (displaying_remembered_context) {
+            view_.playback.playlist_title.clear();
+            view_.now_playing_playlist_artwork_path.clear();
+            view_.now_playing_playlist_artwork_title.clear();
+            last_now_playing_playlist_artwork_url_.clear();
+          }
+          clear_playlist_context();
+        }
+        break;
+      }
+      if (result.browse_intent == BrowseIntent::CapturePlaylistContext) {
+        const std::string fingerprint = queue_fingerprint(result.browse.items);
+        if (!fingerprint.empty() && !selected_playlist_title_.empty()) {
+          settings_.playlist_context_group_id = view_.active_group_id;
+          settings_.playlist_context_title = selected_playlist_title_;
+          settings_.playlist_context_object_id = selected_playlist_object_id_;
+          settings_.playlist_context_artwork_uri = selected_playlist_artwork_uri_;
+          settings_.playlist_context_queue_fingerprint = fingerprint;
+          save_settings();
+        }
         break;
       }
       if (result.list_kind == ListKind::Playlists) {
@@ -861,8 +1041,9 @@ void Controller::apply_result(WorkerResult result) {
                                    }),
                     items.end());
         result.browse.number_returned = items.size();
-        result.browse.total_matches = items.size();
       }
+      const bool playlist_page_empty =
+          result.list_kind == ListKind::Playlists && result.browse.items.empty();
       auto* target = result.list_kind == ListKind::Queue
                          ? &view_.queue
                          : result.list_kind == ListKind::Favorites
@@ -886,13 +1067,8 @@ void Controller::apply_result(WorkerResult result) {
           queue_artwork_urls_.assign(target->size(), {});
           failed_queue_artwork_urls_.clear();
         }
-      } else if (result.start_index == target->size()) {
-        const std::size_t remaining =
-            kMaximumBrowseItems > target->size()
-                ? kMaximumBrowseItems - target->size()
-                : 0;
-        const std::size_t count =
-            std::min(remaining, result.browse.items.size());
+      } else if (result.visible_offset == target->size()) {
+        const std::size_t count = result.browse.items.size();
         target->insert(target->end(),
                        std::make_move_iterator(result.browse.items.begin()),
                        std::make_move_iterator(result.browse.items.begin() + count));
@@ -904,10 +1080,17 @@ void Controller::apply_result(WorkerResult result) {
       // When a complete page contained a Sonos navigation placeholder that
       // was intentionally filtered by the protocol layer, keep pagination
       // aligned with the visible list instead of fetching a duplicate tail.
-      *total = result.start_index == 0 &&
-                       result.browse.number_returned >= result.browse.total_matches
-                   ? target->size()
-                   : result.browse.total_matches;
+      if (result.list_kind == ListKind::Playlists) {
+        playlists_next_raw_index_ = result.start_index + raw_number_returned;
+        playlists_has_more_ = raw_number_returned > 0 &&
+            playlists_next_raw_index_ < raw_total_matches;
+        *total = target->size();
+      } else {
+        *total = result.start_index == 0 &&
+                         result.browse.number_returned >= result.browse.total_matches
+                     ? target->size()
+                     : result.browse.total_matches;
+      }
       view_.selection = target->empty() ? 0 : std::min<int>(
                                                    view_.selection,
                                                    static_cast<int>(target->size() - 1));
@@ -927,6 +1110,10 @@ void Controller::apply_result(WorkerResult result) {
           playlist_context_lookup_requested_id_.clear();
         }
         request_selected_playlist_artwork();
+        if (playlist_page_empty && playlists_has_more_) {
+          request_browse(ListKind::Playlists, playlists_object_,
+                         playlists_next_raw_index_);
+        }
       } else if (result.list_kind == ListKind::Queue) {
         request_queue_artwork();
       }
@@ -941,13 +1128,19 @@ void Controller::apply_result(WorkerResult result) {
           selected_playlist_object_id_ = result.context_id;
           playlist_context_lookup_requested_id_.clear();
           if (result.context.empty()) {
+            selected_playlist_artwork_uri_.clear();
             view_.playback.playlist_title.clear();
             view_.now_playing_playlist_artwork_path.clear();
             view_.now_playing_playlist_artwork_title.clear();
             last_now_playing_playlist_artwork_url_.clear();
+            clear_playlist_context();
           }
           if (result.context_id == pending_playlist_object_id_) {
             playlist_start_acknowledged_ = true;
+          }
+          if (!result.context.empty()) {
+            clear_playlist_context();
+            capture_playlist_context();
           }
         }
         if (!result.quiet_success) {
@@ -966,6 +1159,7 @@ void Controller::apply_result(WorkerResult result) {
               playlist_artwork_title_before_start_;
           last_now_playing_playlist_artwork_url_ =
               playlist_artwork_url_before_start_;
+          selected_playlist_artwork_uri_ = playlist_artwork_uri_before_start_;
           pending_playlist_title_.clear();
           pending_playlist_object_id_.clear();
           playlist_title_before_start_.clear();
@@ -973,6 +1167,7 @@ void Controller::apply_result(WorkerResult result) {
           playlist_artwork_path_before_start_.clear();
           playlist_artwork_title_before_start_.clear();
           playlist_artwork_url_before_start_.clear();
+          playlist_artwork_uri_before_start_.clear();
           playlist_start_acknowledged_ = false;
           request_poll();
         }
@@ -1223,8 +1418,7 @@ void Controller::move_selection(int delta) {
   if (view_.screen == Screen::Favorites) request_selected_favorite_artwork();
   if (view_.screen == Screen::Playlists) request_selected_playlist_artwork();
   if (delta <= 0 || view_.busy ||
-      view_.selection < static_cast<int>(size) - 3 ||
-      size >= kMaximumBrowseItems) {
+      view_.selection < static_cast<int>(size) - 3) {
     return;
   }
   if (view_.screen == Screen::Queue && size < view_.queue_total) {
@@ -1232,9 +1426,9 @@ void Controller::move_selection(int delta) {
   } else if (view_.screen == Screen::Favorites &&
              size < view_.favorites_total) {
     request_browse(ListKind::Favorites, favorites_object_, size);
-  } else if (view_.screen == Screen::Playlists &&
-             size < view_.playlists_total) {
-    request_browse(ListKind::Playlists, playlists_object_, size);
+  } else if (view_.screen == Screen::Playlists && playlists_has_more_) {
+    request_browse(ListKind::Playlists, playlists_object_,
+                   playlists_next_raw_index_);
   }
 }
 
@@ -1298,9 +1492,11 @@ void Controller::activate() {
               view_.now_playing_playlist_artwork_title;
           playlist_artwork_url_before_start_ =
               last_now_playing_playlist_artwork_url_;
+          playlist_artwork_uri_before_start_ = selected_playlist_artwork_uri_;
           playlist_start_acknowledged_ = false;
           selected_playlist_title_ = item.title;
           selected_playlist_object_id_ = item.id;
+          selected_playlist_artwork_uri_ = item.artwork_uri;
           view_.playback.playlist_title = item.title;
           request_now_playing_playlist_artwork(item);
           navigate(Screen::NowPlaying);
@@ -1862,7 +2058,6 @@ void Controller::handle(Action action) {
 
 void Controller::worker_loop() {
   SonosAdapter adapter(&cancelled_);
-  HttpClient http(&cancelled_);
   std::vector<Player> known_players;
   Topology topology;
   while (!cancelled_.load()) {
@@ -1947,8 +2142,10 @@ void Controller::worker_loop() {
         result.text = response.error;
         result.browse = std::move(response.value);
         result.list_kind = command.list_kind;
+        result.browse_intent = command.browse_intent;
         result.context = command.text;
         result.start_index = command.index;
+        result.visible_offset = command.visible_offset;
         break;
       }
       case CommandType::PlayQueue:
@@ -1983,33 +2180,8 @@ void Controller::worker_loop() {
         action(adapter.leave_group(command.player),
                command.player.room_name + " left the group");
         break;
-      case CommandType::DownloadArtwork: {
-        HttpClient::Limits limits;
-        // External cover hosts can be slower than the local Sonos artwork
-        // server on the Mini's Wi-Fi. This work is asynchronous, so a bounded
-        // longer allowance does not block input or rendering.
-        limits.connect_timeout_ms = 4000;
-        limits.read_timeout_ms = 8000;
-        limits.max_body_bytes = 8 * 1024 * 1024;
-        const auto response = http.get_artwork(command.text, command.flag, limits);
-        result.type = ResultType::Artwork;
-        result.context = command.text;
-        result.artwork_target = command.artwork_target;
-        result.success =
-            response.ok() &&
-            artwork_cache_.store(command.text, response.body, &result.text);
-        if (!result.success) {
-          if (result.text.empty()) {
-            result.text = response.ok() ? "Artwork cache rejected the image"
-                                        : response.error;
-          }
-          MIYONOS_WARN("artwork", "Cover download failed: " + result.text);
-        }
-        break;
-      }
       case CommandType::ClearCache:
-        result.type = ResultType::CacheCleared;
-        result.success = artwork_cache_.clear();
+      case CommandType::DownloadArtwork:
         break;
       case CommandType::Stop:
         break;
@@ -2030,6 +2202,41 @@ void Controller::worker_loop() {
       }
       results_.try_push(std::move(topology_result));
     }
+  }
+}
+
+void Controller::artwork_worker_loop() {
+  HttpClient http(&cancelled_);
+  while (!cancelled_.load()) {
+    Command command;
+    if (!artwork_commands_.wait_pop(command, 200)) continue;
+    if (command.type == CommandType::Stop) break;
+    WorkerResult result;
+    if (command.type == CommandType::ClearCache) {
+      result.type = ResultType::CacheCleared;
+      result.success = artwork_cache_.clear();
+    } else if (command.type == CommandType::DownloadArtwork) {
+      HttpClient::Limits limits;
+      limits.connect_timeout_ms = 4000;
+      limits.read_timeout_ms = 8000;
+      limits.max_body_bytes = 8 * 1024 * 1024;
+      const auto response = http.get_artwork(command.text, command.flag, limits);
+      result.type = ResultType::Artwork;
+      result.context = command.text;
+      result.artwork_target = command.artwork_target;
+      result.success = response.ok() &&
+          artwork_cache_.store(command.text, response.body, &result.text);
+      if (!result.success) {
+        if (result.text.empty()) {
+          result.text = response.ok() ? "Artwork cache rejected the image"
+                                      : response.error;
+        }
+        MIYONOS_WARN("artwork", "Cover download failed: " + result.text);
+      }
+    } else {
+      continue;
+    }
+    results_.try_push(std::move(result));
   }
 }
 

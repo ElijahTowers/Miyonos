@@ -43,6 +43,37 @@ EXPECTED_CONTROLS="$(awk '$1 == "controls-overlay.bmp" {print $2}' "$REFERENCE")
 }
 file "$OUTPUT/controls-overlay.bmp" | grep -q '640 x 480 x 32'
 
+MIYONOS_SCREENSHOT_TIME_MS=1000 SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
+  "$BUILD/miyonos" --screen-only --show-playlist --scenario grouped \
+  --data-dir "$DATA_DIR" --capture-after-ms 6000 \
+  --capture-frame "$OUTPUT/playlist-now-playing.bmp"
+PLAYLIST_FRAME="$(shasum -a 256 "$OUTPUT/playlist-now-playing.bmp" | awk '{print $1}')"
+EXPECTED_PLAYLIST="$(awk '$1 == "playlist-now-playing.bmp" {print $2}' "$REFERENCE")"
+[[ "$PLAYLIST_FRAME" == "$EXPECTED_PLAYLIST" ]] || {
+  echo "The active playlist Now Playing reference image changed." >&2
+  echo "Expected: ${EXPECTED_PLAYLIST:-missing}" >&2
+  echo "Actual:   $PLAYLIST_FRAME" >&2
+  exit 1
+}
+file "$OUTPUT/playlist-now-playing.bmp" | grep -q '640 x 480 x 32'
+
+TAIL_DATA="$RUN_ROOT/mixed-favorites/SDCARD/App/Miyonos/data"
+mkdir -p "$TAIL_DATA"
+printf 'schema_version=2\nvolume_step=3\nconfirm_exit=1\n' > "$TAIL_DATA/settings.ini"
+MIYONOS_SCREENSHOT_TIME_MS=1000 SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
+  "$BUILD/miyonos" --screen-only --show-playlist-tail \
+  --scenario mixed-favorites --data-dir "$TAIL_DATA" --capture-after-ms 7000 \
+  --capture-frame "$OUTPUT/mixed-favorite-playlists-tail.bmp"
+TAIL_FRAME="$(shasum -a 256 "$OUTPUT/mixed-favorite-playlists-tail.bmp" | awk '{print $1}')"
+EXPECTED_TAIL="$(awk '$1 == "mixed-favorite-playlists-tail.bmp" {print $2}' "$REFERENCE")"
+[[ "$TAIL_FRAME" == "$EXPECTED_TAIL" ]] || {
+  echo "The mixed Favorite Playlists paging reference image changed." >&2
+  echo "Expected: ${EXPECTED_TAIL:-missing}" >&2
+  echo "Actual:   $TAIL_FRAME" >&2
+  exit 1
+}
+file "$OUTPUT/mixed-favorite-playlists-tail.bmp" | grep -q '640 x 480 x 32'
+
 MIYONOS_SCREENSHOT_TIME_MS=1000 MIYONOS_DISABLE_IMAGE_DECODER=1 \
   SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
   "$BUILD/miyonos" --screen-only --scenario grouped \

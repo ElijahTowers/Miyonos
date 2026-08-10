@@ -36,7 +36,7 @@ afterward and the UI changes only from the confirmed response.
 - `RenderingControl`: player volume and mute.
 - `GroupRenderingControl`: group volume and mute when the service is present.
 - `ContentDirectory`: Queue tracks (`Q:0`) and Favorites (`FV:2`), 60 items
-  per page and at most 240 loaded per list. Real players can return technical
+  per page with additional pages loaded on demand. Real players can return technical
   queue-instance entries from `Q:`, so the Queue screen reads `Q:0` to show
   actual upcoming tracks. The Queue X view filters playlist-shaped Favorites,
   including Spotify playlists; browse metadata includes `albumArtURI` when
@@ -73,7 +73,10 @@ of the playlist it started for that active group queue. A routine refresh of
 the same group preserves this context; selecting another group or starting a
 different source clears it. When Miyonos starts a playlist, it also retains
 that Favorite's artwork URL for the dedicated Now Playing playlist block;
-this remains separate from the changing current-track artwork.
+this remains separate from the changing current-track artwork. The active
+playlist context is also stored with a fingerprint of the first Queue tracks.
+After restarting Miyonos, it is restored only when the live Queue fingerprint
+matches; a queue changed by another Sonos controller is never mislabeled.
 
 ## Defensive limits
 

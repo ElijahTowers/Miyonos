@@ -170,6 +170,12 @@ Settings SettingsStore::load(std::string* warning) const {
   settings.last_group_id = get("last_group_id");
   settings.last_room_uuid = get("last_room_uuid");
   settings.cached_ips = split(get("cached_ips"));
+  settings.playlist_context_group_id = get("playlist_context_group_id");
+  settings.playlist_context_title = get("playlist_context_title");
+  settings.playlist_context_object_id = get("playlist_context_object_id");
+  settings.playlist_context_artwork_uri = get("playlist_context_artwork_uri");
+  settings.playlist_context_queue_fingerprint =
+      get("playlist_context_queue_fingerprint");
   for (std::size_t index = 0; index < kPhysicalButtonCount; ++index) {
     const auto button = static_cast<PhysicalButton>(index);
     const std::string value = get(std::string("button_") +
@@ -189,7 +195,9 @@ Settings SettingsStore::load(std::string* warning) const {
       "spotify_https_artwork", "polling",
       "dim_timeout_seconds", "prevent_sleep", "manual_ips", "button_hints",
       "confirm_exit", "diagnostics_mode", "last_group_id", "last_room_uuid",
-      "cached_ips"};
+      "cached_ips", "playlist_context_group_id", "playlist_context_title",
+      "playlist_context_object_id", "playlist_context_artwork_uri",
+      "playlist_context_queue_fingerprint"};
   std::vector<std::string> known_with_buttons = known;
   for (std::size_t index = 0; index < kPhysicalButtonCount; ++index) {
     known_with_buttons.push_back(
@@ -247,6 +255,13 @@ bool SettingsStore::save(const Settings& input, std::string* error) const {
   fields["last_group_id"] = settings.last_group_id;
   fields["last_room_uuid"] = settings.last_room_uuid;
   fields["cached_ips"] = join(settings.cached_ips);
+  fields["playlist_context_group_id"] = settings.playlist_context_group_id;
+  fields["playlist_context_title"] = settings.playlist_context_title;
+  fields["playlist_context_object_id"] = settings.playlist_context_object_id;
+  fields["playlist_context_artwork_uri"] =
+      settings.playlist_context_artwork_uri;
+  fields["playlist_context_queue_fingerprint"] =
+      settings.playlist_context_queue_fingerprint;
   for (std::size_t index = 0; index < kPhysicalButtonCount; ++index) {
     const auto button = static_cast<PhysicalButton>(index);
     fields[std::string("button_") + physical_button_id(button)] =

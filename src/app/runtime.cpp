@@ -45,6 +45,8 @@ int AppRuntime::run(FramePresenter& frames) {
   bool stay_awake_file = false;
   bool captured = false;
   bool controls_shown = false;
+  bool playlist_started = false;
+  bool playlist_tail_opened = false;
   int exit_status = 0;
 #ifdef MIYONOS_ENABLE_SIMULATOR
   const uint32_t started_at = SDL_GetTicks();
@@ -78,6 +80,29 @@ int AppRuntime::run(FramePresenter& frames) {
         controller.view().screen != Screen::Discovery) {
       controller.handle(Action::Controls);
       controls_shown = true;
+    }
+    if (options_.show_playlist_on_start && !playlist_started) {
+      if (controller.view().screen == Screen::NowPlaying) {
+        controller.handle(Action::Queue);
+      } else if (controller.view().screen == Screen::Queue) {
+        controller.handle(Action::Context);
+      } else if (controller.view().screen == Screen::Playlists &&
+                 !controller.view().playlists.empty()) {
+        controller.handle(Action::Confirm);
+        playlist_started = true;
+      }
+    }
+    if (options_.show_playlist_tail_on_start) {
+      if (controller.view().screen == Screen::NowPlaying &&
+          !playlist_tail_opened) {
+        controller.handle(Action::Queue);
+        playlist_tail_opened = true;
+      } else if (controller.view().screen == Screen::Queue) {
+        controller.handle(Action::Context);
+      } else if (controller.view().screen == Screen::Playlists &&
+                 !controller.view().busy) {
+        controller.handle(Action::Next);
+      }
     }
 #endif
     if (controller.settings().prevent_sleep) {

@@ -32,6 +32,11 @@ struct Settings {
   std::string last_group_id;
   std::string last_room_uuid;
   std::vector<std::string> cached_ips;
+  std::string playlist_context_group_id;
+  std::string playlist_context_title;
+  std::string playlist_context_object_id;
+  std::string playlist_context_artwork_uri;
+  std::string playlist_context_queue_fingerprint;
   std::map<std::string, std::string> unknown_fields;
 };
 
