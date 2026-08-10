@@ -44,14 +44,14 @@ changes the selected target only.
 
 | Item | Current state |
 | --- | --- |
-| Release version | `0.1.26` |
-| End-user download | `dist/Miyonos-App-0.1.26.zip` — a single `Miyonos` folder to put in `App` |
+| Release version | `0.1.27` |
+| End-user download | `dist/Miyonos-App-0.1.27.zip` — a single `Miyonos` folder to put in `App` |
 | macOS simulator | `dist/Miyonos Simulator.app` |
 | Last verified device | Miyoo Mini Plus on OnionOS 4.3.x |
 | Last observed device IP | Not recorded in the public repository; check **Apps → Tweaks → Network** on the device |
-| Last verified device state | Version 0.1.23 is installed. Version 0.1.26 makes Queue read Sonos' live `Q:` list only and keeps Saved Playlists separate; its physical retest is pending. |
-| Current 0.1.26 package ARM binary SHA-256 | `f0384967618bc0038702771d08a7f14fbb3e1ede7ae9dd2d178576696108138a` |
-| Automated verification | 218 core checks, 131 simulator-input checks, 68 simulator-fixture checks, simulator screenshot/storage checks, and package integrity checks passed |
+| Last verified device state | Version 0.1.23 is installed. Version 0.1.27 immediately opens Now Playing and shows the selected Saved Playlist name before Sonos returns metadata; its physical retest is pending. |
+| Current 0.1.27 package ARM binary SHA-256 | `8d354e43c0838ee241317220ea3c983ed1a8d40e83e80147daa2ea8b342584bb` |
+| Automated verification | 225 core checks, 131 simulator-input checks, 68 simulator-fixture checks, simulator screenshot/storage checks, and package integrity checks passed |
 
 The device address is only a local handoff record. Check **Apps → Tweaks →
 Network** on the Miyoo when a connection fails rather than assuming that this
@@ -110,7 +110,7 @@ device IP is shown at the top of **Apps → Tweaks → Network**.
 This is the simplest path for Windows, macOS, and Linux. It installs no helper
 on the computer.
 
-1. Extract `dist/Miyonos-App-0.1.26.zip`.
+1. Extract `dist/Miyonos-App-0.1.27.zip`.
 2. On the Miyoo, enable **Apps → Tweaks → Network → HTTP: Web-based file sync**.
 3. Open the device page in a browser, then open `App`.
 4. Upload the supplied `Miyonos` folder. Do not upload a nested folder and do

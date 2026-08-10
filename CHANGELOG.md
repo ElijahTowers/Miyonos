@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.27 — Immediate playlist Now Playing
+
+- Selecting a Saved Playlist now opens Now Playing immediately and shows the
+  selected playlist name before the player finishes its first metadata poll.
+- If the playlist cannot start, Miyonos restores the previous context and
+  explains the failure instead of leaving a misleading playlist label.
+
 ## 0.1.26 — Queue matches Sonos
 
 - Queue now always reads Sonos' active `Q:` queue and no longer substitutes a

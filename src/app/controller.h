@@ -232,6 +232,11 @@ class Controller {
   std::string selected_playlist_title_;
   std::string selected_playlist_object_id_;
   std::string playlist_context_lookup_requested_id_;
+  std::string pending_playlist_title_;
+  std::string pending_playlist_object_id_;
+  std::string playlist_title_before_start_;
+  std::string playlist_object_before_start_;
+  bool playlist_start_acknowledged_ = false;
   std::string active_station_title_;
   std::string last_artwork_url_;
   std::string last_favorite_artwork_url_;

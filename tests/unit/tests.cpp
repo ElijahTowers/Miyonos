@@ -498,6 +498,34 @@ void test_live_mock_if_requested() {
   CHECK(controller.view().screen == Screen::Queue);
   controller.handle(Action::Context);
   CHECK(controller.view().screen == Screen::Playlists);
+  const auto playlist_deadline = std::chrono::steady_clock::now() +
+                                 std::chrono::seconds(3);
+  while (std::chrono::steady_clock::now() < playlist_deadline &&
+         controller.view().playlists.empty()) {
+    controller.update();
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+  }
+  CHECK(!controller.view().playlists.empty());
+  const std::string selected_playlist =
+      controller.view().playlists[controller.view().selection].title;
+  controller.handle(Action::Confirm);
+  CHECK(controller.view().screen == Screen::NowPlaying);
+  CHECK(controller.view().playback.playlist_title == selected_playlist);
+  const auto playback_deadline = std::chrono::steady_clock::now() +
+                                 std::chrono::seconds(3);
+  while (std::chrono::steady_clock::now() < playback_deadline &&
+         controller.view().playback.track.uri.rfind("x-rincon-queue:", 0) !=
+             0) {
+    controller.update();
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+  }
+  CHECK(controller.view().playback.track.uri.rfind("x-rincon-queue:", 0) ==
+        0);
+  CHECK(controller.view().playback.playlist_title == selected_playlist);
+  controller.handle(Action::Queue);
+  CHECK(controller.view().screen == Screen::Queue);
+  controller.handle(Action::Context);
+  CHECK(controller.view().screen == Screen::Playlists);
   controller.handle(Action::Context);
   CHECK(controller.view().screen == Screen::Queue);
   controller.handle(Action::Back);

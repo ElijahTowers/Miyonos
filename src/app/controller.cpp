@@ -445,6 +445,11 @@ void Controller::select_group(std::size_t index) {
   selected_playlist_title_.clear();
   selected_playlist_object_id_.clear();
   playlist_context_lookup_requested_id_.clear();
+  pending_playlist_title_.clear();
+  pending_playlist_object_id_.clear();
+  playlist_title_before_start_.clear();
+  playlist_object_before_start_.clear();
+  playlist_start_acknowledged_ = false;
   settings_.last_group_id = group.id;
   settings_.last_room_uuid = view_.active_room_uuid;
   save_settings();
@@ -566,47 +571,70 @@ void Controller::apply_result(WorkerResult result) {
         break;
       }
       poll_failures_ = 0;
-      const bool saved_playlist = is_saved_playlist_object_id(
-          result.playback.active_playlist_object_id);
       bool needs_playlist_lookup = false;
-      if (!result.playback.playlist_title.empty()) {
-        selected_playlist_title_ = result.playback.playlist_title;
-        selected_playlist_object_id_ =
-            saved_playlist ? result.playback.active_playlist_object_id : "";
+      const bool playlist_start_pending = !pending_playlist_object_id_.empty();
+      if (playlist_start_pending) {
+        // A poll already in flight can describe the old source after the user
+        // presses A. Keep the selected playlist label visible until Sonos
+        // reports the replacement queue (or the same saved-playlist ID).
+        const bool replacement_confirmed =
+            playlist_start_acknowledged_ &&
+            (is_queue_transport_uri(result.playback.track.uri) ||
+             result.playback.active_playlist_object_id ==
+                 pending_playlist_object_id_);
+        result.playback.playlist_title = pending_playlist_title_;
+        selected_playlist_title_ = pending_playlist_title_;
+        selected_playlist_object_id_ = pending_playlist_object_id_;
         playlist_context_lookup_requested_id_.clear();
-      } else if (saved_playlist) {
-        const auto saved_playlist_item = std::find_if(
-            view_.playlists.begin(), view_.playlists.end(),
-            [&result](const BrowseItem& item) {
-              return item.id == result.playback.active_playlist_object_id &&
-                     !item.title.empty();
-            });
-        if (saved_playlist_item != view_.playlists.end()) {
-          result.playback.playlist_title = saved_playlist_item->title;
-        } else if (selected_playlist_object_id_ ==
-                       result.playback.active_playlist_object_id) {
-          result.playback.playlist_title = selected_playlist_title_;
-        } else {
-          needs_playlist_lookup =
-              playlist_context_lookup_requested_id_ !=
-              result.playback.active_playlist_object_id;
+        if (replacement_confirmed) {
+          pending_playlist_title_.clear();
+          pending_playlist_object_id_.clear();
+          playlist_title_before_start_.clear();
+          playlist_object_before_start_.clear();
+          playlist_start_acknowledged_ = false;
         }
+      } else {
+        const bool saved_playlist = is_saved_playlist_object_id(
+            result.playback.active_playlist_object_id);
         if (!result.playback.playlist_title.empty()) {
           selected_playlist_title_ = result.playback.playlist_title;
           selected_playlist_object_id_ =
-              result.playback.active_playlist_object_id;
+              saved_playlist ? result.playback.active_playlist_object_id : "";
+          playlist_context_lookup_requested_id_.clear();
+        } else if (saved_playlist) {
+          const auto saved_playlist_item = std::find_if(
+              view_.playlists.begin(), view_.playlists.end(),
+              [&result](const BrowseItem& item) {
+                return item.id == result.playback.active_playlist_object_id &&
+                       !item.title.empty();
+              });
+          if (saved_playlist_item != view_.playlists.end()) {
+            result.playback.playlist_title = saved_playlist_item->title;
+          } else if (selected_playlist_object_id_ ==
+                         result.playback.active_playlist_object_id) {
+            result.playback.playlist_title = selected_playlist_title_;
+          } else {
+            needs_playlist_lookup =
+                playlist_context_lookup_requested_id_ !=
+                result.playback.active_playlist_object_id;
+          }
+          if (!result.playback.playlist_title.empty()) {
+            selected_playlist_title_ = result.playback.playlist_title;
+            selected_playlist_object_id_ =
+                result.playback.active_playlist_object_id;
+            playlist_context_lookup_requested_id_.clear();
+          }
+        } else if (is_queue_transport_uri(result.playback.track.uri) &&
+                   !selected_playlist_title_.empty()) {
+          // Saved playlists are loaded into Sonos' queue. Some players omit
+          // the saved-playlist metadata for that queue, so retain the title
+          // selected in Miyonos for the active queue session.
+          result.playback.playlist_title = selected_playlist_title_;
+        } else {
+          selected_playlist_title_.clear();
+          selected_playlist_object_id_.clear();
           playlist_context_lookup_requested_id_.clear();
         }
-      } else if (is_queue_transport_uri(result.playback.track.uri) &&
-                 !selected_playlist_title_.empty()) {
-        // Saved playlists are loaded into Sonos' queue. Some players omit the
-        // saved-playlist metadata for that queue, so retain the title selected
-        // in Miyonos for the active queue session.
-        result.playback.playlist_title = selected_playlist_title_;
-      } else {
-        selected_playlist_title_.clear();
-        selected_playlist_object_id_.clear();
-        playlist_context_lookup_requested_id_.clear();
       }
       const std::string old_playlist_object =
           view_.playback.active_playlist_object_id;
@@ -757,12 +785,27 @@ void Controller::apply_result(WorkerResult result) {
           selected_playlist_title_ = result.context;
           selected_playlist_object_id_ = result.context_id;
           playlist_context_lookup_requested_id_.clear();
+          if (result.context_id == pending_playlist_object_id_) {
+            playlist_start_acknowledged_ = true;
+          }
         }
         if (!result.quiet_success) {
           show_toast(result.text.empty() ? "Done" : result.text);
           request_poll();
         }
       } else {
+        if (result.replaces_playlist_context &&
+            result.context_id == pending_playlist_object_id_) {
+          selected_playlist_title_ = playlist_title_before_start_;
+          selected_playlist_object_id_ = playlist_object_before_start_;
+          view_.playback.playlist_title = playlist_title_before_start_;
+          pending_playlist_title_.clear();
+          pending_playlist_object_id_.clear();
+          playlist_title_before_start_.clear();
+          playlist_object_before_start_.clear();
+          playlist_start_acknowledged_ = false;
+          request_poll();
+        }
         view_.diagnostics.last_error = result.text;
         show_toast(result.quiet_success
                        ? "Volume update failed."
@@ -1037,7 +1080,21 @@ void Controller::activate() {
             item.uri.rfind("x-sonosapi-stream:", 0) == 0;
         const bool queued = enqueue(std::move(command));
         view_.busy = queued;
-        if (queued && !from_playlists && radio_station) {
+        if (queued && from_playlists) {
+          // Show the selected playlist at once instead of waiting for Sonos'
+          // next metadata poll. Some players expose only a queue URI there.
+          pending_playlist_title_ = item.title;
+          pending_playlist_object_id_ = item.id;
+          playlist_title_before_start_ = view_.playback.playlist_title;
+          playlist_object_before_start_ = selected_playlist_object_id_;
+          playlist_start_acknowledged_ = false;
+          selected_playlist_title_ = item.title;
+          selected_playlist_object_id_ = item.id;
+          view_.playback.playlist_title = item.title;
+          navigate(Screen::NowPlaying);
+          show_toast("Starting playlist...", 2400);
+          request_poll();
+        } else if (queued && radio_station) {
           active_station_title_ = item.title;
           show_toast("Starting station...", 5000);
         }

@@ -47,7 +47,9 @@ else
   done
 fi
 
-MIYONOS_INTEGRATION_IP=127.0.0.1 "$BUILD/miyonos_tests"
+# Keep the controller integration test pinned to its local fixture. A real
+# Sonos player may also reply to SSDP on the developer's Wi-Fi.
+MIYONOS_DISABLE_SSDP=1 MIYONOS_INTEGRATION_IP=127.0.0.1 "$BUILD/miyonos_tests"
 
 if [[ -f "$ROOT/dist/Miyonos-$VERSION-OnionOS.zip" ]]; then
   "$ROOT/tests/integration/test_wifi_installer.sh"
