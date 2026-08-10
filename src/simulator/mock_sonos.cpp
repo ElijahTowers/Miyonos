@@ -110,6 +110,16 @@ std::string didl_playlist_favorite(int identifier = 3) {
          "</item>";
 }
 
+std::string didl_large_collection_favorite() {
+  return "<item id=\"FV:2/my-songs\" parentID=\"FV:2\" restricted=\"true\">"
+         "<dc:title>My Songs</dc:title>"
+         "<dc:creator>Music service</dc:creator>"
+         "<upnp:class>object.item.sonos-favorite</upnp:class>"
+         "<upnp:albumArtURI>/getaa?s=1&amp;u=my-songs</upnp:albumArtURI>"
+         "<res>x-rincon-cpcontainer:1006206cservice%3Acollection%3Amy-songs"
+         "</res></item>";
+}
+
 std::string didl_playlist_track(int playlist_id, int identifier) {
   const std::string number = std::to_string(identifier);
   const std::string prefix =
@@ -568,6 +578,9 @@ std::string SimulatorSonosFixture::response_for(
                                   : didl_item(index);
           ++count;
         }
+      } else if (scenario_ == "large-collection") {
+        items = didl_large_collection_favorite();
+        total = count = 1;
       } else {
         items = "<container id=\"FV:2/1\" parentID=\"FV:2\">"
                 "<dc:title>Morning Collection</dc:title>"
@@ -588,6 +601,18 @@ std::string SimulatorSonosFixture::response_for(
   }
   if (action == "AddURIToQueue") {
     const std::string enqueued_uri = field(body, "EnqueuedURI");
+    if (scenario_ == "large-collection" &&
+        enqueued_uri.find("my-songs") != std::string::npos) {
+      status = 500;
+      return "<?xml version=\"1.0\"?><s:Envelope "
+             "xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\">"
+             "<s:Body><s:Fault><faultcode>s:Client</faultcode>"
+             "<faultstring>UPnPError</faultstring><detail><UPnPError "
+             "xmlns=\"urn:schemas-upnp-org:control-1-0\">"
+             "<errorCode>714</errorCode><errorDescription>Collection is too "
+             "large to enqueue</errorDescription></UPnPError></detail>"
+             "</s:Fault></s:Body></s:Envelope>";
+    }
     const int playlist_id = saved_playlist_id(enqueued_uri);
     if (playlist_id > 0 && queue_cleared_) {
       loaded_playlist_id_ = playlist_id;

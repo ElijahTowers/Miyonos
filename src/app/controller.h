@@ -153,6 +153,7 @@ class Controller {
     bool flag = false;
     bool replace_queue = false;
     bool replaces_playlist_context = false;
+    bool show_now_playing_on_success = false;
     ArtworkTarget artwork_target = ArtworkTarget::NowPlaying;
     std::size_t index = 0;
     std::size_t visible_offset = 0;
@@ -188,6 +189,7 @@ class Controller {
     bool success = false;
     bool quiet_success = false;
     bool replaces_playlist_context = false;
+    bool show_now_playing_on_success = false;
     ArtworkTarget artwork_target = ArtworkTarget::NowPlaying;
   };
 

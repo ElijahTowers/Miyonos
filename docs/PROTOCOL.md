@@ -67,6 +67,11 @@ queue.
 Sonos can report UPnP 804 for an already-empty queue; Miyonos treats that as
 the required clean state and continues loading the selected playlist.
 
+Non-playlist collection Favorites, such as a music service's **My Songs** or
+Liked Songs, open directly as the current Sonos source. Miyonos deliberately
+does not add such a collection to the queue first: it may contain thousands of
+tracks, while a direct source open lets Sonos load it lazily.
+
 Many players then report only a generic `x-rincon-queue` transport URI for
 each following track, with no source playlist label. Miyonos keeps the title
 of the playlist it started for that active group queue. A routine refresh of

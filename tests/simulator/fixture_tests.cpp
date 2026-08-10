@@ -155,6 +155,22 @@ void test_content_scenarios() {
     CHECK(is_playlist_favorite(second.value.items[3]));
   }
   {
+    // A My Songs-style favorite can contain thousands of tracks. The fixture
+    // rejects AddURIToQueue for it, so this only succeeds when Miyonos opens
+    // the cpcontainer directly instead of asking Sonos to expand it at once.
+    Session session("large-collection");
+    SonosAdapter adapter;
+    const auto players = discover(adapter);
+    if (players.empty()) return;
+    const auto favorites = adapter.browse(players.front(), "FV:2", 0, 60);
+    CHECK(favorites.ok());
+    CHECK(favorites.value.items.size() == 1);
+    CHECK(!is_playlist_favorite(favorites.value.items.front()));
+    CHECK(favorites.value.items.front().title == "My Songs");
+    CHECK(adapter.play_item(players.front(), favorites.value.items.front(), false)
+              .ok());
+  }
+  {
     Session session("no-artwork");
     HttpClient client;
     const auto missing = client.get("http://127.0.0.1:1400/getaa?u=mock");

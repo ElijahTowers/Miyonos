@@ -1143,6 +1143,9 @@ void Controller::apply_result(WorkerResult result) {
             capture_playlist_context();
           }
         }
+        if (result.show_now_playing_on_success) {
+          navigate(Screen::NowPlaying);
+        }
         if (!result.quiet_success) {
           show_toast(result.text.empty() ? "Done" : result.text);
           request_poll();
@@ -1465,12 +1468,17 @@ void Controller::activate() {
         if (!selected) break;
         const bool playlist_favorite =
             from_playlists || is_playlist_favorite(item);
+        const bool large_collection_favorite =
+            !playlist_favorite &&
+            item.uri.rfind("x-rincon-cpcontainer:", 0) == 0;
         Command command;
         command.type = CommandType::PlayItem;
         command.player = *selected;
         command.item = item;
         command.replace_queue = playlist_favorite;
-        command.replaces_playlist_context = playlist_favorite;
+        command.replaces_playlist_context =
+            playlist_favorite || large_collection_favorite;
+        command.show_now_playing_on_success = large_collection_favorite;
         if (playlist_favorite) {
           command.playlist_title = item.title;
           command.playlist_object_id = item.id;
@@ -2158,10 +2166,14 @@ void Controller::worker_loop() {
       case CommandType::PlayItem:
         action(adapter.play_item(command.player, command.item,
                                  command.replace_queue),
-               command.item.uri.rfind("x-sonosapi-stream:", 0) == 0
-                   ? "Station started"
-                   : "Item started");
+               command.show_now_playing_on_success
+                   ? "Opening collection..."
+                   : command.item.uri.rfind("x-sonosapi-stream:", 0) == 0
+                         ? "Station started"
+                         : "Item started");
         result.replaces_playlist_context = command.replaces_playlist_context;
+        result.show_now_playing_on_success =
+            command.show_now_playing_on_success;
         result.context = command.playlist_title;
         result.context_id = command.playlist_object_id;
         break;

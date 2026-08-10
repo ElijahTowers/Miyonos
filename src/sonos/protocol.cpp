@@ -965,15 +965,18 @@ ProtocolResult<bool> SonosAdapter::play_item(const Player& coordinator,
     return ProtocolResult<bool>{false, error, response.upnp_error_code};
   };
 
-  if (item.uri.rfind("x-rincon-cpcontainer:", 0) == 0) {
-    if (replace_queue) {
-      // A playlist Favorite must replace, not append to, the existing queue.
-      // Otherwise tracks from the previous playlist remain in the next-up list.
-      auto cleared = soap(coordinator, "AVTransport", "RemoveAllTracksFromQueue",
-                          {{"InstanceID", "0"}});
-      if (!cleared.ok() && cleared.upnp_error_code != 804) {
-        return failure("Clearing the current queue", cleared);
-      }
+  if (item.uri.rfind("x-rincon-cpcontainer:", 0) == 0 && replace_queue) {
+    // Playlist Favorites are intentionally expanded into a clean queue so
+    // tracks from a previous playlist cannot remain in the next-up list.
+    // Other cpcontainers (for example a music service's "My Songs" or Liked
+    // Songs collection) can contain thousands of tracks. Asking Sonos to add
+    // all of those to the queue in one request is slow and some speakers
+    // reject it. Those collections continue below through SetAVTransportURI,
+    // which lets Sonos open the source directly and load it lazily.
+    auto cleared = soap(coordinator, "AVTransport", "RemoveAllTracksFromQueue",
+                        {{"InstanceID", "0"}});
+    if (!cleared.ok() && cleared.upnp_error_code != 804) {
+      return failure("Clearing the current queue", cleared);
     }
     auto added = soap(
         coordinator, "AVTransport", "AddURIToQueue",
