@@ -92,15 +92,27 @@ that `data` folder when replacing the app files.
 
 ## Essential controls
 
-On the Now Playing screen: A plays/pauses; L1 opens Speaker Volumes; R1
-selects the next volume target in the current group; Up/Down changes that
-target's volume; Left/Right change track;
-X toggles group mute; Y opens Rooms & Groups;
-L2 opens Queue; R2 opens Favorites; Start opens the menu; Select opens the
-current Controls pop-up;
-Menu asks to exit. B goes back. Every button can be changed in **Settings →
-Button mapping**. Holding Menu + Start for three seconds always restores the
-default layout.
+These are the default controls on **Now Playing**:
+
+| Button | Action |
+| --- | --- |
+| A | Play or pause |
+| B | Go back |
+| D-pad Up / Down | Change the selected volume target |
+| D-pad Left / Right | Previous or next track |
+| X | Mute or unmute the group |
+| Y | Open Rooms & Groups |
+| L1 | Open Speaker Volumes |
+| R1 | Select the next speaker or group volume target |
+| L2 | Open Queue |
+| R2 | Open Favorites |
+| Start | Open the main menu |
+| Select | Show the Controls pop-up |
+| Menu | Ask to exit Miyonos |
+| Hold Menu + Start for 3 seconds | Restore the default button layout |
+
+Every button can be changed in **Settings → Button mapping**. The final row is
+always available as a safe recovery shortcut.
 
 ## Battery-saving idle mode
 
