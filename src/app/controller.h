@@ -113,6 +113,7 @@ class Controller {
     Next,
     Seek,
     Volume,
+    SyncSpeakerVolumes,
     GetSpeakerVolume,
     Mute,
     Browse,
@@ -147,6 +148,7 @@ class Controller {
     CommandType type = CommandType::Poll;
     Player player;
     BrowseItem item;
+    std::vector<Player> players;
     ListKind list_kind = ListKind::Queue;
     BrowseIntent browse_intent = BrowseIntent::Display;
     std::string text;
@@ -229,6 +231,7 @@ class Controller {
   void focus_speaker_card();
   void adjust_speaker_card_volume(int direction);
   void toggle_speaker_card_mute();
+  void sync_speaker_card_volumes();
   void navigate(Screen screen);
   void switch_queue_playlist();
   void back();

@@ -44,7 +44,8 @@ shown target.
 available speaker in the selected group with its room name, current individual
 volume, mute state, and a built-in illustration based on its Sonos model.
 Use Left/Right or R1 to choose a speaker, Up/Down to change that speaker's
-volume, A to mute or unmute it, and Select to refresh the displayed values.
+volume, A to mute or unmute it, X to set every visible speaker in the group to
+the selected speaker's volume, and Select to refresh the displayed values.
 With **Settings → Official Sonos product photos** on (the default), recognized
 models use a cached direct image from Sonos' official media CDN. Turn the
 setting off to use only the built-in illustration and make no product-photo

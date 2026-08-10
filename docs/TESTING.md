@@ -122,7 +122,8 @@ Render a deterministic UI preview without a display:
 - [ ] Speaker Volumes shows every available member of the selected group with
       the correct room, model illustration, mute state, and individual volume.
       Left/Right and R1 change the selection; Up/Down and A affect only the
-      selected speaker.
+      selected speaker. X sets every visible speaker to the selected speaker's
+      individual volume.
 - [ ] With the default **Official Sonos product photos** and internet access,
       supported Beam, Roam, Era 100, or Arc cards show the direct official
       image after a short load. Turn the setting off again and confirm the

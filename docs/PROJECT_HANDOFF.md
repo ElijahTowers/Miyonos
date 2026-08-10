@@ -36,7 +36,8 @@ direct `media.sonos.com` images for Beam, Roam, Era 100, and Arc; they are
 TLS-verified, cached locally, and never bundled or proxied. It shows each
 speaker's individual volume and mute state; Left/Right or R1 selects a
 speaker, Up/Down adjusts only that speaker, and A toggles its mute. L1 opens
-this overview directly.
+this overview directly. X synchronizes every visible speaker to the selected
+speaker's individual volume.
 
 Favorites uses the same source-provided artwork policy: its selected entry
 shows a bounded cached cover when Sonos supplies one, otherwise **Cover

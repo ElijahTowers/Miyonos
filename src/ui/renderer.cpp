@@ -755,7 +755,7 @@ void Renderer::speakers(const ViewState& view) {
                             " of " + std::to_string(speakers.size()),
                         420, 1, kMuted);
   }
-  hints("L/R  Speaker   Up/Down  Volume", "A  Mute    B  Back");
+  hints("L/R  Speaker   Up/Down  Volume", "A  Mute   X  Sync all   B  Back");
 }
 
 void Renderer::queue_list(const ViewState& view) {
@@ -1114,7 +1114,7 @@ void Renderer::help(const ViewState& view) {
       "B  Back or cancel",
       "D-Pad Up/Down  Selected target volume or list selection",
       "D-Pad Left/Right  Previous/next track or page",
-      "X  Mute, or switch Queue and favorite playlists",
+      "X  Mute, sync speakers, or switch Queue/playlists",
       "Y  Rooms & Groups",
       "L1  Speaker Volumes     R1  Next volume target",
       "L2/R2  Queue/favorites",

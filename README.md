@@ -98,6 +98,10 @@ Menu asks to exit. B goes back. Every button can be changed in **Settings →
 Button mapping**. Holding Menu + Start for three seconds always restores the
 default layout.
 
+In **Speaker Volumes**, use X (**Sync all**) to set every visible speaker in
+the current group to the selected speaker's individual volume. A still mutes
+or unmutes only the selected speaker.
+
 Queue uses the same clear layout as Favorites: numbered tracks on the left and
 the selected track's source-provided cover on the right. Miyonos loads only
 nearby queue covers, one at a time, into the same bounded artwork cache. X

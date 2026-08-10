@@ -520,6 +520,23 @@ void test_live_mock_if_requested() {
       const bool muted_before = controller.view().speaker_muted;
       controller.handle(Action::Confirm);
       CHECK(controller.view().speaker_muted != muted_before);
+      const int selected_volume = controller.view().speaker_volume;
+      controller.handle(Action::Context);
+      CHECK(controller.view().toast.find("Syncing ") == 0);
+      for (const auto& member :
+           controller.view().topology.groups.front().member_uuids) {
+        const auto volume = controller.view().speaker_volumes.find(member);
+        CHECK(volume != controller.view().speaker_volumes.end());
+        CHECK(volume->second.volume == selected_volume);
+      }
+      const auto sync_deadline = std::chrono::steady_clock::now() +
+                                 std::chrono::seconds(3);
+      while (std::chrono::steady_clock::now() < sync_deadline &&
+             controller.view().toast != "All speaker volumes synced") {
+        controller.update();
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+      }
+      CHECK(controller.view().toast == "All speaker volumes synced");
       controller.handle(Action::Left);
       CHECK(controller.view().selection == 0);
     }

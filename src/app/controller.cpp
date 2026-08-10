@@ -761,6 +761,48 @@ void Controller::toggle_speaker_card_mute() {
   show_toast(target->room_name + (view_.speaker_muted ? " muted" : " unmuted"));
 }
 
+void Controller::sync_speaker_card_volumes() {
+  const Group* group = active_group();
+  const Player* source = volume_target();
+  if (!group || !source) return;
+  if (view_.speaker_volume < 0) {
+    request_speaker_volume();
+    show_toast("Reading " + source->room_name + " volume...");
+    return;
+  }
+
+  Command command;
+  command.type = CommandType::SyncSpeakerVolumes;
+  command.value = clamp_volume(view_.speaker_volume);
+  std::vector<std::string> target_uuids;
+  for (const auto& uuid : group->member_uuids) {
+    const Player* speaker = player_by_uuid(uuid);
+    if (speaker && speaker->visible && speaker->available) {
+      command.players.push_back(*speaker);
+      target_uuids.push_back(speaker->uuid);
+    }
+  }
+  if (command.players.size() < 2) {
+    show_toast("Only one speaker is in this group.");
+    return;
+  }
+  const int volume = command.value;
+  const std::size_t speaker_count = command.players.size();
+  if (!enqueue(std::move(command))) return;
+
+  // Keep cards that already have a confirmed mute state responsive while the
+  // worker performs the bounded multi-speaker update. A refresh follows the
+  // result so unavailable or stale cards are never treated as authoritative.
+  for (const auto& uuid : target_uuids) {
+    const auto known = speaker_volumes_.find(uuid);
+    if (known == speaker_volumes_.end()) continue;
+    known->second.volume = volume;
+    view_.speaker_volumes[uuid] = known->second;
+  }
+  volume_feedback_until_ms_ = monotonic_ms() + 1200;
+  show_toast("Syncing " + std::to_string(speaker_count) + " speakers...");
+}
+
 void Controller::select_group(std::size_t index, bool opened_by_user) {
   if (index >= view_.topology.groups.size()) return;
   const Group& group = view_.topology.groups[index];
@@ -1313,6 +1355,9 @@ void Controller::apply_result(WorkerResult result) {
                        : result.text.empty() ? "Speaker did not respond"
                                              : result.text,
                    2400);
+      }
+      if (result.context == "speaker-volume-sync") {
+        request_group_speaker_volumes();
       }
       break;
     case ResultType::Artwork:
@@ -2171,8 +2216,10 @@ void Controller::handle(Action action) {
       move_selection(1);
     } else if (action == Action::Up || action == Action::Down) {
       adjust_speaker_card_volume(action == Action::Up ? 1 : -1);
-    } else if (action == Action::Confirm || action == Action::Context) {
+    } else if (action == Action::Confirm) {
       toggle_speaker_card_mute();
+    } else if (action == Action::Context) {
+      sync_speaker_card_volumes();
     }
     return;
   }
@@ -2344,6 +2391,26 @@ void Controller::worker_loop() {
                "");
         result.quiet_success = true;
         break;
+      case CommandType::SyncSpeakerVolumes: {
+        result.type = ResultType::Action;
+        result.context = "speaker-volume-sync";
+        result.success = true;
+        for (const Player& speaker : command.players) {
+          if (cancelled_.load()) {
+            result.success = false;
+            result.text = "Speaker-volume sync was cancelled.";
+            break;
+          }
+          const auto response = adapter.set_volume(speaker, command.value, false);
+          if (!response.ok()) {
+            result.success = false;
+            result.text = "Could not sync every speaker volume.";
+            break;
+          }
+        }
+        if (result.success) result.text = "All speaker volumes synced";
+        break;
+      }
       case CommandType::GetSpeakerVolume: {
         const auto response = adapter.get_speaker_volume(command.player);
         result.type = ResultType::SpeakerVolume;
