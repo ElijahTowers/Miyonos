@@ -38,7 +38,7 @@ constexpr std::array<Button, 15> kButtons{{
     {{76, 30, 86, 28}, Action::SpeakerVolumes, "L1", Shape::Pill},
     {{174, 30, 86, 28}, Action::Queue, "L2", Shape::Pill},
     {{378, 30, 86, 28}, Action::Favorites, "R2", Shape::Pill},
-    {{476, 30, 86, 28}, Action::NextSpeaker, "R1", Shape::Pill},
+    {{476, 30, 86, 28}, Action::NextGroup, "R1", Shape::Pill},
     {{151, 494, 42, 66}, Action::Up, "", Shape::Rectangle},
     {{151, 574, 42, 66}, Action::Down, "", Shape::Rectangle},
     {{85, 560, 66, 42}, Action::Left, "", Shape::Rectangle},

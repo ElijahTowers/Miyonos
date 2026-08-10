@@ -337,6 +337,8 @@ void test_settings_and_cache() {
   CHECK(unsafe.button_mapping == kDefaultButtonMapping);
   CHECK(kDefaultButtonMapping[button_index(PhysicalButton::L1)] ==
         Action::SpeakerVolumes);
+  CHECK(kDefaultButtonMapping[button_index(PhysicalButton::R1)] ==
+        Action::NextGroup);
   CHECK(button_mapping_is_safe(saved.button_mapping));
   Settings previous_defaults;
   previous_defaults.button_mapping = kRefreshDefaultButtonMapping;
@@ -346,6 +348,11 @@ void test_settings_and_cache() {
   latest_previous_defaults.button_mapping =
       kSpeakerVolumesPreviousDefaultButtonMapping;
   CHECK(store.save(latest_previous_defaults));
+  CHECK(store.load().button_mapping == kDefaultButtonMapping);
+  Settings group_switch_previous_defaults;
+  group_switch_previous_defaults.button_mapping =
+      kGroupSwitchPreviousDefaultButtonMapping;
+  CHECK(store.save(group_switch_previous_defaults));
   CHECK(store.load().button_mapping == kDefaultButtonMapping);
 
   ArtworkCache cache((fs::path(directory) / "art").string(), 1400);
@@ -682,7 +689,6 @@ void test_live_mock_if_requested() {
   CHECK(controller.view().screen == Screen::Speakers);
   controller.handle(Action::Back);
   CHECK(controller.view().screen == Screen::NowPlaying);
-  controller.handle(Action::PreviousSpeaker);
   CHECK(controller.view().group_volume_target);
   const int group_volume_before = controller.view().speaker_volume;
   std::map<std::string, int> member_volumes_before;
@@ -750,8 +756,15 @@ void test_live_mock_if_requested() {
       CHECK(current->second.volume == before.second);
     }
   }
+  // Next Speaker remains available as an optional custom action, but it is no
+  // longer the R1 default. Returning to Now Playing restores group control.
   controller.handle(Action::NextSpeaker);
   CHECK(!controller.view().group_volume_target);
+  controller.handle(Action::Back);
+  CHECK(controller.view().group_volume_target);
+  controller.handle(Action::NextGroup);
+  CHECK(controller.view().group_volume_target);
+  CHECK(controller.view().toast == "Only one group is available.");
   controller.handle(Action::ExitButton);
   CHECK(controller.view().screen == Screen::ConfirmExit);
   controller.handle(Action::ExitButton);

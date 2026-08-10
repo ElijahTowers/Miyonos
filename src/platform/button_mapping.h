@@ -60,7 +60,9 @@ inline constexpr ButtonMapping kSpeakerVolumesPreviousDefaultButtonMapping{{
     Action::Menu,      Action::Controls,  Action::ExitButton,
 }};
 
-inline constexpr ButtonMapping kDefaultButtonMapping{{
+// Default layout before R1 became the group switcher. Keep this so an
+// untouched installation receives the clearer Now Playing behavior.
+inline constexpr ButtonMapping kGroupSwitchPreviousDefaultButtonMapping{{
     Action::Up,        Action::Down,      Action::Left,
     Action::Right,     Action::Confirm,   Action::Back,
     Action::Context,   Action::Rooms,     Action::SpeakerVolumes,
@@ -68,12 +70,20 @@ inline constexpr ButtonMapping kDefaultButtonMapping{{
     Action::Menu,      Action::Controls,  Action::ExitButton,
 }};
 
-inline constexpr std::array<Action, 22> kMappableActions{{
+inline constexpr ButtonMapping kDefaultButtonMapping{{
+    Action::Up,        Action::Down,      Action::Left,
+    Action::Right,     Action::Confirm,   Action::Back,
+    Action::Context,   Action::Rooms,     Action::SpeakerVolumes,
+    Action::NextGroup, Action::Queue,     Action::Favorites,
+    Action::Menu,      Action::Controls,  Action::ExitButton,
+}};
+
+inline constexpr std::array<Action, 23> kMappableActions{{
     Action::None,         Action::Up,           Action::Down,
     Action::Left,         Action::Right,        Action::Confirm,
     Action::Back,         Action::Context,      Action::Rooms,
     Action::SpeakerVolumes, Action::PreviousSpeaker, Action::NextSpeaker,
-    Action::Previous,
+    Action::NextGroup,    Action::Previous,
     Action::Next,         Action::SeekBackward,
     Action::SeekForward,  Action::Queue,        Action::Favorites,
     Action::Menu,         Action::Controls,     Action::Refresh,
@@ -134,6 +144,7 @@ inline const char* action_id(Action action) {
     case Action::SpeakerVolumes: return "speaker_volumes";
     case Action::PreviousSpeaker: return "previous_speaker";
     case Action::NextSpeaker: return "next_speaker";
+    case Action::NextGroup: return "next_group";
     case Action::Previous: return "previous_track";
     case Action::Next: return "next_track";
     case Action::SeekBackward: return "seek_backward";
@@ -163,6 +174,7 @@ inline const char* action_name(Action action) {
     case Action::SpeakerVolumes: return "Speaker Volumes";
     case Action::PreviousSpeaker: return "Previous Speaker";
     case Action::NextSpeaker: return "Next Speaker";
+    case Action::NextGroup: return "Next Group";
     case Action::Previous: return "Previous Track";
     case Action::Next: return "Next Track";
     case Action::SeekBackward: return "Seek Backward";

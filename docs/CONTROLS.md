@@ -12,7 +12,7 @@ source. All screens use semantic actions rather than raw SDL keys.
 | X | Toggle group mute | Context action where shown |
 | Y | Rooms & Groups | Rooms & Groups |
 | L1 | Speaker Volumes | Speaker Volumes |
-| R1 | Next speaker or Group volume | Jump 20 rows |
+| R1 | Next Sonos group | No default action |
 | L2 | Queue | Queue |
 | R2 | Favorites | Favorites |
 | Start | Main Menu | Main Menu |
@@ -36,14 +36,13 @@ cover.
 In **Favorites**, the selected item appears beside its source-provided cover
 art. Folders and providers that do not expose a usable cover show **Cover
 unavailable** instead. When enabled, supported Sonos Radio/TuneIn station
-logos use the same bounded cache. L1 opens Speaker Volumes; R1 cycles Group
-together with the visible individual speakers; Up/Down changes the currently
-shown target.
+logos use the same bounded cache. L1 opens Speaker Volumes; R1 switches to the
+next Sonos group. Now Playing always adjusts the active group's volume.
 
 **Speaker Volumes** in the Main Menu is a group overview. It shows each
 available speaker in the selected group with its room name, current individual
 volume, mute state, and a built-in illustration based on its Sonos model.
-Use Left/Right or R1 to choose a speaker, Up/Down to change that speaker's
+Use Left/Right to choose a speaker, Up/Down to change that speaker's
 volume, A to mute or unmute it, X to set every visible speaker in the group to
 the selected speaker's volume, and Select to refresh the displayed values.
 With **Settings → Official Sonos product photos** on (the default), recognized
@@ -62,7 +61,7 @@ This is also the quickest way to check a custom layout.
 
 Every physical control can be reassigned under **Settings → Button Mapping**.
 Available actions include navigation, play/pause, mute/context, rooms,
-Speaker Volumes, previous/next speaker, previous/next track, seek
+Speaker Volumes, next group, previous/next speaker, previous/next track, seek
 backward/forward, Queue, Favorites, Main Menu, Controls, Refresh, Exit, and
 No action. Changes remain staged until
 B is pressed and the layout passes its safety check. Up, Down, Confirm, Back,
@@ -78,7 +77,8 @@ fixed chord cannot be reassigned or disabled.
 
 Held D-pad input starts with the operating system's repeat delay and is then
 limited to one accepted repeat every 160 ms. Volume retains its conservative
-configured step and pending network updates are coalesced.
+configured step. Individual-speaker updates are coalesced; group button presses
+remain relative adjustments so Sonos can apply each step to the active group.
 
 ## Idle battery saver
 
@@ -98,7 +98,7 @@ remove the active coordinator through that action.
 
 Desktop alternatives are: arrows; Z or Space for A; X or Left Ctrl for B; A or
 Left Shift for X; S or Left Alt for Y; Q/E for L1 (Speaker Volumes); W/T for
-R1 (next volume target); 1/Tab for L2;
+R1 (next Sonos group); 1/Tab for L2;
 2/Backspace for R2; Return for Start; R or Right Ctrl for Select; Escape for
 Menu.
 

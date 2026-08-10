@@ -271,8 +271,12 @@ void Controller::request_poll() {
 
 void Controller::request_speaker_volume() {
   if (view_.group_volume_target) {
-    view_.speaker_volume = view_.playback.volume;
-    view_.speaker_muted = view_.playback.muted;
+    if (view_.playback.received_at_ms > 0) {
+      view_.speaker_volume = view_.playback.volume;
+      view_.speaker_muted = view_.playback.muted;
+    } else {
+      request_poll();
+    }
     return;
   }
   const Player* target = volume_target();
@@ -718,6 +722,27 @@ void Controller::cycle_volume_target(int direction) {
   show_toast("Volume target: " + target->room_name, 1800);
 }
 
+void Controller::cycle_group(int direction) {
+  const std::size_t count = view_.topology.groups.size();
+  if (count == 0) return;
+  if (count == 1) {
+    show_toast("Only one group is available.");
+    return;
+  }
+  std::size_t current = 0;
+  for (; current < count; ++current) {
+    if (view_.topology.groups[current].id == view_.active_group_id) break;
+  }
+  if (current == count) current = 0;
+  const int group_count = static_cast<int>(count);
+  const int next =
+      (static_cast<int>(current) + direction % group_count + group_count) %
+      group_count;
+  select_group(static_cast<std::size_t>(next));
+  const Group& selected = view_.topology.groups[static_cast<std::size_t>(next)];
+  show_toast("Group: " + selected.name);
+}
+
 void Controller::focus_speaker_card() {
   const Group* group = active_group();
   if (!group) return;
@@ -730,6 +755,8 @@ void Controller::focus_speaker_card() {
   view_.selection = std::max(
       0, std::min<int>(view_.selection, static_cast<int>(speakers.size() - 1)));
   const Player* speaker = speakers[static_cast<std::size_t>(view_.selection)];
+  // The dedicated Speaker Volumes screen is the sole default route to
+  // individual room controls.
   view_.group_volume_target = false;
   view_.active_room_uuid = speaker->uuid;
   const auto cached = speaker_volumes_.find(speaker->uuid);
@@ -832,7 +859,8 @@ void Controller::select_group(std::size_t index, bool opened_by_user) {
   const bool same_active_group = !view_.active_group_id.empty() &&
                                  view_.active_group_id == group.id;
   view_.active_group_id = group.id;
-  view_.group_volume_target = false;
+  // Selecting a room/group always lands on the group control in Now Playing.
+  view_.group_volume_target = true;
   const auto contains = [&group](const std::string& uuid) {
     return std::find(group.member_uuids.begin(), group.member_uuids.end(), uuid) !=
            group.member_uuids.end();
@@ -845,11 +873,15 @@ void Controller::select_group(std::size_t index, bool opened_by_user) {
                                  ? group.coordinator_uuid
                                  : group.member_uuids.front();
   }
-  const auto cached = speaker_volumes_.find(view_.active_room_uuid);
-  view_.speaker_volume =
-      cached == speaker_volumes_.end() ? -1 : cached->second.volume;
-  view_.speaker_muted =
-      cached == speaker_volumes_.end() ? false : cached->second.muted;
+  if (same_active_group && view_.playback.received_at_ms > 0) {
+    view_.speaker_volume = view_.playback.volume;
+    view_.speaker_muted = view_.playback.muted;
+  } else {
+    // The old playback snapshot belongs to a different group, so never use
+    // it as a volume value for the newly selected group.
+    view_.speaker_volume = -1;
+    view_.speaker_muted = false;
+  }
   if (!same_active_group) {
     // A playlist label belongs to the active group queue. Topology refreshes
     // regularly reselect the same group; they must not erase that label while
@@ -880,7 +912,6 @@ void Controller::select_group(std::size_t index, bool opened_by_user) {
     history_.clear();
   }
   request_poll();
-  request_speaker_volume();
   request_group_speaker_volumes();
 }
 
@@ -1578,6 +1609,14 @@ void Controller::navigate(Screen screen) {
   if (screen == Screen::Favorites) request_browse(ListKind::Favorites);
   if (screen == Screen::Playlists) request_browse(ListKind::Playlists);
   if (screen == Screen::Diagnostics) refresh_diagnostics();
+  if (screen == Screen::NowPlaying) {
+    view_.group_volume_target = true;
+    view_.speaker_volume = view_.playback.received_at_ms > 0
+                               ? view_.playback.volume
+                               : -1;
+    view_.speaker_muted = view_.playback.muted;
+    request_poll();
+  }
   if (screen == Screen::Speakers) {
     request_group_speaker_volumes();
     request_speaker_product_photos();
@@ -1642,12 +1681,26 @@ void Controller::back() {
     view_.screen = Screen::NowPlaying;
     history_.clear();
     view_.selection = 0;
+    view_.group_volume_target = true;
+    view_.speaker_volume = view_.playback.received_at_ms > 0
+                               ? view_.playback.volume
+                               : -1;
+    view_.speaker_muted = view_.playback.muted;
+    request_poll();
     return;
   }
   selections_[view_.screen] = view_.selection;
   view_.screen = history_.back();
   history_.pop_back();
   view_.selection = selections_[view_.screen];
+  if (view_.screen == Screen::NowPlaying) {
+    view_.group_volume_target = true;
+    view_.speaker_volume = view_.playback.received_at_ms > 0
+                               ? view_.playback.volume
+                               : -1;
+    view_.speaker_muted = view_.playback.muted;
+    request_poll();
+  }
   if (view_.screen == Screen::Favorites) request_selected_favorite_artwork();
   if (view_.screen == Screen::Playlists) request_selected_playlist_artwork();
 }
@@ -2287,6 +2340,8 @@ void Controller::handle(Action action) {
     if (!selected) return;
     if (action == Action::Confirm) {
       activate();
+    } else if (action == Action::NextGroup) {
+      cycle_group(1);
     } else if (action == Action::PreviousSpeaker ||
                action == Action::NextSpeaker) {
       cycle_volume_target(action == Action::NextSpeaker ? 1 : -1);

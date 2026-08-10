@@ -59,7 +59,7 @@ struct ViewState {
   std::size_t playlists_total = 0;
   std::string active_group_id;
   std::string active_room_uuid;
-  bool group_volume_target = false;
+  bool group_volume_target = true;
   int speaker_volume = -1;
   bool speaker_muted = false;
   std::map<std::string, SpeakerVolume> speaker_volumes;
@@ -233,6 +233,7 @@ class Controller {
   const Player* coordinator() const;
   const Player* volume_target() const;
   void cycle_volume_target(int direction);
+  void cycle_group(int direction);
   void focus_speaker_card();
   void adjust_speaker_card_volume(int direction);
   void toggle_speaker_card_mute();

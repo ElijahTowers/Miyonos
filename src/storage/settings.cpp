@@ -201,7 +201,8 @@ Settings SettingsStore::load(std::string* warning) const {
   }
   if (settings.button_mapping == kLegacyDefaultButtonMapping ||
       settings.button_mapping == kRefreshDefaultButtonMapping ||
-      settings.button_mapping == kSpeakerVolumesPreviousDefaultButtonMapping) {
+      settings.button_mapping == kSpeakerVolumesPreviousDefaultButtonMapping ||
+      settings.button_mapping == kGroupSwitchPreviousDefaultButtonMapping) {
     settings.button_mapping = kDefaultButtonMapping;
   }
   const std::vector<std::string> known = {

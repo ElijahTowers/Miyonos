@@ -97,12 +97,12 @@ These are the default controls on **Now Playing**:
 | --- | --- |
 | A | Play or pause |
 | B | Go back |
-| D-pad Up / Down | Change the selected volume target |
+| D-pad Up / Down | Change the group volume |
 | D-pad Left / Right | Previous or next track |
 | X | Mute or unmute the group |
 | Y | Open Rooms & Groups |
 | L1 | Open Speaker Volumes |
-| R1 | Select the next speaker or group volume target |
+| R1 | Switch to the next Sonos group |
 | L2 | Open Queue |
 | R2 | Open Favorites |
 | Start | Open the main menu |
@@ -144,8 +144,9 @@ playlist's cover art in a dedicated lower-right block, separate from the
 current track cover on the left.
 Favorites also shows the selected favorite's source-provided cover art, or
 **Cover unavailable** when the Sonos item does not provide one. L1 opens
-Speaker Volumes; R1 cycles the group-volume target together with each
-individual speaker.
+Speaker Volumes; R1 switches to the next Sonos group. Now Playing always
+controls the selected group's volume; individual room levels are adjusted only
+in Speaker Volumes.
 
 Spotify Favorites and Sonos Radio stations can provide a public HTTPS cover
 instead of a local Sonos image. **Settings → External cover art over HTTPS**

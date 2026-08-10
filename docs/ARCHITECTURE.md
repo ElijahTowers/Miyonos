@@ -35,14 +35,13 @@ the controller, and renders at about 30 FPS. A single network worker consumes a
 bounded 32-command queue and publishes into a bounded 32-result queue.
 Playback, browse, topology, discovery, and artwork work all use that worker.
 
-Individual speaker-volume updates are optimistic. Now Playing keeps a focused
-visible speaker in the active group; R1 changes that focus while L1 opens the
-Speaker Volumes overview, and Up/Down sends `RenderingControl` volume only to
-that speaker. Pending volume commands are
-replaced only by a newer value for the same speaker, so rapid changes to one
-room cannot discard another room's request. Other full queues give visible
-“please wait” feedback. Socket waits are bounded and observe the shutdown
-cancellation flag.
+Now Playing always controls the active group's volume; R1 selects the next
+available Sonos group and L1 opens the dedicated Speaker Volumes overview.
+That overview is the only default route to an individual speaker's volume.
+Individual updates are optimistic and replace only a newer pending value for
+the same speaker, so rapid changes to one room cannot discard another room's
+request. Other full queues give visible “please wait” feedback. Socket waits
+are bounded and observe the shutdown cancellation flag.
 
 Playback is polled at an intensity selected in Settings. Between responses,
 elapsed time is extrapolated locally only while Playing. After repeated poll

@@ -96,8 +96,8 @@ Render a deterministic UI preview without a display:
 - [ ] Multiple rooms and current groups have correct names/member counts.
 - [ ] Stereo pair and home theater hide satellites, surrounds, and Sub.
 - [ ] Play/pause, previous/next, group mute, and safe repeated volume changes
-      work. L1 must open Speaker Volumes; R1 must cycle Group and each
-      controllable member of a group.
+      work. L1 must open Speaker Volumes; R1 must switch between Sonos groups;
+      Now Playing Up/Down must adjust only the active group.
 - [ ] Music, radio, TV audio, podcast, AirPlay/Spotify Connect metadata degrade
       cleanly when fields or actions are unavailable.
 - [ ] Seekable media seeks; non-seekable media explains without track skipping.
@@ -121,7 +121,7 @@ Render a deterministic UI preview without a display:
 - [ ] Join and remove a room refreshes topology and retains a coordinator.
 - [ ] Speaker Volumes shows every available member of the selected group with
       the correct room, model illustration, mute state, and individual volume.
-      Left/Right and R1 change the selection; Up/Down and A affect only the
+      Left/Right change the selection; Up/Down and A affect only the
       selected speaker. X sets every visible speaker to the selected speaker's
       individual volume.
 - [ ] With the default **Official Sonos product photos** and internet access,

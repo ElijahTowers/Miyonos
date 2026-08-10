@@ -39,11 +39,10 @@ privacy-sanitized Sonos evidence is in
 [LIVE_SONOS_VALIDATION.md](LIVE_SONOS_VALIDATION.md).
 
 The Now Playing D-pad Left/Right actions select the previous/next track. L1
-opens Speaker Volumes, while R1 cycles the volume target through Group and
-every controllable speaker in the active group; D-pad Up/Down changes only
-that target. Group uses Sonos'
-group-volume service when available, while an individual target uses its own
-`RenderingControl` volume. X remains the existing group mute control.
+opens Speaker Volumes, while R1 switches to the next Sonos group. Now Playing
+always adjusts the active group's volume; individual speakers are adjusted in
+the dedicated Speaker Volumes screen through their own `RenderingControl`
+volume. X remains the existing group mute control.
 The Main Menu's Speaker Volumes screen presents every available member of the
 selected group together, with its individual volume, mute state, room name, and
 a local model-specific illustration. The default remains fully local; an

@@ -62,7 +62,7 @@ void test_keyboard() {
       {SDLK_LCTRL, Action::Back},     {SDLK_x, Action::Back},
       {SDLK_LSHIFT, Action::Context}, {SDLK_a, Action::Context},
       {SDLK_LALT, Action::Rooms},     {SDLK_s, Action::Rooms},
-      {SDLK_q, Action::SpeakerVolumes}, {SDLK_w, Action::NextSpeaker},
+      {SDLK_q, Action::SpeakerVolumes}, {SDLK_w, Action::NextGroup},
       {SDLK_1, Action::Queue},        {SDLK_2, Action::Favorites},
       {SDLK_RETURN, Action::Menu},    {SDLK_r, Action::Controls},
       {SDLK_ESCAPE, Action::ExitButton}, {SDLK_F12, Action::None},
@@ -83,7 +83,7 @@ void test_mouse_and_hit_areas() {
   };
   const std::array<Hit, 15> hits{{
       {119, 44, Action::SpeakerVolumes}, {217, 44, Action::Queue},
-      {421, 44, Action::Favorites},  {519, 44, Action::NextSpeaker},
+      {421, 44, Action::Favorites},  {519, 44, Action::NextGroup},
       {172, 527, Action::Up},        {172, 607, Action::Down},
       {118, 581, Action::Left},      {226, 581, Action::Right},
       {449, 529, Action::Context},   {408, 574, Action::Rooms},
@@ -125,7 +125,7 @@ void test_gamepad() {
       {SDL_CONTROLLER_BUTTON_X, Action::Context},
       {SDL_CONTROLLER_BUTTON_Y, Action::Rooms},
       {SDL_CONTROLLER_BUTTON_LEFTSHOULDER, Action::SpeakerVolumes},
-      {SDL_CONTROLLER_BUTTON_RIGHTSHOULDER, Action::NextSpeaker},
+      {SDL_CONTROLLER_BUTTON_RIGHTSHOULDER, Action::NextGroup},
       {SDL_CONTROLLER_BUTTON_START, Action::Menu},
       {SDL_CONTROLLER_BUTTON_BACK, Action::Controls},
       {SDL_CONTROLLER_BUTTON_GUIDE, Action::ExitButton},

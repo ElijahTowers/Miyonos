@@ -15,6 +15,7 @@ enum class Action {
   SpeakerVolumes,
   PreviousSpeaker,
   NextSpeaker,
+  NextGroup,
   Previous,
   Next,
   SeekBackward,
