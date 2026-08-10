@@ -62,6 +62,8 @@ struct ViewState {
   std::string artwork_path;
   std::string favorite_artwork_path;
   std::string playlist_artwork_path;
+  std::string now_playing_playlist_artwork_path;
+  std::string now_playing_playlist_artwork_title;
   bool discovering = true;
   bool connected = false;
   bool busy = false;
@@ -123,7 +125,13 @@ class Controller {
     ClearLogs
   };
 
-  enum class ArtworkTarget { NowPlaying, Favorite, Playlist, Queue };
+  enum class ArtworkTarget {
+    NowPlaying,
+    Favorite,
+    Playlist,
+    NowPlayingPlaylist,
+    Queue
+  };
 
   struct Command {
     CommandType type = CommandType::Poll;
@@ -182,6 +190,7 @@ class Controller {
   void request_speaker_volume();
   void request_selected_favorite_artwork();
   void request_selected_playlist_artwork();
+  void request_now_playing_playlist_artwork(const BrowseItem& playlist);
   void request_queue_artwork();
   void request_browse(ListKind kind, const std::string& object_id = {},
                       std::size_t start_index = 0);
@@ -240,11 +249,15 @@ class Controller {
   std::string pending_playlist_object_id_;
   std::string playlist_title_before_start_;
   std::string playlist_object_before_start_;
+  std::string playlist_artwork_path_before_start_;
+  std::string playlist_artwork_title_before_start_;
+  std::string playlist_artwork_url_before_start_;
   bool playlist_start_acknowledged_ = false;
   std::string active_station_title_;
   std::string last_artwork_url_;
   std::string last_favorite_artwork_url_;
   std::string last_playlist_artwork_url_;
+  std::string last_now_playing_playlist_artwork_url_;
   std::vector<std::string> queue_artwork_urls_;
   std::string queue_artwork_inflight_url_;
   std::set<std::string> failed_queue_artwork_urls_;

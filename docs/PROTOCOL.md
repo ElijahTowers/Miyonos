@@ -71,7 +71,9 @@ Many players then report only a generic `x-rincon-queue` transport URI for
 each following track, with no source playlist label. Miyonos keeps the title
 of the playlist it started for that active group queue. A routine refresh of
 the same group preserves this context; selecting another group or starting a
-different source clears it.
+different source clears it. When Miyonos starts a playlist, it also retains
+that Favorite's artwork URL for the dedicated Now Playing playlist block;
+this remains separate from the changing current-track artwork.
 
 ## Defensive limits
 

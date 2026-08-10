@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.31 — Now Playing playlist cover
+
+- Now Playing has a dedicated lower-right playlist block with the selected
+  playlist's name and cover art, separate from the current track cover.
+- Reuses the existing bounded artwork cache and only keeps a compact playlist
+  thumbnail in memory, so the additional cover does not affect controls.
+
 ## 0.1.30 — Persistent Now Playing playlist label
 
 - Retains the playlist selected in Miyonos while Sonos advances through its

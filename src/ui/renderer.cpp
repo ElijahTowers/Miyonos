@@ -356,7 +356,7 @@ void Renderer::draw_queue_thumbnail(const std::string& path,
         static_cast<uint64_t>(source->w) * source->h <= 4ULL * 1024 * 1024) {
       // Keep the on-device thumbnail cache deliberately tiny. Storing full
       // album-size textures for six rows would use too much memory on Miyoo.
-      constexpr int kThumbnailPixels = 64;
+      constexpr int kThumbnailPixels = 96;
       SDL_Surface* thumbnail = SDL_CreateRGBSurfaceWithFormat(
           0, kThumbnailPixels, kThumbnailPixels, 32, SDL_PIXELFORMAT_RGBA32);
       if (thumbnail) {
@@ -466,10 +466,6 @@ void Renderer::now_playing(const ViewState& view, const Settings& settings) {
   draw_marquee(title, 292, 66, 3, kCream, 326, visual_clock_ms());
   font_.draw(clipped(artist, 50), 292, 107, 2, kMint, 320);
   font_.draw(clipped(detail, 52), 292, 138, 1, kMuted, 320);
-  if (!view.playback.playlist_title.empty()) {
-    font_.draw(clipped("Playlist: " + view.playback.playlist_title, 46), 292,
-               159, 1, kMint, 320);
-  }
   const char* symbol = view.playback.state == TransportState::Playing ? ">" : "II";
   font_.draw(symbol, 292, 181, 3, kCoral);
   const std::string speaker_status =
@@ -496,14 +492,35 @@ void Renderer::now_playing(const ViewState& view, const Settings& settings) {
   font_.draw("VOL " + clipped(volume_room, 22), 20, 307, 1, kMuted, 235);
   fill(renderer_, SDL_Rect{55, 322, 200, 8}, kPanelLight);
   fill(renderer_, SDL_Rect{55, 322, volume_width, 8}, kCoral);
+  const bool playlist_active = !view.playback.playlist_title.empty();
+  int queue_y = 294;
+  int group_y = 314;
+  int group_width = 320;
+  if (playlist_active) {
+    // Keep the current-track cover prominent on the left and reserve the lower
+    // right for the source playlist that owns this queue.
+    font_.draw("PLAYLIST", 292, 284, 1, kMuted);
+    draw_marquee(view.playback.playlist_title, 292, 299, 1, kMint, 212,
+                 visual_clock_ms());
+    const std::string playlist_artwork =
+        view.now_playing_playlist_artwork_title ==
+                view.playback.playlist_title
+            ? view.now_playing_playlist_artwork_path
+            : "";
+    draw_queue_thumbnail(playlist_artwork, SDL_Rect{520, 284, 88, 88});
+    queue_y = 320;
+    group_y = 338;
+    group_width = 212;
+  }
   if (track.queue_position > 0) {
-    font_.draw("Queue item " + std::to_string(track.queue_position), 292, 294,
+    font_.draw("Queue item " + std::to_string(track.queue_position), 292, queue_y,
                1, kMuted);
   }
   if (active && active->member_uuids.size() > 1) {
-    font_.draw(std::to_string(active->member_uuids.size()) +
-                   " rooms grouped  L1/R1 selects target",
-               292, 314, 1, kMuted, 320);
+    font_.draw(clipped(std::to_string(active->member_uuids.size()) +
+                           " rooms grouped  L1/R1 selects target",
+                       playlist_active ? 34 : 54),
+               292, group_y, 1, kMuted, group_width);
   }
   font_.draw("A Play/Pause    X Group mute    L1/R1 Target", 20, 365, 1,
              kCream);

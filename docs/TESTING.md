@@ -101,7 +101,8 @@ Render a deterministic UI preview without a display:
       Playlist was started. X must switch to Favorite Playlists, show the
       selected cover when supplied, and A must replace—not append to—the active
       Sonos queue. The selected playlist name must remain visible on Now
-      Playing when later tracks return only generic queue metadata.
+      Playing when later tracks return only generic queue metadata, together
+      with its separate lower-right playlist cover.
 - [ ] Favorite and nested favorite container open/play. The selected Favorite
       shows source-provided cover art, or **Cover unavailable** when absent.
 - [ ] With internet access and **External cover art over HTTPS** explicitly on,

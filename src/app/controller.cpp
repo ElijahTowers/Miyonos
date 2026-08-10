@@ -298,6 +298,47 @@ void Controller::request_selected_playlist_artwork() {
   enqueue(std::move(command));
 }
 
+void Controller::request_now_playing_playlist_artwork(
+    const BrowseItem& playlist) {
+  view_.now_playing_playlist_artwork_title = playlist.title;
+  if (!settings_.auto_artwork) {
+    view_.now_playing_playlist_artwork_path.clear();
+    last_now_playing_playlist_artwork_url_.clear();
+    return;
+  }
+  const Player* selected = coordinator();
+  if (!selected) return;
+  const std::string url = artwork_url(*selected, playlist.artwork_uri,
+                                      settings_.spotify_https_artwork);
+  if (url.empty()) {
+    view_.now_playing_playlist_artwork_path.clear();
+    last_now_playing_playlist_artwork_url_.clear();
+    return;
+  }
+  if (url == last_now_playing_playlist_artwork_url_) return;
+  last_now_playing_playlist_artwork_url_ = url;
+  view_.now_playing_playlist_artwork_path.clear();
+
+  // The playlist browser may already be downloading this exact cover. Reuse
+  // its result instead of adding a duplicate request to the worker queue.
+  if (url == last_playlist_artwork_url_) {
+    view_.now_playing_playlist_artwork_path = view_.playlist_artwork_path;
+    return;
+  }
+  const std::string cached = artwork_cache_.find(url);
+  if (!cached.empty()) {
+    view_.now_playing_playlist_artwork_path = cached;
+    return;
+  }
+  Command command;
+  command.type = CommandType::DownloadArtwork;
+  command.player = *selected;
+  command.text = url;
+  command.flag = settings_.spotify_https_artwork;
+  command.artwork_target = ArtworkTarget::NowPlayingPlaylist;
+  enqueue(std::move(command));
+}
+
 void Controller::request_queue_artwork() {
   if (!settings_.auto_artwork || view_.screen != Screen::Queue ||
       view_.queue.empty()) {
@@ -517,7 +558,13 @@ void Controller::select_group(std::size_t index, bool opened_by_user) {
     pending_playlist_object_id_.clear();
     playlist_title_before_start_.clear();
     playlist_object_before_start_.clear();
+    playlist_artwork_path_before_start_.clear();
+    playlist_artwork_title_before_start_.clear();
+    playlist_artwork_url_before_start_.clear();
     playlist_start_acknowledged_ = false;
+    view_.now_playing_playlist_artwork_path.clear();
+    view_.now_playing_playlist_artwork_title.clear();
+    last_now_playing_playlist_artwork_url_.clear();
   }
   settings_.last_group_id = group.id;
   settings_.last_room_uuid = view_.active_room_uuid;
@@ -662,6 +709,9 @@ void Controller::apply_result(WorkerResult result) {
           pending_playlist_object_id_.clear();
           playlist_title_before_start_.clear();
           playlist_object_before_start_.clear();
+          playlist_artwork_path_before_start_.clear();
+          playlist_artwork_title_before_start_.clear();
+          playlist_artwork_url_before_start_.clear();
           playlist_start_acknowledged_ = false;
         }
       } else {
@@ -720,6 +770,19 @@ void Controller::apply_result(WorkerResult result) {
         active_station_title_.clear();
       }
       view_.playback = std::move(result.playback);
+      if (view_.playback.playlist_title.empty()) {
+        view_.now_playing_playlist_artwork_path.clear();
+        view_.now_playing_playlist_artwork_title.clear();
+        last_now_playing_playlist_artwork_url_.clear();
+      } else if (!view_.now_playing_playlist_artwork_title.empty() &&
+                 view_.now_playing_playlist_artwork_title !=
+                     view_.playback.playlist_title) {
+        // Do not show the previous playlist's cover if Sonos reports a
+        // different named playlist outside the Miyonos-started queue session.
+        view_.now_playing_playlist_artwork_path.clear();
+        view_.now_playing_playlist_artwork_title.clear();
+        last_now_playing_playlist_artwork_url_.clear();
+      }
       if (view_.group_volume_target) {
         if (monotonic_ms() < volume_feedback_until_ms_ &&
             view_.speaker_volume >= 0) {
@@ -877,6 +940,12 @@ void Controller::apply_result(WorkerResult result) {
           selected_playlist_title_ = result.context;
           selected_playlist_object_id_ = result.context_id;
           playlist_context_lookup_requested_id_.clear();
+          if (result.context.empty()) {
+            view_.playback.playlist_title.clear();
+            view_.now_playing_playlist_artwork_path.clear();
+            view_.now_playing_playlist_artwork_title.clear();
+            last_now_playing_playlist_artwork_url_.clear();
+          }
           if (result.context_id == pending_playlist_object_id_) {
             playlist_start_acknowledged_ = true;
           }
@@ -891,10 +960,19 @@ void Controller::apply_result(WorkerResult result) {
           selected_playlist_title_ = playlist_title_before_start_;
           selected_playlist_object_id_ = playlist_object_before_start_;
           view_.playback.playlist_title = playlist_title_before_start_;
+          view_.now_playing_playlist_artwork_path =
+              playlist_artwork_path_before_start_;
+          view_.now_playing_playlist_artwork_title =
+              playlist_artwork_title_before_start_;
+          last_now_playing_playlist_artwork_url_ =
+              playlist_artwork_url_before_start_;
           pending_playlist_title_.clear();
           pending_playlist_object_id_.clear();
           playlist_title_before_start_.clear();
           playlist_object_before_start_.clear();
+          playlist_artwork_path_before_start_.clear();
+          playlist_artwork_title_before_start_.clear();
+          playlist_artwork_url_before_start_.clear();
           playlist_start_acknowledged_ = false;
           request_poll();
         }
@@ -916,6 +994,9 @@ void Controller::apply_result(WorkerResult result) {
       } else if (result.artwork_target == ArtworkTarget::Playlist) {
         artwork_path = &view_.playlist_artwork_path;
         last_artwork_url = &last_playlist_artwork_url_;
+      } else if (result.artwork_target == ArtworkTarget::NowPlayingPlaylist) {
+        artwork_path = &view_.now_playing_playlist_artwork_path;
+        last_artwork_url = &last_now_playing_playlist_artwork_url_;
       }
       if (result.artwork_target == ArtworkTarget::Queue) {
         if (result.context == queue_artwork_inflight_url_) {
@@ -939,6 +1020,10 @@ void Controller::apply_result(WorkerResult result) {
       if (result.context != *last_artwork_url) break;
       if (result.success) {
         *artwork_path = result.text;
+        if (result.artwork_target == ArtworkTarget::Playlist &&
+            result.context == last_now_playing_playlist_artwork_url_) {
+          view_.now_playing_playlist_artwork_path = result.text;
+        }
       } else {
         view_.diagnostics.last_error = result.text;
         last_artwork_url->clear();
@@ -949,10 +1034,12 @@ void Controller::apply_result(WorkerResult result) {
       view_.artwork_path.clear();
       view_.favorite_artwork_path.clear();
       view_.playlist_artwork_path.clear();
+      view_.now_playing_playlist_artwork_path.clear();
       view_.queue_artwork_paths.assign(view_.queue.size(), {});
       last_artwork_url_.clear();
       last_favorite_artwork_url_.clear();
       last_playlist_artwork_url_.clear();
+      last_now_playing_playlist_artwork_url_.clear();
       queue_artwork_urls_.assign(view_.queue.size(), {});
       queue_artwork_inflight_url_.clear();
       failed_queue_artwork_urls_.clear();
@@ -1205,10 +1292,17 @@ void Controller::activate() {
           pending_playlist_object_id_ = item.id;
           playlist_title_before_start_ = view_.playback.playlist_title;
           playlist_object_before_start_ = selected_playlist_object_id_;
+          playlist_artwork_path_before_start_ =
+              view_.now_playing_playlist_artwork_path;
+          playlist_artwork_title_before_start_ =
+              view_.now_playing_playlist_artwork_title;
+          playlist_artwork_url_before_start_ =
+              last_now_playing_playlist_artwork_url_;
           playlist_start_acknowledged_ = false;
           selected_playlist_title_ = item.title;
           selected_playlist_object_id_ = item.id;
           view_.playback.playlist_title = item.title;
+          request_now_playing_playlist_artwork(item);
           navigate(Screen::NowPlaying);
           show_toast("Starting playlist...", 2400);
           request_poll();
