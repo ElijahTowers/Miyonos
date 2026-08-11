@@ -466,6 +466,9 @@ void Renderer::now_playing(const ViewState& view, const Settings& settings) {
   draw_marquee(title, 292, 66, 3, kCream, 326, visual_clock_ms());
   font_.draw(clipped(artist, 50), 292, 107, 2, kMint, 320);
   font_.draw(clipped(detail, 52), 292, 138, 1, kMuted, 320);
+  if (view.playback.shuffle) {
+    font_.draw("SHUFFLE ON", 292, 160, 1, kCoral);
+  }
   const char* symbol = view.playback.state == TransportState::Playing ? ">" : "II";
   font_.draw(symbol, 292, 181, 3, kCoral);
   const std::string speaker_status =
@@ -523,7 +526,8 @@ void Renderer::now_playing(const ViewState& view, const Settings& settings) {
                292, group_y, 1, kMuted, group_width);
   }
   if (settings.button_hints != ButtonHints::Never) {
-    hints("SELECT  Controls", "L2  Queue    R2  Favorites");
+    hints("SELECT  Controls    Hold R2  Shuffle",
+          "L2  Queue    R2  Favorites");
   }
 }
 
@@ -1162,10 +1166,15 @@ void Renderer::controls_overlay(const ViewState& view,
       ? physical_button_name(static_cast<PhysicalButton>(
             std::distance(settings.button_mapping.begin(), controls)))
       : "a mapped button";
-  font_.draw_centered(has_controls_button
-                          ? controls_button + " opens this guide"
-                          : "Assign Show Controls in Button Mapping",
-                      370, 1, kMuted);
+  const bool r2_opens_favorites =
+      settings.button_mapping[button_index(PhysicalButton::R2)] ==
+      Action::Favorites;
+  font_.draw_centered(
+      r2_opens_favorites
+          ? "Hold R2 on Now Playing to toggle shuffle"
+          : has_controls_button ? controls_button + " opens this guide"
+                                : "Assign Show Controls in Button Mapping",
+      370, 1, kMuted);
   font_.draw_centered("A, B, or " + controls_button + " closes it", 398, 1,
                       kMint);
   (void)view;

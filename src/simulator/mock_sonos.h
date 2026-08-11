@@ -36,6 +36,7 @@ class SimulatorSonosFixture {
   std::thread thread_;
   bool playing_ = true;
   bool muted_ = false;
+  bool shuffle_ = false;
   int volume_ = 28;
   bool queue_cleared_ = false;
   int loaded_playlist_id_ = 0;

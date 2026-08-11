@@ -14,7 +14,7 @@ source. All screens use semantic actions rather than raw SDL keys.
 | L1 | Speaker Volumes | Speaker Volumes |
 | R1 | Next Sonos group | No default action |
 | L2 | Queue | Queue |
-| R2 | Favorites | Favorites |
+| R2 | Favorites; hold to toggle shuffle | Favorites |
 | Start | Main Menu | Main Menu |
 | Select | Controls pop-up | Controls pop-up |
 | Menu | Exit confirmation | Exit confirmation |
@@ -58,6 +58,13 @@ cover URLs and never uses a Sonos or music-service login.
 Press **Select** at any time for a compact pop-up that shows every physical
 button and its current assignment. Press A, B, or Select again to close it.
 This is also the quickest way to check a custom layout.
+
+With R2 assigned to **Favorites** (the default), hold R2 for about one second
+on Now Playing to toggle Sonos shuffle. A short press still opens Favorites.
+Miyonos uses `SHUFFLE_NOREPEAT`, which shuffles the active queue without
+repeating tracks. **SHUFFLE ON** remains visible on Now Playing while it is
+enabled. If R2 is reassigned in Button Mapping, the custom short-press action
+is preserved and the hold gesture is unavailable.
 
 Every physical control can be reassigned under **Settings → Button Mapping**.
 Available actions include navigation, play/pause, mute/context, rooms,

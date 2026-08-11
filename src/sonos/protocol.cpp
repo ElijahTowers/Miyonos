@@ -814,6 +814,16 @@ ProtocolResult<PlaybackSnapshot> SonosAdapter::get_playback(
     result.value.allowed_actions =
         capped(response_value(actions.value, "Actions"), 512);
   }
+  // Sonos exposes shuffle as part of the transport play mode. This optional
+  // read must not make normal Now Playing polling fail on an older speaker
+  // that does not advertise it.
+  const auto settings =
+      soap(coordinator, "AVTransport", "GetTransportSettings", {{"InstanceID", "0"}});
+  if (settings.ok()) {
+    result.value.shuffle =
+        lowercase(response_value(settings.value, "PlayMode")).find("shuffle") !=
+        std::string::npos;
+  }
   result.value.track.seekable =
       result.value.track.duration_seconds > 0 &&
       (result.value.allowed_actions.empty() ||
@@ -911,6 +921,16 @@ ProtocolResult<bool> SonosAdapter::seek_time(const Player& coordinator,
                        {{"InstanceID", "0"},
                         {"Unit", "REL_TIME"},
                         {"Target", format_duration(seconds)}});
+  return {response.ok(), response.error, response.upnp_error_code};
+}
+
+ProtocolResult<bool> SonosAdapter::set_shuffle(const Player& coordinator,
+                                                bool enabled) {
+  // Preserve the simple, expected behavior for a hand-held remote: shuffle
+  // either visits every queued track once or restores Sonos' normal order.
+  auto response = soap(coordinator, "AVTransport", "SetPlayMode",
+                       {{"InstanceID", "0"},
+                        {"NewPlayMode", enabled ? "SHUFFLE_NOREPEAT" : "NORMAL"}});
   return {response.ok(), response.error, response.upnp_error_code};
 }
 

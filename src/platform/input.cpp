@@ -8,6 +8,12 @@
 
 namespace miyonos {
 
+namespace {
+
+constexpr uint32_t kR2ShuffleHoldMs = 800;
+
+}  // namespace
+
 Input::Input(RuntimeMode mode) : mode_(mode) {
   const int joystick_count = SDL_NumJoysticks();
   for (int index = 0; index < joystick_count; ++index) {
@@ -26,6 +32,30 @@ Input::~Input() {
 bool Input::repeatable(Action action) const {
   return action == Action::Up || action == Action::Down ||
          action == Action::Left || action == Action::Right;
+}
+
+bool Input::delays_r2_favorites(PhysicalButton button, Action action) const {
+  // R2's normal action remains Favorites. Delaying only that mapping lets a
+  // held R2 become a clean Now Playing shuffle gesture without taking a
+  // custom R2 assignment away from the owner.
+  return button == PhysicalButton::R2 && action == Action::Favorites;
+}
+
+void Input::begin_r2_favorites_press(Action action) {
+  r2_favorites_pending_ = true;
+  r2_shuffle_emitted_ = false;
+  r2_favorites_pressed_ms_ = SDL_GetTicks();
+  r2_favorites_short_action_ = action;
+}
+
+Action Input::end_r2_favorites_press() {
+  if (!r2_favorites_pending_) return Action::None;
+  const Action short_action =
+      r2_shuffle_emitted_ ? Action::None : r2_favorites_short_action_;
+  r2_favorites_pending_ = false;
+  r2_shuffle_emitted_ = false;
+  r2_favorites_short_action_ = Action::None;
+  return short_action;
 }
 
 Action Input::mapped_action(PhysicalButton button) const {
@@ -145,6 +175,10 @@ Action Input::translate(const SDL_Event& event) {
       // SDL already supplies rate-limited keyboard repeat events. The custom
       // held-button timer is reserved for mouse and controller input.
       note_press(action, false, visual_action);
+      if (delays_r2_favorites(button, action)) {
+        begin_r2_favorites_press(action);
+        return Action::None;
+      }
     }
     return action;
   }
@@ -152,7 +186,8 @@ Action Input::translate(const SDL_Event& event) {
     const PhysicalButton button = from_key(event.key.keysym.sym);
     note_physical_button(button, false);
     release(mapped_action(button), default_button_action(button));
-    return Action::None;
+    return button == PhysicalButton::R2 ? end_r2_favorites_press()
+                                        : Action::None;
   }
   if (event.type == SDL_CONTROLLERDEVICEADDED) {
     SDL_GameController* controller = SDL_GameControllerOpen(event.cdevice.which);
@@ -211,12 +246,17 @@ Action Input::translate(const SDL_Event& event) {
         const Action action = mapped_action(PhysicalButton::R2);
         note_physical_button(PhysicalButton::R2, true);
         note_press(action, false, Action::Favorites);
+        if (delays_r2_favorites(PhysicalButton::R2, action)) {
+          begin_r2_favorites_press(action);
+          return Action::None;
+        }
         return action;
       }
-      if (!down) {
+      if (!down && right_trigger_down_) {
         right_trigger_down_ = false;
         note_physical_button(PhysicalButton::R2, false);
         release(mapped_action(PhysicalButton::R2), Action::Favorites);
+        return end_r2_favorites_press();
       }
     }
     return Action::None;
@@ -240,6 +280,10 @@ Action Input::translate(const SDL_Event& event) {
     mouse_action_ = mapped_action(mouse_button_);
     note_physical_button(mouse_button_, true);
     note_press(mouse_action_, true, visual_action);
+    if (delays_r2_favorites(mouse_button_, mouse_action_)) {
+      begin_r2_favorites_press(mouse_action_);
+      return Action::None;
+    }
     return mouse_action_;
   }
   if (mode_ == RuntimeMode::Simulator &&
@@ -247,8 +291,12 @@ Action Input::translate(const SDL_Event& event) {
       event.button.button == SDL_BUTTON_LEFT) {
     note_physical_button(mouse_button_, false);
     release(mouse_action_, default_button_action(mouse_button_));
+    const Action released = mouse_button_ == PhysicalButton::R2
+                                ? end_r2_favorites_press()
+                                : Action::None;
     mouse_action_ = Action::None;
     mouse_button_ = PhysicalButton::Count;
+    return released;
   }
 #endif
   return Action::None;
@@ -260,6 +308,11 @@ Action Input::repeat_action(uint32_t now) {
     recovery_chord_emitted_ = true;
     held_action_ = Action::None;
     return Action::ResetButtonMapping;
+  }
+  if (r2_favorites_pending_ && !r2_shuffle_emitted_ &&
+      now - r2_favorites_pressed_ms_ >= kR2ShuffleHoldMs) {
+    r2_shuffle_emitted_ = true;
+    return Action::ToggleShuffle;
   }
   if (!repeatable(held_action_)) return Action::None;
   if (now - held_since_ms_ < 420 || now - last_repeat_ms_ < 160) {

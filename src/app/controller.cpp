@@ -1371,6 +1371,12 @@ void Controller::apply_result(WorkerResult result) {
     }
     case ResultType::Action:
       if (result.success) {
+        if (result.context == "shuffle") {
+          // SetPlayMode has acknowledged the requested state. Keep the
+          // on-screen indicator responsive; the following poll remains the
+          // authoritative reconciliation with Sonos.
+          view_.playback.shuffle = result.flag;
+        }
         if (result.replaces_playlist_context) {
           selected_playlist_title_ = result.context;
           selected_playlist_object_id_ = result.context_id;
@@ -2428,6 +2434,19 @@ void Controller::handle(Action action) {
       command.value = group->member_uuids.size() > 1 ? 1 : 0;
       enqueue(std::move(command));
       show_toast(view_.playback.muted ? "Muted" : "Unmuted");
+    } else if (action == Action::ToggleShuffle) {
+      if (is_radio_stream(view_.playback.track)) {
+        show_toast("This radio station cannot be shuffled.");
+        return;
+      }
+      const bool enable_shuffle = !view_.playback.shuffle;
+      Command command;
+      command.type = CommandType::SetShuffle;
+      command.player = *selected;
+      command.flag = enable_shuffle;
+      if (enqueue(std::move(command))) {
+        show_toast(enable_shuffle ? "Enabling shuffle..." : "Disabling shuffle...");
+      }
     } else if (action == Action::Previous || action == Action::Next ||
                action == Action::Left || action == Action::Right) {
       if (is_radio_stream(view_.playback.track)) {
@@ -2524,6 +2543,12 @@ void Controller::worker_loop() {
         break;
       case CommandType::Next:
         action(adapter.next(command.player), "Next track");
+        break;
+      case CommandType::SetShuffle:
+        action(adapter.set_shuffle(command.player, command.flag),
+               command.flag ? "Shuffle enabled" : "Shuffle disabled");
+        result.context = "shuffle";
+        result.flag = command.flag;
         break;
       case CommandType::Seek:
         action(adapter.seek_time(command.player, command.value), "Position changed");

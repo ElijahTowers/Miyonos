@@ -56,14 +56,14 @@ volume on Now Playing.
 
 | Item | Current state |
 | --- | --- |
-| Release version | `0.1.34` |
-| End-user download | `dist/Miyonos-App-0.1.34.zip` — a single `Miyonos` folder to put in `App` |
+| Release version | `0.1.35` |
+| End-user download | `dist/Miyonos-App-0.1.35.zip` — a single `Miyonos` folder to put in `App` |
 | macOS simulator | `dist/Miyonos Simulator.app` |
 | Last verified device | Miyoo Mini Plus on OnionOS 4.3.x |
 | Last observed device IP | Not recorded in the public repository; check **Apps → Tweaks → Network** on the device |
-| Last verified device state | Version 0.1.23 is installed. Version 0.1.28 validated the live playlist-start flow. Version 0.1.29 additionally read the live `Q:0` queue: all 50 returned tracks included an artwork reference. Version 0.1.34 retains the large-collection wait, group-first controls, and a wake-friendly dim idle frame. Its physical retest is pending. |
-| Current 0.1.34 package ARM binary SHA-256 | `2e3b28caa84ebd609fc21d207b3e52b74c279fc5f31035c126a122732616f494` |
-| Automated verification | 311 core checks, 131 simulator-input checks, 99 simulator-fixture checks, simulator screenshot/storage checks, and package integrity checks passed |
+| Last verified device state | Version 0.1.23 is installed. Version 0.1.28 validated the live playlist-start flow. Version 0.1.29 additionally read the live `Q:0` queue: all 50 returned tracks included an artwork reference. Version 0.1.35 adds direct non-repeating playlist shuffle through a held R2 gesture and a visible shuffle state. Its physical retest is pending. |
+| Current 0.1.35 package ARM binary SHA-256 | `da6a2a973d1d410d349034fdfb5df0955e89014c224efda42dd73ec1f6132e23` |
+| Automated verification | 321 core checks, 137 simulator-input checks, 99 simulator-fixture checks, simulator screenshot/storage checks, and package integrity checks passed |
 
 The device address is only a local handoff record. Check **Apps → Tweaks →
 Network** on the Miyoo when a connection fails rather than assuming that this
@@ -122,7 +122,7 @@ device IP is shown at the top of **Apps → Tweaks → Network**.
 This is the simplest path for Windows, macOS, and Linux. It installs no helper
 on the computer.
 
-1. Extract `dist/Miyonos-App-0.1.34.zip`.
+1. Extract `dist/Miyonos-App-0.1.35.zip`.
 2. On the Miyoo, enable **Apps → Tweaks → Network → HTTP: Web-based file sync**.
 3. Open the device page in a browser, then open `App`.
 4. Upload the supplied `Miyonos` folder. Do not upload a nested folder and do
@@ -270,8 +270,10 @@ The full device checklist and evidence rules are in [TESTING.md](TESTING.md).
 
 The default Now Playing layout is: L1 Speaker Volumes, R1 next Sonos group,
 Up/Down the active group's volume, Left/Right previous/next track, A
-play/pause, X group mute, Y rooms, L2 queue, R2
-favorites, Start menu, Select controls, Menu exit, and B back.
+play/pause, X group mute, Y rooms, L2 queue, R2 favorites (hold R2 for about
+one second to toggle shuffle), Start menu, Select controls, Menu exit, and B
+back. Shuffle uses Sonos' non-repeating queue shuffle mode and displays a
+visible **SHUFFLE ON** state on Now Playing.
 
 Every physical control is configurable in **Settings → Button Mapping**.
 Changes are staged until saving and must retain actions for Up, Down, Confirm,

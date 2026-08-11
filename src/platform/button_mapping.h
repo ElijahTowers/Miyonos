@@ -151,6 +151,7 @@ inline const char* action_id(Action action) {
     case Action::SeekForward: return "seek_forward";
     case Action::Queue: return "queue";
     case Action::Favorites: return "favorites";
+    case Action::ToggleShuffle: return "toggle_shuffle";
     case Action::Menu: return "main_menu";
     case Action::Controls: return "controls";
     case Action::Refresh: return "refresh";
@@ -181,6 +182,7 @@ inline const char* action_name(Action action) {
     case Action::SeekForward: return "Seek Forward";
     case Action::Queue: return "Queue";
     case Action::Favorites: return "Favorites";
+    case Action::ToggleShuffle: return "Toggle Shuffle";
     case Action::Menu: return "Main Menu";
     case Action::Controls: return "Show Controls";
     case Action::Refresh: return "Refresh";

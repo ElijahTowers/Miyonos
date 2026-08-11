@@ -103,6 +103,7 @@ class State:
     playing = True
     volume = 28
     muted = False
+    shuffle = False
     elapsed = 77
     current_uri = "x-rincon-queue:RINCON_LIVING#0"
     scenario = "grouped"
@@ -413,6 +414,15 @@ class Handler(http.server.BaseHTTPRequestHandler):
             response = envelope(
                 action, AV, "<Actions>Set,Stop,Pause,Play,Seek,Next,Previous</Actions>"
             )
+        elif action == "GetTransportSettings":
+            response = envelope(
+                action,
+                AV,
+                f"<PlayMode>{'SHUFFLE_NOREPEAT' if State.shuffle else 'NORMAL'}</PlayMode>",
+            )
+        elif action == "SetPlayMode":
+            State.shuffle = "SHUFFLE" in self.field(body, "NewPlayMode", "")
+            response = envelope(action, AV)
         elif action in ("GetVolume", "GetGroupVolume"):
             namespace = GRC if "Group" in action else RC
             response = envelope(action, namespace, f"<CurrentVolume>{State.volume}</CurrentVolume>")

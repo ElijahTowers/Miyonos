@@ -539,6 +539,16 @@ std::string SimulatorSonosFixture::response_for(
     return envelope(action, kAv,
                     "<Actions>Set,Stop,Pause,Play,Seek,Next,Previous</Actions>");
   }
+  if (action == "GetTransportSettings") {
+    return envelope(action, kAv,
+                    std::string("<PlayMode>") +
+                        (shuffle_ ? "SHUFFLE_NOREPEAT" : "NORMAL") +
+                        "</PlayMode>");
+  }
+  if (action == "SetPlayMode") {
+    shuffle_ = field(body, "NewPlayMode").find("SHUFFLE") != std::string::npos;
+    return envelope(action, kAv);
+  }
   if (action == "GetVolume" || action == "GetGroupVolume") {
     return envelope(action, action == "GetVolume" ? kRc : kGrc,
                     "<CurrentVolume>" + std::to_string(volume_) +

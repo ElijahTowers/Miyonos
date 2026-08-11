@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(Miyonos VERSION 0.1.34 LANGUAGES CXX)
+project(Miyonos VERSION 0.1.35 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

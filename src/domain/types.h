@@ -90,6 +90,7 @@ struct PlaybackSnapshot {
   int volume = 0;
   bool muted = false;
   bool group_volume = false;
+  bool shuffle = false;
   std::string allowed_actions;
   std::string coordinator_uuid;
   uint64_t received_at_ms = 0;

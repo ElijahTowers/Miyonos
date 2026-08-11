@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.1.35 — Direct playlist shuffle
+
+- Hold R2 for about one second on Now Playing to toggle shuffle while its
+  normal short press still opens Favorites. The gesture is available only
+  while R2 retains its default Favorites assignment.
+- Miyonos reads and writes Sonos' transport play mode, using
+  `SHUFFLE_NOREPEAT` for predictable non-repeating playlist shuffle. Now
+  Playing keeps a visible **SHUFFLE ON** state and radio streams explain that
+  shuffle is unavailable instead of sending an unsupported request.
+- The simulator, mock Sonos service, input tests, controller tests, and
+  deterministic visual references cover the new interaction.
+
 ## 0.1.34 — Wake-friendly idle battery saver
 
 - Idle mode now leaves one readable, dimmed static screen in the framebuffer

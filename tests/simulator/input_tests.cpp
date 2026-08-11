@@ -68,10 +68,18 @@ void test_keyboard() {
       {SDLK_ESCAPE, Action::ExitButton}, {SDLK_F12, Action::None},
   }};
   for (const auto& mapping : mappings) {
+    const bool delayed_r2 = mapping.first == SDLK_2;
     CHECK(input.translate(key_event(SDL_KEYDOWN, mapping.first)) ==
-          mapping.second);
-    CHECK(input.translate(key_event(SDL_KEYUP, mapping.first)) == Action::None);
+          (delayed_r2 ? Action::None : mapping.second));
+    CHECK(input.translate(key_event(SDL_KEYUP, mapping.first)) ==
+          (delayed_r2 ? mapping.second : Action::None));
   }
+
+  CHECK(input.translate(key_event(SDL_KEYDOWN, SDLK_BACKSPACE)) == Action::None);
+  const uint32_t r2_hold_started = SDL_GetTicks();
+  CHECK(input.repeat_action(r2_hold_started + 900) == Action::ToggleShuffle);
+  CHECK(input.repeat_action(r2_hold_started + 1000) == Action::None);
+  CHECK(input.translate(key_event(SDL_KEYUP, SDLK_BACKSPACE)) == Action::None);
 }
 
 void test_mouse_and_hit_areas() {
@@ -94,9 +102,9 @@ void test_mouse_and_hit_areas() {
   for (const Hit& hit : hits) {
     CHECK(simulator_hit_test(hit.x, hit.y) == hit.action);
     CHECK(input.translate(mouse_event(SDL_MOUSEBUTTONDOWN, hit.x, hit.y)) ==
-          hit.action);
+          (hit.action == Action::Favorites ? Action::None : hit.action));
     CHECK(input.translate(mouse_event(SDL_MOUSEBUTTONUP, hit.x, hit.y)) ==
-          Action::None);
+          (hit.action == Action::Favorites ? hit.action : Action::None));
   }
   CHECK(simulator_hit_test(0, 0) == Action::None);
   CHECK(simulator_hit_test(384, 550) == Action::None);
@@ -149,8 +157,10 @@ void test_gamepad() {
 
   trigger.caxis.axis = SDL_CONTROLLER_AXIS_TRIGGERRIGHT;
   trigger.caxis.value = 20000;
-  CHECK(input.translate(trigger) == Action::Favorites);
-  CHECK(input.repeat_action(SDL_GetTicks() + 1000) == Action::None);
+  CHECK(input.translate(trigger) == Action::None);
+  const uint32_t r2_trigger_hold_started = SDL_GetTicks();
+  CHECK(input.repeat_action(r2_trigger_hold_started + 900) ==
+        Action::ToggleShuffle);
   trigger.caxis.value = 0;
   CHECK(input.translate(trigger) == Action::None);
 }
@@ -166,6 +176,10 @@ void test_custom_mapping_and_recovery_chord() {
   CHECK(input.translate(key_event(SDL_KEYDOWN, SDLK_w)) ==
         Action::SeekForward);
   CHECK(input.translate(key_event(SDL_KEYUP, SDLK_w)) == Action::None);
+  mapping[button_index(PhysicalButton::R2)] = Action::Refresh;
+  input.set_button_mapping(mapping);
+  CHECK(input.translate(key_event(SDL_KEYDOWN, SDLK_2)) == Action::Refresh);
+  CHECK(input.translate(key_event(SDL_KEYUP, SDLK_2)) == Action::None);
 
   input.translate(key_event(SDL_KEYDOWN, SDLK_ESCAPE));
   input.translate(key_event(SDL_KEYDOWN, SDLK_RETURN));

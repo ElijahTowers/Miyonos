@@ -478,6 +478,15 @@ void test_live_mock_if_requested() {
   CHECK(adapter.stop(*mock_player).ok());
   CHECK(adapter.play(*mock_player).ok());
   CHECK(adapter.seek_time(*mock_player, 60).ok());
+  CHECK(!adapter.get_playback(*mock_player).value.shuffle);
+  CHECK(adapter.set_shuffle(*mock_player, true).ok());
+  CHECK(adapter.get_playback(*mock_player).value.shuffle);
+  CHECK(adapter.set_shuffle(*mock_player, false).ok());
+  // The earlier stream-Favorite test deliberately leaves the fixture on a
+  // radio source. Restore a queue before exercising playlist shuffle.
+  CHECK(adapter.play_saved_playlist(*mock_player,
+                                    saved_playlists.value.items.back())
+            .ok());
 
   HttpClient client;
   HttpClient::Limits limits;
@@ -504,6 +513,27 @@ void test_live_mock_if_requested() {
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
   }
   CHECK(controller.view().screen == Screen::NowPlaying);
+  CHECK(!controller.view().playback.shuffle);
+  controller.handle(Action::ToggleShuffle);
+  const auto shuffle_enabled_deadline = std::chrono::steady_clock::now() +
+                                        std::chrono::seconds(3);
+  while (std::chrono::steady_clock::now() < shuffle_enabled_deadline &&
+         !controller.view().playback.shuffle) {
+    controller.update();
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+  }
+  CHECK(controller.view().playback.shuffle);
+  CHECK(controller.view().toast == "Shuffle enabled");
+  controller.handle(Action::ToggleShuffle);
+  const auto shuffle_disabled_deadline = std::chrono::steady_clock::now() +
+                                         std::chrono::seconds(3);
+  while (std::chrono::steady_clock::now() < shuffle_disabled_deadline &&
+         controller.view().playback.shuffle) {
+    controller.update();
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+  }
+  CHECK(!controller.view().playback.shuffle);
+  CHECK(controller.view().toast == "Shuffle disabled");
   controller.handle(Action::Controls);
   CHECK(controller.view().controls_overlay);
   controller.handle(Action::Back);

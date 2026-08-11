@@ -1,16 +1,18 @@
-# Miyonos 0.1.34 final status
+# Miyonos 0.1.35 final status
 
 Status: **real Sonos LAN integration, cover retrieval, simulator, and release
 packages are complete; sharp direct framebuffer output is visually and
 digitally verified. The live playlist-start flow was validated in 0.1.28;
 version 0.1.29 additionally read the owner's live `Q:0` queue, where all 50
-returned tracks included an artwork reference. Version 0.1.34 retains the
+returned tracks included an artwork reference. Version 0.1.35 retains the
 selected playlist label and cover-art block through later generic queue
 metadata and topology refreshes, and makes Now Playing group-focused with
 relative group-volume updates. Direct large music-service collections now use
 a bounded longer source-open deadline. Its idle battery saver retains a dim
 static frame so a Miyoo power-button wake is immediately readable. Its
-physical-device retest is pending.**
+physical-device retest is pending. Version 0.1.35 also toggles Sonos'
+non-repeating shuffle mode through a held R2 gesture and retains a visible
+shuffle state on Now Playing.**
 
 ## Delivered
 
@@ -29,7 +31,7 @@ uncached image at a time. It uses no
 Miyonos account, cloud service, API key, analytics, or Sonos cloud
 authorization.
 
-Version 0.1.34 retains the adapter validated against a real Sonos household
+Version 0.1.35 retains the adapter validated against a real Sonos household
 and the target cover-art path fixed in 0.1.3. Physical
 testing showed that both the rejected 640 × 480 Mini GFX route and its accepted
 320 × 240 scale route were unsuitable for a complete sharp interface. Miyonos
@@ -41,6 +43,13 @@ favorites replace the active queue, while large non-playlist collections open
 directly without trying to expand every item into the queue. Detailed,
 privacy-sanitized Sonos evidence is in
 [LIVE_SONOS_VALIDATION.md](LIVE_SONOS_VALIDATION.md).
+
+The default R2 Favorites shortcut now has a hold gesture on Now Playing:
+holding R2 for about one second uses AVTransport `SetPlayMode` to toggle
+`SHUFFLE_NOREPEAT` or `NORMAL`. The default is still a short R2 press for
+Favorites, R2 custom mappings are preserved, and radio streams decline the
+action before an unsupported Sonos request is sent. The current state is read
+from `GetTransportSettings` and shown as **SHUFFLE ON**.
 
 The Now Playing D-pad Left/Right actions select the previous/next track. L1
 opens Speaker Volumes, while R1 switches to the next Sonos group. Now Playing

@@ -91,6 +91,7 @@ class SonosAdapter {
   ProtocolResult<bool> next(const Player& coordinator);
   ProtocolResult<bool> previous(const Player& coordinator);
   ProtocolResult<bool> seek_time(const Player& coordinator, int seconds);
+  ProtocolResult<bool> set_shuffle(const Player& coordinator, bool enabled);
   ProtocolResult<bool> play_queue_item(const Player& coordinator,
                                        std::size_t one_based_track);
   ProtocolResult<bool> set_volume(const Player& player, int volume,

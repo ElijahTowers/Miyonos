@@ -29,6 +29,9 @@ class Input {
   void release(Action action, Action visual_action);
   void note_physical_button(PhysicalButton button, bool down);
   bool repeatable(Action action) const;
+  bool delays_r2_favorites(PhysicalButton button, Action action) const;
+  void begin_r2_favorites_press(Action action);
+  Action end_r2_favorites_press();
 
   RuntimeMode mode_ = RuntimeMode::Desktop;
   bool diagnostics_ = false;
@@ -38,6 +41,10 @@ class Input {
   Action held_action_ = Action::None;
   bool left_trigger_down_ = false;
   bool right_trigger_down_ = false;
+  bool r2_favorites_pending_ = false;
+  bool r2_shuffle_emitted_ = false;
+  uint32_t r2_favorites_pressed_ms_ = 0;
+  Action r2_favorites_short_action_ = Action::None;
   Action mouse_action_ = Action::None;
   PhysicalButton mouse_button_ = PhysicalButton::Count;
   ButtonMapping mapping_ = kDefaultButtonMapping;

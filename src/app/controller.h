@@ -115,6 +115,7 @@ class Controller {
     Pause,
     Previous,
     Next,
+    SetShuffle,
     Seek,
     Volume,
     AdjustGroupVolume,

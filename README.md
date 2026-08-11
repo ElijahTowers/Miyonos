@@ -9,7 +9,7 @@ be turned off in Settings.
 
 ![Miyonos Now Playing preview](docs/images/now-playing.png)
 
-Version 0.1.34 is a technical preview with real Sonos LAN validation, robust
+Version 0.1.35 is a technical preview with real Sonos LAN validation, robust
 source-provided cover retrieval, a local Miyoo battery gauge, a local
 simulator, and sharp native 640 × 480 output through the device's
 double-buffered framebuffer. It includes:
@@ -18,7 +18,7 @@ double-buffered framebuffer. It includes:
   D-pad-operated manual IPv4 editor;
 - topology-aware logical rooms, groups, coordinators, bonded-player filtering,
   room joining, and room removal;
-- play/pause, previous/next, individual speaker volume within a group, group
+- play/pause, previous/next, non-repeating playlist shuffle, individual speaker volume within a group, group
   mute, seeking, live progress, track metadata, and separate source-provided
   cover artwork for the current track and its active playlist; and
 - the Miyoo's own battery percentage on Now Playing, read locally from its
@@ -45,7 +45,7 @@ double-buffered framebuffer. It includes:
 
 The desktop/mock suite and ARM cross-build pass. Discovery, playback metadata,
 cover retrieval, topology, and an idempotent volume write have also been
-validated against a real mixed-model Sonos household. Version 0.1.34 keeps Now
+validated against a real mixed-model Sonos household. Version 0.1.35 keeps Now
 Playing group-focused: R1 switches groups, L1 opens individual Speaker
 Volumes, and group plus/minus uses Sonos' relative group control before
 refreshing each member's actual volume. Large non-playlist music-service
@@ -81,7 +81,7 @@ entirely optional.
 
 ## Install
 
-Download `Miyonos-App-0.1.34.zip` from the [GitHub Releases page](https://github.com/ElijahTowers/Miyonos/releases). It contains only the `Miyonos` app folder.
+Download `Miyonos-App-0.1.35.zip` from the [GitHub Releases page](https://github.com/ElijahTowers/Miyonos/releases). It contains only the `Miyonos` app folder.
 
 1. Unzip the download. It contains one folder: `Miyonos`.
 2. Put that folder in the OnionOS `App` folder.
@@ -109,7 +109,7 @@ These are the default controls on **Now Playing**:
 | L1 | Open Speaker Volumes |
 | R1 | Switch to the next Sonos group |
 | L2 | Open Queue |
-| R2 | Open Favorites |
+| R2 | Open Favorites; hold to toggle shuffle |
 | Start | Open the main menu |
 | Select | Show the Controls pop-up |
 | Menu | Ask to exit Miyonos |
@@ -117,6 +117,13 @@ These are the default controls on **Now Playing**:
 
 Every button can be changed in **Settings → Button mapping**. The final row is
 always available as a safe recovery shortcut.
+
+With the default R2 assignment, hold **R2** for about one second on Now
+Playing to switch Sonos shuffle on or off. A short R2 press still opens
+Favorites. Miyonos uses Sonos' `SHUFFLE_NOREPEAT` mode, so it plays the active
+queue in a random order without repeating tracks. The persistent **SHUFFLE
+ON** label confirms the active state. If R2 is assigned to another action in
+Button Mapping, its normal custom behavior takes precedence.
 
 ## Battery-saving idle mode
 

@@ -22,6 +22,7 @@ enum class Action {
   SeekForward,
   Queue,
   Favorites,
+  ToggleShuffle,
   Menu,
   Controls,
   Refresh,
