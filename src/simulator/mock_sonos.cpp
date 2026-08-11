@@ -453,10 +453,17 @@ std::string SimulatorSonosFixture::response_for(
            "</serviceList></device></root>";
   }
 
+  const std::string action = action_from_headers(headers);
   if (scenario_ == "slow") {
     std::this_thread::sleep_for(std::chrono::milliseconds(850));
   }
-  const std::string action = action_from_headers(headers);
+  if (scenario_ == "large-collection-slow" &&
+      action == "SetAVTransportURI") {
+    // Deliberately exceed the normal 2.5-second SOAP read deadline. A large
+    // music-service collection must still open directly without queueing all
+    // of its tracks.
+    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+  }
   if (action == "GetZoneGroupState") {
     const std::string living =
         "<ZoneGroupMember UUID=\"RINCON_LIVING\" ZoneName=\"Living Room\" "
@@ -591,7 +598,8 @@ std::string SimulatorSonosFixture::response_for(
                                   : didl_item(index);
           ++count;
         }
-      } else if (scenario_ == "large-collection") {
+      } else if (scenario_ == "large-collection" ||
+                 scenario_ == "large-collection-slow") {
         items = didl_large_collection_favorite();
         total = count = 1;
       } else {
@@ -614,7 +622,8 @@ std::string SimulatorSonosFixture::response_for(
   }
   if (action == "AddURIToQueue") {
     const std::string enqueued_uri = field(body, "EnqueuedURI");
-    if (scenario_ == "large-collection" &&
+    if ((scenario_ == "large-collection" ||
+         scenario_ == "large-collection-slow") &&
         enqueued_uri.find("my-songs") != std::string::npos) {
       status = 500;
       return "<?xml version=\"1.0\"?><s:Envelope "

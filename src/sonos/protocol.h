@@ -115,7 +115,8 @@ class SonosAdapter {
       const Player& player, const std::string& service_name,
       const std::string& action,
       const std::vector<std::pair<std::string, std::string>>& arguments,
-      std::size_t max_response = 2 * 1024 * 1024);
+      std::size_t max_response = 2 * 1024 * 1024,
+      int read_timeout_ms = 0);
   const Service* service(const Player& player,
                          const std::string& service_name) const;
   ProtocolResult<bool> simple_transport(const Player& player,

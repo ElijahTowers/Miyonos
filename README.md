@@ -9,7 +9,7 @@ be turned off in Settings.
 
 ![Miyonos Now Playing preview](docs/images/now-playing.png)
 
-Version 0.1.32 is a technical preview with real Sonos LAN validation, robust
+Version 0.1.33 is a technical preview with real Sonos LAN validation, robust
 source-provided cover retrieval, a local Miyoo battery gauge, a local
 simulator, and sharp native 640 × 480 output through the device's
 double-buffered framebuffer. It includes:
@@ -45,12 +45,14 @@ double-buffered framebuffer. It includes:
 
 The desktop/mock suite and ARM cross-build pass. Discovery, playback metadata,
 cover retrieval, topology, and an idempotent volume write have also been
-validated against a real mixed-model Sonos household. Version 0.1.32 keeps Now
+validated against a real mixed-model Sonos household. Version 0.1.33 keeps Now
 Playing group-focused: R1 switches groups, L1 opens individual Speaker
 Volumes, and group plus/minus uses Sonos' relative group control before
-refreshing each member's actual volume. It also reads the real Sonos `Q:0`
-track container and starts playlist-shaped Spotify Favorites as clean queue
-replacements. It accepts
+refreshing each member's actual volume. Large non-playlist music-service
+Favorites, such as **My Songs**, open directly with a bounded longer deadline
+instead of trying to add thousands of tracks to the queue. It also reads the
+real Sonos `Q:0` track container and starts playlist-shaped Spotify Favorites
+as clean queue replacements. It accepts
 the strict Spotify, Spotify-in-Sonos, and Sonos Radio/TuneIn cover endpoint
 forms that real Sonos Favorites expose. A direct radio Favorite waits for its
 buffering transition to settle, recognizes Sonos' rewritten session flags, and
@@ -79,7 +81,7 @@ entirely optional.
 
 ## Install
 
-Download `Miyonos-App-0.1.32.zip` from the [GitHub Releases page](https://github.com/ElijahTowers/Miyonos/releases). It contains only the `Miyonos` app folder.
+Download `Miyonos-App-0.1.33.zip` from the [GitHub Releases page](https://github.com/ElijahTowers/Miyonos/releases). It contains only the `Miyonos` app folder.
 
 1. Unzip the download. It contains one folder: `Miyonos`.
 2. Put that folder in the OnionOS `App` folder.

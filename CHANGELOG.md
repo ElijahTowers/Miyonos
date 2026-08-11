@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.33 — Reliable large music collections
+
+- Large non-playlist music-service Favorites such as **My Songs** now receive
+  a bounded 20-second source-open deadline. They still open directly on Sonos
+  instead of attempting to enqueue thousands of tracks, so a slow speaker no
+  longer reports the normal interactive read timeout prematurely.
+- The Favorites screen now clearly says **Opening collection...** while the
+  speaker accepts a large direct source.
+- The simulator test suite now verifies a direct collection response that is
+  deliberately slower than the ordinary 2.5-second SOAP deadline.
+
 ## 0.1.32 — Group-first controls and reliable group volume
 
 - Now Playing always controls the active Sonos group. R1 switches to the next

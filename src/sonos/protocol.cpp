@@ -28,6 +28,11 @@ namespace {
 constexpr const char* kZonePlayerTarget =
     "urn:schemas-upnp-org:device:ZonePlayer:1";
 
+// Music-service collections such as My Songs can take a speaker longer than
+// the normal interactive SOAP deadline to open. Sonos loads their tracks
+// lazily after this call; Miyonos never expands the collection into the queue.
+constexpr int kCollectionStartReadTimeoutMs = 20000;
+
 std::string trim(const std::string& value) {
   const auto begin = value.find_first_not_of(" \t\r\n");
   if (begin == std::string::npos) return {};
@@ -689,7 +694,7 @@ ProtocolResult<std::string> SonosAdapter::soap(
     const Player& player, const std::string& service_name,
     const std::string& action,
     const std::vector<std::pair<std::string, std::string>>& arguments,
-    std::size_t max_response) {
+    std::size_t max_response, int read_timeout_ms) {
   ProtocolResult<std::string> result;
   const Service* target = service(player, service_name);
   if (!target || !parse_http_url(target->control_url).valid) {
@@ -702,6 +707,7 @@ ProtocolResult<std::string> SonosAdapter::soap(
   const std::string body = make_soap_envelope(target->type, action, arguments);
   HttpClient::Limits limits;
   limits.max_body_bytes = max_response;
+  if (read_timeout_ms > 0) limits.read_timeout_ms = read_timeout_ms;
   const auto response =
       http_.post(target->control_url, "text/xml; charset=\"utf-8\"", body,
                  {{"SOAPACTION", "\"" + target->type + "#" + action + "\""}},
@@ -1025,13 +1031,19 @@ ProtocolResult<bool> SonosAdapter::play_item(const Player& coordinator,
     return {true, {}, 0};
   }
 
+  const bool collection_source =
+      item.uri.rfind("x-rincon-cpcontainer:", 0) == 0;
+  const int read_timeout_ms =
+      collection_source ? kCollectionStartReadTimeoutMs : 0;
   auto set = soap(coordinator, "AVTransport", "SetAVTransportURI",
                   {{"InstanceID", "0"},
                    {"CurrentURI", item.uri},
-                   {"CurrentURIMetaData", item.metadata}});
+                   {"CurrentURIMetaData", item.metadata}},
+                  2 * 1024 * 1024, read_timeout_ms);
   if (!set.ok()) return failure("Opening this favorite", set);
   auto start = soap(coordinator, "AVTransport", "Play",
-                    {{"InstanceID", "0"}, {"Speed", "1"}});
+                    {{"InstanceID", "0"}, {"Speed", "1"}},
+                    2 * 1024 * 1024, read_timeout_ms);
   const bool radio_stream = item.uri.rfind("x-sonosapi-stream:", 0) == 0;
   if (!radio_stream) {
     if (!start.ok()) return failure("Starting this favorite", start);

@@ -171,6 +171,26 @@ void test_content_scenarios() {
               .ok());
   }
   {
+    // A real music service can take longer than the normal 2.5-second SOAP
+    // deadline while the speaker opens a large direct collection. This
+    // fixture proves that only this bounded start path waits longer; it still
+    // must not attempt to enqueue the collection.
+    Session session("large-collection-slow");
+    SonosAdapter adapter;
+    const auto players = discover(adapter);
+    if (players.empty()) return;
+    const auto favorites = adapter.browse(players.front(), "FV:2", 0, 60);
+    CHECK(favorites.ok());
+    CHECK(favorites.value.items.size() == 1);
+    const auto started = std::chrono::steady_clock::now();
+    CHECK(adapter.play_item(players.front(), favorites.value.items.front(), false)
+              .ok());
+    const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now() - started);
+    CHECK(elapsed.count() >= 2900);
+    CHECK(elapsed.count() < 10000);
+  }
+  {
     Session session("no-artwork");
     HttpClient client;
     const auto missing = client.get("http://127.0.0.1:1400/getaa?u=mock");

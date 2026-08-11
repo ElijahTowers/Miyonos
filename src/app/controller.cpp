@@ -1843,6 +1843,8 @@ void Controller::activate() {
         } else if (queued && radio_station) {
           active_station_title_ = item.title;
           show_toast("Starting station...", 5000);
+        } else if (queued && large_collection_favorite) {
+          show_toast("Opening collection...", 20000);
         }
       }
       break;

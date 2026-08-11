@@ -66,8 +66,8 @@ repeat rate, release outside a button, and the absence of unsafe repeats for
 volume-independent function buttons. The native fixture suite validates normal
 playback, separate rooms, grouping, 360 queue entries, 180 mixed Favorites
 with playlist-shaped entries across pages, a large My Songs-style collection,
-missing artwork, slow responses, coordinator changes, and cleanup/offline
-refusal.
+the deliberately slow direct opening of that collection, missing artwork, slow
+responses, coordinator changes, and cleanup/offline refusal.
 
 The screenshot suite uses `--screen-only`, a fixed visual clock, and a fixed
 simulated battery reading to compare a deterministic 640 × 480 BMP against its
