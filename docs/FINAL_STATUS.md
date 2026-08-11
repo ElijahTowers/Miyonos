@@ -150,38 +150,24 @@ separate SDL2_image installation.
 ## Release artifacts
 
 ```text
-dist/Miyonos-Simulator-0.1.21-macOS.zip
-SHA-256 75d76b9df818f3f2857429e55a5d18f1130a4dcf4ccfa7ed6d68a89fb7bb2b10
-Size 1,147,530 bytes
-
-dist/Miyonos-0.1.21-OnionOS.zip
-SHA-256 68a4c73c5676f8dd93a80e9d3b8d25c03ce2aa23a5df65e84ccca2a3ddbabb97
-Size 12,598,660 bytes
-
-dist/Miyonos-0.1.21-Universal-Browser-Installer.zip
-SHA-256 5f505ab5c65a5ae0b9e063adba78572fa22dba5fbe5c81118d266bf1b8aa700d
-Size 12,605,604 bytes
-
-dist/Miyonos-0.1.21-WiFi-Installer-macOS.zip
-SHA-256 ecf8c42347e0aeb49cf189e3034ec0838c203f5c29c0d5150e3553adfedd96b0
-Size 12,618,060 bytes
+dist/Miyonos-App-0.1.36.zip
+SHA-256 aadc98f97781ac72165fa80c2e7017f3d7be4c0007abd9bb4d9571d893fef7d0
+Size 12,627,445 bytes
 ```
 
-All ZIP files passed CRC and SHA-256 verification. The universal ZIP contains
-the same upload-ready `Miyonos` application folder as the OnionOS package,
-including `libSDL2_image-2.0.so.0`, `libjpeg.so.9`, and their notices. It
-contains no user `data` directory. The simulator app is ad-hoc signed, bundles
-its linked SDL2 library, embeds the Spotify trust certificate resource, and
-reports version 0.1.21. Debug symbols remain separate at
-`dist/Miyonos-0.1.21-symbols`.
+The public GitHub release contains only this upload-ready `Miyonos` application
+folder and its `.sha256` checksum. It includes the required runtime libraries
+and notices but deliberately contains no user `data` directory. The macOS
+simulator and maintainer-only helpers remain reproducible local artifacts and
+are not part of the end-user release.
 
 ## Verification completed
 
-- Desktop protocol/integration/state suite: **205 checks, 0 failures**.
-- Simulator input suite: **131 checks, 0 failures** across mouse, keyboard,
+- Desktop protocol/integration/state suite: **321 checks, 0 failures**.
+- Simulator input suite: **146 checks, 0 failures** across mouse, keyboard,
   gamepad, custom mappings, the fixed recovery chord, protected held input,
   and D-pad repeat.
-- Native simulator fixture suite: **68 checks, 0 failures** across grouped and
+- Native simulator fixture suite: **99 checks, 0 failures** across grouped and
   separate rooms, long queues, saved-playlist replacement, Favorite artwork,
   missing artwork, slow/offline behavior, and coordinator changes.
 - Simulator screenshot/restart suite: deterministic 640 × 480 frame,
