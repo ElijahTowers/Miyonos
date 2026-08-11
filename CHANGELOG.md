@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.36 — Wake-only Battery Saver input
+
+- The first physical app button after Idle battery saver now only restores the
+  Miyonos screen. It never also pauses playback, changes volume, opens a
+  screen, or triggers any other mapped action.
+- A held D-pad button cannot begin repeating after it wakes the app, and R2's
+  delayed Favorites/shuffle actions are both discarded when R2 was the
+  wake-only button.
+
 ## 0.1.35 — Direct playlist shuffle
 
 - Hold R2 for about one second on Now Playing to toggle shuffle while its

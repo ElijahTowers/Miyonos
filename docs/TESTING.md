@@ -132,9 +132,9 @@ Render a deterministic UI preview without a display:
 - [ ] Sleep/dim settings and `/tmp/stay_awake` behavior are correct.
 - [ ] With **Idle battery saver** on, wait 60 seconds without input. Confirm
       one dim static Miyonos frame remains visible, a short power-button wake
-      reveals it without a second button press, an app button restores the
-      full display without a visible delay, Sonos playback continues, and no
-      new cover request starts until the app wakes.
+      reveals it without a second button press, the first app button restores
+      the full display without performing its normal action, Sonos playback
+      continues, and no new cover request starts until the app wakes.
 - [ ] Menu exit, signal exit, and an induced crash all resume Onion MainUI.
 - [ ] Settings persist; updating the app keeps the `data` directory.
 - [ ] One-hour session shows no increasing memory, cache, queue, or log growth.

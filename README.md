@@ -9,7 +9,7 @@ be turned off in Settings.
 
 ![Miyonos Now Playing preview](docs/images/now-playing.png)
 
-Version 0.1.35 is a technical preview with real Sonos LAN validation, robust
+Version 0.1.36 is a technical preview with real Sonos LAN validation, robust
 source-provided cover retrieval, a local Miyoo battery gauge, a local
 simulator, and sharp native 640 × 480 output through the device's
 double-buffered framebuffer. It includes:
@@ -45,7 +45,7 @@ double-buffered framebuffer. It includes:
 
 The desktop/mock suite and ARM cross-build pass. Discovery, playback metadata,
 cover retrieval, topology, and an idempotent volume write have also been
-validated against a real mixed-model Sonos household. Version 0.1.35 keeps Now
+validated against a real mixed-model Sonos household. Version 0.1.36 keeps Now
 Playing group-focused: R1 switches groups, L1 opens individual Speaker
 Volumes, and group plus/minus uses Sonos' relative group control before
 refreshing each member's actual volume. Large non-playlist music-service
@@ -81,7 +81,7 @@ entirely optional.
 
 ## Install
 
-Download `Miyonos-App-0.1.35.zip` from the [GitHub Releases page](https://github.com/ElijahTowers/Miyonos/releases). It contains only the `Miyonos` app folder.
+Download `Miyonos-App-0.1.36.zip` from the [GitHub Releases page](https://github.com/ElijahTowers/Miyonos/releases). It contains only the `Miyonos` app folder.
 
 1. Unzip the download. It contains one folder: `Miyonos`.
 2. Put that folder in the OnionOS `App` folder.
@@ -132,9 +132,11 @@ button press, Miyonos leaves one dim static screen in its framebuffer and
 stops the normal 30 FPS drawing loop. It defers new cover-art downloads,
 checks a playing Sonos source every 15 seconds and a paused source every 60
 seconds, and refreshes the topology every two minutes. A short Miyoo power
-button press therefore reveals the static Miyonos screen immediately; any
-physical app button restores the normal display. Sonos continues playing
-independently while Miyonos is idle.
+button press therefore reveals the static Miyonos screen immediately. The
+first physical app button after Battery Saver is wake-only: it restores the
+normal display without also pausing music, changing playback, opening a menu,
+or adjusting volume. Press a button again to perform its normal action. Sonos
+continues playing independently while Miyonos is idle.
 
 This reduces Miyonos-specific use while it remains open; it cannot create a
 hardware deep-sleep state for the Miyoo. For OnionOS to manage its normal sleep

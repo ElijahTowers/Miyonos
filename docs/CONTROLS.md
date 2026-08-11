@@ -94,9 +94,12 @@ no physical-button input, Miyonos leaves one dimmed static screen in the
 framebuffer, stops its normal 30 FPS presentation loop, pauses queued artwork
 downloads, and uses slower Sonos polling. This means a short power-button
 press that wakes the Miyoo screen immediately reveals Miyonos without a second
-button press. Any physical app button restores the full-brightness UI,
-including one assigned to **No action**. The Sonos speakers continue their
-playback; this setting only reduces work performed by Miyonos.
+app button press. The first physical app button after Battery Saver is
+wake-only: it restores the full-brightness UI without also performing its
+normal action, including play/pause, volume, or navigation. Press again to
+perform an action. This also applies to a button assigned to **No action**.
+The Sonos speakers continue their playback; this setting only reduces work
+performed by Miyonos.
 
 In the IPv4 editor, Left/Right selects an octet, Up/Down changes it, A validates
 and saves, B cancels, and X clears saved manual addresses.

@@ -34,6 +34,23 @@ bool Input::repeatable(Action action) const {
          action == Action::Left || action == Action::Right;
 }
 
+void Input::suppress_current_press() {
+  if (current_press_button_ != PhysicalButton::Count) {
+    suppressed_press_button_ = current_press_button_;
+  }
+}
+
+bool Input::suppresses(PhysicalButton button) const {
+  return button != PhysicalButton::Count && button == suppressed_press_button_;
+}
+
+void Input::clear_suppressed_press(PhysicalButton button) {
+  if (button == suppressed_press_button_) {
+    suppressed_press_button_ = PhysicalButton::Count;
+  }
+  if (button == current_press_button_) current_press_button_ = PhysicalButton::Count;
+}
+
 bool Input::delays_r2_favorites(PhysicalButton button, Action action) const {
   // R2's normal action remains Favorites. Delaying only that mapping lets a
   // held R2 become a clean Now Playing shuffle gesture without taking a
@@ -63,13 +80,15 @@ Action Input::mapped_action(PhysicalButton button) const {
   return index < mapping_.size() ? mapping_[index] : Action::None;
 }
 
-void Input::note_press(Action action, bool held, Action visual_action) {
+void Input::note_press(PhysicalButton button, Action action, bool held,
+                       Action visual_action) {
 #ifndef MIYONOS_ENABLE_SIMULATOR
   (void)visual_action;
 #endif
   if (action == Action::None) return;
   if (held && repeatable(action)) {
     held_action_ = action;
+    held_button_ = button;
     held_since_ms_ = SDL_GetTicks();
     last_repeat_ms_ = held_since_ms_;
   }
@@ -79,11 +98,14 @@ void Input::note_press(Action action, bool held, Action visual_action) {
 #endif
 }
 
-void Input::release(Action action, Action visual_action) {
+void Input::release(PhysicalButton button, Action visual_action) {
 #ifndef MIYONOS_ENABLE_SIMULATOR
   (void)visual_action;
 #endif
-  if (action == held_action_) held_action_ = Action::None;
+  if (button == held_button_) {
+    held_action_ = Action::None;
+    held_button_ = PhysicalButton::Count;
+  }
 #ifdef MIYONOS_ENABLE_SIMULATOR
   if (mode_ == RuntimeMode::Simulator)
     simulator_note_press(visual_action, false);
@@ -162,6 +184,7 @@ Action Input::translate(const SDL_Event& event) {
     const PhysicalButton button = from_key(key);
     const Action action = mapped_action(button);
     const Action visual_action = default_button_action(button);
+    const bool suppressed = suppresses(button);
     if (diagnostics_) last_keycode_ = static_cast<int>(key);
     if (event.key.repeat != 0) {
       const uint32_t now = SDL_GetTicks();
@@ -171,23 +194,28 @@ Action Input::translate(const SDL_Event& event) {
       last_repeat_ms_ = now;
     } else {
       last_repeat_ms_ = SDL_GetTicks();
+      current_press_button_ = button;
       note_physical_button(button, true);
       // SDL already supplies rate-limited keyboard repeat events. The custom
       // held-button timer is reserved for mouse and controller input.
-      note_press(action, false, visual_action);
+      note_press(button, action, false, visual_action);
       if (delays_r2_favorites(button, action)) {
         begin_r2_favorites_press(action);
         return Action::None;
       }
     }
-    return action;
+    return suppressed ? Action::None : action;
   }
   if (event.type == SDL_KEYUP) {
     const PhysicalButton button = from_key(event.key.keysym.sym);
+    const bool suppressed = suppresses(button);
     note_physical_button(button, false);
-    release(mapped_action(button), default_button_action(button));
-    return button == PhysicalButton::R2 ? end_r2_favorites_press()
-                                        : Action::None;
+    release(button, default_button_action(button));
+    const Action released = button == PhysicalButton::R2
+                                ? end_r2_favorites_press()
+                                : Action::None;
+    clear_suppressed_press(button);
+    return suppressed ? Action::None : released;
   }
   if (event.type == SDL_CONTROLLERDEVICEADDED) {
     SDL_GameController* controller = SDL_GameControllerOpen(event.cdevice.which);
@@ -212,15 +240,18 @@ Action Input::translate(const SDL_Event& event) {
   if (event.type == SDL_CONTROLLERBUTTONDOWN) {
     const PhysicalButton button = from_controller_button(event.cbutton.button);
     const Action action = mapped_action(button);
+    const bool suppressed = suppresses(button);
     last_keycode_ = 1000 + event.cbutton.button;
+    current_press_button_ = button;
     note_physical_button(button, true);
-    note_press(action, true, default_button_action(button));
-    return action;
+    note_press(button, action, true, default_button_action(button));
+    return suppressed ? Action::None : action;
   }
   if (event.type == SDL_CONTROLLERBUTTONUP) {
     const PhysicalButton button = from_controller_button(event.cbutton.button);
     note_physical_button(button, false);
-    release(mapped_action(button), default_button_action(button));
+    release(button, default_button_action(button));
+    clear_suppressed_press(button);
     return Action::None;
   }
   if (event.type == SDL_CONTROLLERAXISMOTION) {
@@ -230,33 +261,41 @@ Action Input::translate(const SDL_Event& event) {
       if (down && !left_trigger_down_) {
         left_trigger_down_ = true;
         const Action action = mapped_action(PhysicalButton::L2);
+        const bool suppressed = suppresses(PhysicalButton::L2);
+        current_press_button_ = PhysicalButton::L2;
         note_physical_button(PhysicalButton::L2, true);
-        note_press(action, false, Action::Queue);
-        return action;
+        note_press(PhysicalButton::L2, action, false, Action::Queue);
+        return suppressed ? Action::None : action;
       }
       if (!down) {
         left_trigger_down_ = false;
         note_physical_button(PhysicalButton::L2, false);
-        release(mapped_action(PhysicalButton::L2), Action::Queue);
+        release(PhysicalButton::L2, Action::Queue);
+        clear_suppressed_press(PhysicalButton::L2);
       }
     } else if (event.caxis.axis == SDL_CONTROLLER_AXIS_TRIGGERRIGHT) {
       const bool down = event.caxis.value >= kTriggerThreshold;
       if (down && !right_trigger_down_) {
         right_trigger_down_ = true;
         const Action action = mapped_action(PhysicalButton::R2);
+        const bool suppressed = suppresses(PhysicalButton::R2);
+        current_press_button_ = PhysicalButton::R2;
         note_physical_button(PhysicalButton::R2, true);
-        note_press(action, false, Action::Favorites);
+        note_press(PhysicalButton::R2, action, false, Action::Favorites);
         if (delays_r2_favorites(PhysicalButton::R2, action)) {
           begin_r2_favorites_press(action);
           return Action::None;
         }
-        return action;
+        return suppressed ? Action::None : action;
       }
       if (!down && right_trigger_down_) {
         right_trigger_down_ = false;
+        const bool suppressed = suppresses(PhysicalButton::R2);
         note_physical_button(PhysicalButton::R2, false);
-        release(mapped_action(PhysicalButton::R2), Action::Favorites);
-        return end_r2_favorites_press();
+        release(PhysicalButton::R2, Action::Favorites);
+        const Action released = end_r2_favorites_press();
+        clear_suppressed_press(PhysicalButton::R2);
+        return suppressed ? Action::None : released;
       }
     }
     return Action::None;
@@ -278,25 +317,30 @@ Action Input::translate(const SDL_Event& event) {
     const Action visual_action = simulator_hit_test(logical_x, logical_y);
     mouse_button_ = physical_button_for_default_action(visual_action);
     mouse_action_ = mapped_action(mouse_button_);
+    const bool suppressed = suppresses(mouse_button_);
+    current_press_button_ = mouse_button_;
     note_physical_button(mouse_button_, true);
-    note_press(mouse_action_, true, visual_action);
+    note_press(mouse_button_, mouse_action_, true, visual_action);
     if (delays_r2_favorites(mouse_button_, mouse_action_)) {
       begin_r2_favorites_press(mouse_action_);
       return Action::None;
     }
-    return mouse_action_;
+    return suppressed ? Action::None : mouse_action_;
   }
   if (mode_ == RuntimeMode::Simulator &&
       event.type == SDL_MOUSEBUTTONUP &&
       event.button.button == SDL_BUTTON_LEFT) {
-    note_physical_button(mouse_button_, false);
-    release(mouse_action_, default_button_action(mouse_button_));
-    const Action released = mouse_button_ == PhysicalButton::R2
+    const PhysicalButton button = mouse_button_;
+    const bool suppressed = suppresses(button);
+    note_physical_button(button, false);
+    release(button, default_button_action(button));
+    const Action released = button == PhysicalButton::R2
                                 ? end_r2_favorites_press()
                                 : Action::None;
+    clear_suppressed_press(button);
     mouse_action_ = Action::None;
     mouse_button_ = PhysicalButton::Count;
-    return released;
+    return suppressed ? Action::None : released;
   }
 #endif
   return Action::None;
@@ -310,11 +354,14 @@ Action Input::repeat_action(uint32_t now) {
     return Action::ResetButtonMapping;
   }
   if (r2_favorites_pending_ && !r2_shuffle_emitted_ &&
+      !suppresses(PhysicalButton::R2) &&
       now - r2_favorites_pressed_ms_ >= kR2ShuffleHoldMs) {
     r2_shuffle_emitted_ = true;
     return Action::ToggleShuffle;
   }
-  if (!repeatable(held_action_)) return Action::None;
+  if (!repeatable(held_action_) || suppresses(held_button_)) {
+    return Action::None;
+  }
   if (now - held_since_ms_ < 420 || now - last_repeat_ms_ < 160) {
     return Action::None;
   }

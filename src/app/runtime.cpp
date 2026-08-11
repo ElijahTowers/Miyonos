@@ -64,23 +64,28 @@ int AppRuntime::run(FramePresenter& frames) {
       window_closed = true;
       return;
     }
-    // Wake before translating the input, so even an intentionally unmapped
-    // physical button restores the UI immediately.
-    if (event.type == SDL_KEYDOWN ||
-        event.type == SDL_CONTROLLERBUTTONDOWN
+    // The first physical button after Battery Saver is a wake-only action.
+    // It restores the static app frame without also pausing music, changing a
+    // track, or opening a screen. Input remembers that one press until its
+    // release, which also covers R2's delayed short-press behavior.
+    bool physical_press = event.type == SDL_KEYDOWN ||
+                          event.type == SDL_CONTROLLERBUTTONDOWN;
 #ifdef MIYONOS_ENABLE_SIMULATOR
-        || event.type == SDL_MOUSEBUTTONDOWN
+    physical_press = physical_press || event.type == SDL_MOUSEBUTTONDOWN;
 #endif
-    ) {
+    const bool wake_only =
+        physical_press && controller.view().idle_battery_saver_active;
+    if (physical_press) {
       controller.note_user_activity();
     }
     const Action action = input.translate(event);
+    if (wake_only) input.suppress_current_press();
     if (controller.settings().diagnostics_mode &&
         (event.type == SDL_KEYDOWN ||
          event.type == SDL_CONTROLLERBUTTONDOWN)) {
       controller.record_input_code(input.last_keycode());
     }
-    if (action != Action::None) controller.handle(action);
+    if (!wake_only && action != Action::None) controller.handle(action);
   };
   while (running && !controller.exit_requested()) {
     input.set_diagnostics(controller.settings().diagnostics_mode);

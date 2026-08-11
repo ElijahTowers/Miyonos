@@ -17,6 +17,10 @@ class Input {
 
   Action translate(const SDL_Event& event);
   Action repeat_action(uint32_t now);
+  // The runtime calls this after the physical button that wakes Miyonos from
+  // its idle saver. Any action from that one press, including a held repeat or
+  // R2's delayed release action, is discarded until the button is released.
+  void suppress_current_press();
   void set_button_mapping(const ButtonMapping& mapping) { mapping_ = mapping; }
   void set_diagnostics(bool enabled) { diagnostics_ = enabled; }
   int last_keycode() const { return last_keycode_; }
@@ -25,10 +29,13 @@ class Input {
   PhysicalButton from_key(SDL_Keycode key) const;
   PhysicalButton from_controller_button(Uint8 button) const;
   Action mapped_action(PhysicalButton button) const;
-  void note_press(Action action, bool held, Action visual_action);
-  void release(Action action, Action visual_action);
+  void note_press(PhysicalButton button, Action action, bool held,
+                  Action visual_action);
+  void release(PhysicalButton button, Action visual_action);
   void note_physical_button(PhysicalButton button, bool down);
   bool repeatable(Action action) const;
+  bool suppresses(PhysicalButton button) const;
+  void clear_suppressed_press(PhysicalButton button);
   bool delays_r2_favorites(PhysicalButton button, Action action) const;
   void begin_r2_favorites_press(Action action);
   Action end_r2_favorites_press();
@@ -39,6 +46,9 @@ class Input {
   uint32_t last_repeat_ms_ = 0;
   uint32_t held_since_ms_ = 0;
   Action held_action_ = Action::None;
+  PhysicalButton held_button_ = PhysicalButton::Count;
+  PhysicalButton current_press_button_ = PhysicalButton::Count;
+  PhysicalButton suppressed_press_button_ = PhysicalButton::Count;
   bool left_trigger_down_ = false;
   bool right_trigger_down_ = false;
   bool r2_favorites_pending_ = false;

@@ -1,18 +1,19 @@
-# Miyonos 0.1.35 final status
+# Miyonos 0.1.36 final status
 
 Status: **real Sonos LAN integration, cover retrieval, simulator, and release
 packages are complete; sharp direct framebuffer output is visually and
 digitally verified. The live playlist-start flow was validated in 0.1.28;
 version 0.1.29 additionally read the owner's live `Q:0` queue, where all 50
-returned tracks included an artwork reference. Version 0.1.35 retains the
+returned tracks included an artwork reference. Version 0.1.36 retains the
 selected playlist label and cover-art block through later generic queue
 metadata and topology refreshes, and makes Now Playing group-focused with
 relative group-volume updates. Direct large music-service collections now use
 a bounded longer source-open deadline. Its idle battery saver retains a dim
 static frame so a Miyoo power-button wake is immediately readable. Its
-physical-device retest is pending. Version 0.1.35 also toggles Sonos'
+physical-device retest is pending. Version 0.1.36 also retains Sonos'
 non-repeating shuffle mode through a held R2 gesture and retains a visible
-shuffle state on Now Playing.**
+shuffle state on Now Playing. Its first physical button after Battery Saver is
+wake-only, so waking with A never also pauses playback.**
 
 ## Delivered
 
@@ -31,7 +32,7 @@ uncached image at a time. It uses no
 Miyonos account, cloud service, API key, analytics, or Sonos cloud
 authorization.
 
-Version 0.1.35 retains the adapter validated against a real Sonos household
+Version 0.1.36 retains the adapter validated against a real Sonos household
 and the target cover-art path fixed in 0.1.3. Physical
 testing showed that both the rejected 640 × 480 Mini GFX route and its accepted
 320 × 240 scale route were unsuitable for a complete sharp interface. Miyonos

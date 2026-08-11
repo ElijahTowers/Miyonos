@@ -165,6 +165,37 @@ void test_gamepad() {
   CHECK(input.translate(trigger) == Action::None);
 }
 
+void test_wake_only_press_suppression() {
+  Input input(RuntimeMode::Simulator);
+
+  // AppRuntime ignores the initial action, then tells Input to discard every
+  // result from that physical press until release. This keeps the same A
+  // press from pausing music after it wakes Battery Saver.
+  CHECK(input.translate(key_event(SDL_KEYDOWN, SDLK_SPACE)) == Action::Confirm);
+  input.suppress_current_press();
+  CHECK(input.translate(key_event(SDL_KEYUP, SDLK_SPACE)) == Action::None);
+
+  // R2 has a delayed short action and a hold action, both of which must stay
+  // quiet when it was the wake-only press.
+  CHECK(input.translate(key_event(SDL_KEYDOWN, SDLK_BACKSPACE)) == Action::None);
+  input.suppress_current_press();
+  const uint32_t r2_started = SDL_GetTicks();
+  CHECK(input.repeat_action(r2_started + 1000) == Action::None);
+  CHECK(input.translate(key_event(SDL_KEYUP, SDLK_BACKSPACE)) == Action::None);
+
+  // A held D-pad button cannot start repeating volume or navigation after it
+  // has been used solely to wake the screen.
+  CHECK(input.translate(controller_button_event(
+            SDL_CONTROLLERBUTTONDOWN, SDL_CONTROLLER_BUTTON_DPAD_UP)) ==
+        Action::Up);
+  input.suppress_current_press();
+  CHECK(input.repeat_action(SDL_GetTicks() + 1000) == Action::None);
+  CHECK(input.translate(controller_button_event(
+            SDL_CONTROLLERBUTTONUP, SDL_CONTROLLER_BUTTON_DPAD_UP)) ==
+        Action::None);
+  CHECK(input.repeat_action(SDL_GetTicks() + 1200) == Action::None);
+}
+
 void test_custom_mapping_and_recovery_chord() {
   Input input(RuntimeMode::Simulator);
   ButtonMapping mapping = kDefaultButtonMapping;
@@ -201,6 +232,7 @@ int main() {
   test_keyboard();
   test_mouse_and_hit_areas();
   test_gamepad();
+  test_wake_only_press_suppression();
   test_custom_mapping_and_recovery_chord();
   SDL_Quit();
   std::cout << checks << " simulator input checks, " << failures
