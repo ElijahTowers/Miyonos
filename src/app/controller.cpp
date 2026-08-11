@@ -29,6 +29,22 @@ constexpr int kIdlePlayingPollIntervalMs = 15000;
 constexpr int kIdlePausedPollIntervalMs = 60000;
 constexpr int kIdleTopologyIntervalMs = 120000;
 
+uint64_t idle_battery_saver_delay_ms() {
+#ifdef MIYONOS_ENABLE_SIMULATOR
+  // The screenshot harness can exercise the 60-second device behavior without
+  // making the full suite wait a minute. Target builds never read this value.
+  if (const char* configured =
+          std::getenv("MIYONOS_TEST_IDLE_SAVER_DELAY_MS")) {
+    char* end = nullptr;
+    const unsigned long long value = std::strtoull(configured, &end, 10);
+    if (end && *end == '\0' && value > 0 && value <= 30000) {
+      return static_cast<uint64_t>(value);
+    }
+  }
+#endif
+  return kIdleBatterySaverDelayMs;
+}
+
 std::string queue_fingerprint(const std::vector<BrowseItem>& items) {
   if (items.empty()) return {};
   std::uint64_t hash = 1469598103934665603ULL;
@@ -1580,7 +1596,7 @@ int Controller::topology_interval_ms() const {
 void Controller::update_idle_battery_saver(uint64_t now) {
   const bool should_be_active =
       settings_.idle_battery_saver && view_.last_input_ms > 0 &&
-      now - view_.last_input_ms >= kIdleBatterySaverDelayMs;
+      now - view_.last_input_ms >= idle_battery_saver_delay_ms();
   if (should_be_active == view_.idle_battery_saver_active) return;
   view_.idle_battery_saver_active = should_be_active;
   artwork_paused_.store(should_be_active);

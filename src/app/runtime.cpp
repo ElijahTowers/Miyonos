@@ -57,7 +57,7 @@ int AppRuntime::run(FramePresenter& frames) {
   const uint32_t started_at = SDL_GetTicks();
 #endif
   uint32_t next_frame = SDL_GetTicks();
-  uint32_t next_idle_frame = next_frame;
+  bool idle_frame_presented = false;
   auto process_event = [&](const SDL_Event& event) {
     if (event.type == SDL_QUIT) {
       running = false;
@@ -163,9 +163,10 @@ int AppRuntime::run(FramePresenter& frames) {
 
     const bool idle_battery_saver =
         controller.view().idle_battery_saver_active;
-    const uint32_t now = SDL_GetTicks();
-    if (!idle_battery_saver ||
-        static_cast<Sint32>(now - next_idle_frame) >= 0) {
+    // Preserve one dimmed frame, then stop presenting while idle. OnionOS can
+    // wake its LCD with the power key without generating an SDL input event;
+    // retaining the frame makes the UI visible immediately after that wake.
+    if (!idle_battery_saver || !idle_frame_presented) {
       renderer.draw(controller.view(), controller.settings());
       if (!frames.present()) {
         std::cerr << "Miyonos could not present its display: "
@@ -173,7 +174,7 @@ int AppRuntime::run(FramePresenter& frames) {
         exit_status = 1;
         break;
       }
-      next_idle_frame = now + 1000;
+      idle_frame_presented = idle_battery_saver;
     }
 #ifdef MIYONOS_ENABLE_SIMULATOR
     if ((!options_.capture_path.empty() ||
@@ -199,6 +200,7 @@ int AppRuntime::run(FramePresenter& frames) {
       next_frame = SDL_GetTicks();
       continue;
     }
+    idle_frame_presented = false;
     next_frame += 33;
     const uint32_t frame_now = SDL_GetTicks();
     if (next_frame > frame_now) {

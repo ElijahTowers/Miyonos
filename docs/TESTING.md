@@ -74,9 +74,9 @@ simulated battery reading to compare a deterministic 640 × 480 BMP against its
 approved SHA-256 reference. It also restarts against the same isolated SD-card
 tree, verifies settings persistence, captures offline behavior, and confirms
 that the local fixture leaves no listener behind. It includes the Controls
-overlay, Queue, Speaker Volumes, and active-playlist layouts, and the tail of
-a mixed Favorite Playlists collection to guard against paging regressions. The
-current
+overlay, Queue, Speaker Volumes, active-playlist, and idle-battery-saver
+layouts, and the tail of a mixed Favorite Playlists collection to guard against
+paging regressions. The current
 263-check controller suite automatically visits
 Now Playing, Rooms, Group Editor, Speaker Volumes, Queue, Favorites, Settings,
 Help, About, Diagnostics, IP Editor, action confirmation, and exit
@@ -131,9 +131,10 @@ Render a deterministic UI preview without a display:
 - [ ] Speaker reboot and router reconnect recover without restarting Miyonos.
 - [ ] Sleep/dim settings and `/tmp/stay_awake` behavior are correct.
 - [ ] With **Idle battery saver** on, wait 60 seconds without input. Confirm
-      the display becomes black, a button restores the prior screen without a
-      visible delay, Sonos playback continues, and no new cover request starts
-      until the app wakes.
+      one dim static Miyonos frame remains visible, a short power-button wake
+      reveals it without a second button press, an app button restores the
+      full display without a visible delay, Sonos playback continues, and no
+      new cover request starts until the app wakes.
 - [ ] Menu exit, signal exit, and an induced crash all resume Onion MainUI.
 - [ ] Settings persist; updating the app keeps the `data` directory.
 - [ ] One-hour session shows no increasing memory, cache, queue, or log growth.

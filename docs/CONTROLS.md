@@ -83,11 +83,13 @@ remain relative adjustments so Sonos can apply each step to the active group.
 ## Idle battery saver
 
 **Settings → Idle battery saver** is enabled by default. After 60 seconds with
-no physical-button input, Miyonos replaces the screen with black, presents at
-one frame per second instead of 30, pauses queued artwork downloads, and uses
-slower Sonos polling. Any physical button wakes the UI immediately, including
-one assigned to **No action**. The Sonos speakers continue their playback;
-this setting only reduces work performed by Miyonos.
+no physical-button input, Miyonos leaves one dimmed static screen in the
+framebuffer, stops its normal 30 FPS presentation loop, pauses queued artwork
+downloads, and uses slower Sonos polling. This means a short power-button
+press that wakes the Miyoo screen immediately reveals Miyonos without a second
+button press. Any physical app button restores the full-brightness UI,
+including one assigned to **No action**. The Sonos speakers continue their
+playback; this setting only reduces work performed by Miyonos.
 
 In the IPv4 editor, Left/Right selects an octet, Up/Down changes it, A validates
 and saves, B cancels, and X clears saved manual addresses.

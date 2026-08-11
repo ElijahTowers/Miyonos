@@ -29,6 +29,24 @@ grep -qx "$ACTUAL" <<<"$EXPECTED" || {
 }
 file "$OUTPUT/grouped-frame.bmp" | grep -q '640 x 480 x 32'
 
+IDLE_DATA="$RUN_ROOT/idle/SDCARD/App/Miyonos/data"
+mkdir -p "$IDLE_DATA"
+printf 'schema_version=2\ncontent_defaults_version=1\nvolume_step=3\nconfirm_exit=1\nofficial_sonos_product_photos=0\n' > "$IDLE_DATA/settings.ini"
+MIYONOS_SCREENSHOT_TIME_MS=1000 MIYONOS_TEST_IDLE_SAVER_DELAY_MS=3000 \
+  SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
+  "$BUILD/miyonos" --screen-only --scenario grouped \
+  --data-dir "$IDLE_DATA" --capture-after-ms 4500 \
+  --capture-frame "$OUTPUT/idle-battery-saver.bmp"
+IDLE_FRAME="$(shasum -a 256 "$OUTPUT/idle-battery-saver.bmp" | awk '{print $1}')"
+EXPECTED_IDLE="$(awk '$1 == "idle-battery-saver.bmp" {print $2}' "$REFERENCE")"
+[[ "$IDLE_FRAME" == "$EXPECTED_IDLE" ]] || {
+  echo "The idle battery saver reference image changed." >&2
+  echo "Expected: ${EXPECTED_IDLE:-missing}" >&2
+  echo "Actual:   $IDLE_FRAME" >&2
+  exit 1
+}
+file "$OUTPUT/idle-battery-saver.bmp" | grep -q '640 x 480 x 32'
+
 MIYONOS_SCREENSHOT_TIME_MS=1000 SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
   "$BUILD/miyonos" --screen-only --show-controls --scenario grouped \
   --data-dir "$DATA_DIR" --capture-after-ms 4500 \

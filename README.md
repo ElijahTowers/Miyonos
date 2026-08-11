@@ -9,7 +9,7 @@ be turned off in Settings.
 
 ![Miyonos Now Playing preview](docs/images/now-playing.png)
 
-Version 0.1.33 is a technical preview with real Sonos LAN validation, robust
+Version 0.1.34 is a technical preview with real Sonos LAN validation, robust
 source-provided cover retrieval, a local Miyoo battery gauge, a local
 simulator, and sharp native 640 × 480 output through the device's
 double-buffered framebuffer. It includes:
@@ -36,16 +36,16 @@ double-buffered framebuffer. It includes:
   images for recognized models, and stores them in the same bounded local cache;
 - offline recovery, bounded retries, confirmations, rotating logs, settings,
   diagnostics, help, and a polished 640 × 480 interface;
-- a default-on **Idle battery saver**: after 60 seconds without input it shows
-  a black screen, lowers presentation from 30 FPS to one frame per second,
-  pauses queued cover downloads, and slows Sonos polling without interrupting
-  speaker playback; and
+- a default-on **Idle battery saver**: after 60 seconds without input it
+  leaves one dim static screen, stops further presentation, pauses queued
+  cover downloads, and slows Sonos polling without interrupting speaker
+  playback; and
 - a self-contained OnionOS package and a double-clickable macOS simulator with
   safe built-in Sonos scenarios and an optional Live Sonos mode.
 
 The desktop/mock suite and ARM cross-build pass. Discovery, playback metadata,
 cover retrieval, topology, and an idempotent volume write have also been
-validated against a real mixed-model Sonos household. Version 0.1.33 keeps Now
+validated against a real mixed-model Sonos household. Version 0.1.34 keeps Now
 Playing group-focused: R1 switches groups, L1 opens individual Speaker
 Volumes, and group plus/minus uses Sonos' relative group control before
 refreshing each member's actual volume. Large non-playlist music-service
@@ -81,7 +81,7 @@ entirely optional.
 
 ## Install
 
-Download `Miyonos-App-0.1.33.zip` from the [GitHub Releases page](https://github.com/ElijahTowers/Miyonos/releases). It contains only the `Miyonos` app folder.
+Download `Miyonos-App-0.1.34.zip` from the [GitHub Releases page](https://github.com/ElijahTowers/Miyonos/releases). It contains only the `Miyonos` app folder.
 
 1. Unzip the download. It contains one folder: `Miyonos`.
 2. Put that folder in the OnionOS `App` folder.
@@ -121,11 +121,13 @@ always available as a safe recovery shortcut.
 ## Battery-saving idle mode
 
 **Settings → Idle battery saver** is on by default. After 60 seconds without a
-button press, Miyonos turns its display black, stops the normal 30 FPS drawing
-loop, defers new cover-art downloads, checks a playing Sonos source every 15
-seconds and a paused source every 60 seconds, and refreshes the topology every
-two minutes. Press any physical button to wake the same screen immediately.
-Sonos continues playing independently while Miyonos is idle.
+button press, Miyonos leaves one dim static screen in its framebuffer and
+stops the normal 30 FPS drawing loop. It defers new cover-art downloads,
+checks a playing Sonos source every 15 seconds and a paused source every 60
+seconds, and refreshes the topology every two minutes. A short Miyoo power
+button press therefore reveals the static Miyonos screen immediately; any
+physical app button restores the normal display. Sonos continues playing
+independently while Miyonos is idle.
 
 This reduces Miyonos-specific use while it remains open; it cannot create a
 hardware deep-sleep state for the Miyoo. For OnionOS to manage its normal sleep

@@ -38,6 +38,7 @@ class Renderer {
   void ip_editor(const ViewState& view);
   void help(const ViewState& view);
   void controls_overlay(const ViewState& view, const Settings& settings);
+  void idle_battery_saver_overlay();
   void about(const ViewState& view);
   void diagnostics(const ViewState& view);
   void offline(const ViewState& view);

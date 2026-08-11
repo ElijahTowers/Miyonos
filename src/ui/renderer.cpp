@@ -1171,6 +1171,19 @@ void Renderer::controls_overlay(const ViewState& view,
   (void)view;
 }
 
+void Renderer::idle_battery_saver_overlay() {
+  // This is drawn only once when idle mode starts. It deliberately leaves a
+  // readable static frame in the framebuffer so a power-key display wake does
+  // not need a second app button press to reveal Miyonos.
+  SDL_SetRenderDrawBlendMode(renderer_, SDL_BLENDMODE_BLEND);
+  fill(renderer_, SDL_Rect{0, 0, 640, 480}, SDL_Color{0, 0, 0, 172});
+  SDL_SetRenderDrawBlendMode(renderer_, SDL_BLENDMODE_NONE);
+  fill(renderer_, SDL_Rect{184, 206, 272, 68}, kNavy);
+  fill(renderer_, SDL_Rect{190, 212, 260, 56}, kPanel);
+  font_.draw_centered("Battery saver", 224, 2, kCream);
+  font_.draw_centered("Press any app button to wake", 250, 1, kMuted);
+}
+
 void Renderer::about(const ViewState& view) {
   status_bar(view, "About");
   font_.draw_centered(strings::kAppName, 74, 5, kCream);
@@ -1257,15 +1270,6 @@ void Renderer::confirm_action(const ViewState& view) {
 }
 
 void Renderer::draw(const ViewState& view, const Settings& settings_value) {
-  // This path deliberately avoids layout, texture work, and alpha compositing.
-  // AppRuntime presents it only once per second while the idle battery saver is
-  // active, rather than drawing the regular UI at 30 FPS.
-  if (view.idle_battery_saver_active) {
-    SDL_SetRenderDrawColor(renderer_, 0, 0, 0, 255);
-    SDL_RenderClear(renderer_);
-    SDL_RenderPresent(renderer_);
-    return;
-  }
   background();
   switch (view.screen) {
     case Screen::Splash: splash(view); break;
@@ -1296,13 +1300,15 @@ void Renderer::draw(const ViewState& view, const Settings& settings_value) {
   }
   toast(view);
   if (view.controls_overlay) controls_overlay(view, settings_value);
-  if (settings_value.dim_timeout_seconds > 0 &&
+  if (!view.idle_battery_saver_active &&
+      settings_value.dim_timeout_seconds > 0 &&
       monotonic_ms() - view.last_input_ms >
           static_cast<uint64_t>(settings_value.dim_timeout_seconds) * 1000) {
     SDL_SetRenderDrawBlendMode(renderer_, SDL_BLENDMODE_BLEND);
     fill(renderer_, SDL_Rect{0, 0, 640, 480}, SDL_Color{0, 0, 0, 155});
     SDL_SetRenderDrawBlendMode(renderer_, SDL_BLENDMODE_NONE);
   }
+  if (view.idle_battery_saver_active) idle_battery_saver_overlay();
   SDL_RenderPresent(renderer_);
 }
 

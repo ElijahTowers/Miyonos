@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.34 — Wake-friendly idle battery saver
+
+- Idle mode now leaves one readable, dimmed static screen in the framebuffer
+  and stops presenting further frames. Waking the Miyoo LCD with its power
+  button therefore reveals Miyonos immediately, without requiring another app
+  button press.
+- Idle mode continues to pause queued artwork downloads and reduce Sonos
+  polling. A deterministic simulator screenshot guards the dim static screen.
+
 ## 0.1.33 — Reliable large music collections
 
 - Large non-playlist music-service Favorites such as **My Songs** now receive
